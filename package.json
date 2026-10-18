@@ -9,6 +9,7 @@
     "lint": "eslint",
     "smoke": "node --experimental-strip-types scripts/smoke-extract.mjs",
     "test": "node --experimental-strip-types --test 'lib/__tests__/*.test.ts'",
+    "eval": "node --experimental-strip-types scripts/eval.mjs",
     "enrich-sample": "node --experimental-strip-types scripts/enrich-sample.mjs"
   },
   "dependencies": {

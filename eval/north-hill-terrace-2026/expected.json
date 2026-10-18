@@ -1,0 +1,77 @@
+{
+  "flags": [
+    {
+      "id": "special-assessment-parkade",
+      "severity": "critical",
+      "title_keywords": [
+        "special assessment",
+        "parkade",
+        "8,500"
+      ],
+      "evidence_quote": "BE IT RESOLVED that a special assessment of $8,500 per unit ($714,000 in total) be levied, payable in four quarterly installments of $2,125 commencing July 1, 2026.",
+      "source_doc": "demo-02-agm-minutes-2026-04-22.pdf",
+      "min_amount_cad": 714000
+    },
+    {
+      "id": "reserve-fund-61pct",
+      "severity": "critical",
+      "title_keywords": [
+        "reserve fund",
+        "61%"
+      ],
+      "evidence_quote": "The reserve fund balance at year-end was $745,000 against a study-recommended balance of $1,221,000 — approximately 61% funded.",
+      "source_doc": "demo-02-agm-minutes-2026-04-22.pdf"
+    },
+    {
+      "id": "envelope-remediation-unfunded",
+      "severity": "warning",
+      "title_keywords": [
+        "envelope",
+        "1.15"
+      ],
+      "evidence_quote": "The preliminary opinion of probable cost is $1,150,000, which is not currently funded in the reserve fund plan.",
+      "source_doc": "demo-01-board-minutes-2026-09-09.pdf",
+      "min_amount_cad": 1150000
+    },
+    {
+      "id": "litigation-mediation-water-ingress",
+      "severity": "warning",
+      "title_keywords": [
+        "water-ingress",
+        "mediation"
+      ],
+      "evidence_quote": "The window water-ingress claim affecting units 304, 305 and 406 remains in mediation; the next session is scheduled for October 28, 2026.",
+      "source_doc": "demo-01-board-minutes-2026-09-09.pdf"
+    },
+    {
+      "id": "insurance-deductible-100k",
+      "severity": "warning",
+      "title_keywords": [
+        "deductible",
+        "100,000"
+      ],
+      "evidence_quote": "The deductible has increased to $100,000 per occurrence following the June 2024 hail claim ($380,000 paid).",
+      "source_doc": "demo-01-board-minutes-2026-09-09.pdf"
+    },
+    {
+      "id": "rental-cap-proposal",
+      "severity": "warning",
+      "title_keywords": [
+        "rental cap",
+        "15%"
+      ],
+      "evidence_quote": "The Board reviewed a draft amendment that would cap rentals at 15% of units (22% of units are currently rented).",
+      "source_doc": "demo-01-board-minutes-2026-09-09.pdf"
+    },
+    {
+      "id": "nuisance-unit-1204",
+      "severity": "info",
+      "title_keywords": [
+        "unit 1204",
+        "noise"
+      ],
+      "evidence_quote": "Unit 1204: fourth noise complaint in six months (late-night music). The Board authorized a final warning letter; fines under section 12.4 of the bylaws will apply to any recurrence.",
+      "source_doc": "demo-01-board-minutes-2026-09-09.pdf"
+    }
+  ]
+}

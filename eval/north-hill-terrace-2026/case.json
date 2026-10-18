@@ -1,0 +1,11 @@
+{
+  "name": "north-hill-terrace-2026",
+  "docs_dir": "../../demo-docs",
+  "docs": [
+    "demo-01-board-minutes-2026-09-09.pdf",
+    "demo-02-agm-minutes-2026-04-22.pdf",
+    "demo-03-reserve-fund-plan-summary-2026.pdf",
+    "demo-04-information-statement-unit-506.pdf"
+  ],
+  "analysis": "../../sample-data/sample-report-2026.json"
+}

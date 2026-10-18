@@ -233,6 +233,53 @@ the default), `CRON_SECRET` (generate with `openssl rand -hex 32`; Vercel
 sends it as `Authorization: Bearer <CRON_SECRET>` on cron requests — the
 route fails closed when unset).
 
+## Eval: recall, fabrication, verification rate
+
+`npm run eval -- <stack-dir> [--analysis <analysis.json>]` scores a produced
+analysis against a hand-labeled eval case — no API key needed, because quotes
+are re-verified against freshly extracted page text (never the `verified`
+fields stamped on a stored report).
+
+An eval case is a directory `eval/<stack-name>/` with two files:
+
+- `case.json` — `{ "name", "docs_dir", "docs": ["a.pdf", ...], "analysis" }`
+  (paths relative to the case dir). `docs_dir` points at the source PDFs;
+  `analysis` points at a produced analysis JSON (a run output, the ephemeral
+  `{analysis}` payload, or a checked-in sample report). `--analysis` overrides it.
+- `expected.json` — `{ "flags": [...] }`, one entry per flag a correct report
+  MUST contain. Each entry:
+
+```json
+{
+  "id": "special-assessment-parkade",
+  "severity": "critical",
+  "title_keywords": ["special assessment", "parkade", "8,500"],
+  "min_amount_cad": 714000,
+  "evidence_quote": "BE IT RESOLVED that a special assessment of $8,500 per unit ...",
+  "source_doc": "demo-02-agm-minutes-2026-04-22.pdf"
+}
+```
+
+`title_keywords` (all must appear in the produced flag's title, normalized)
+or a single `title` substring decides the match; each produced flag is matched
+at most once, best keyword coverage wins. `min_amount_cad` is checked against
+the flag's headline money figure (`amount_cad ?? per_unit_cad`).
+`evidence_quote` is the labeler's canonical quote — it must itself verify
+against `source_doc`, otherwise the case is flagged as stale.
+
+Three metrics, printed with a per-flag table:
+
+| Metric | Definition |
+|--------|-----------|
+| **recall** | expected flags matched / expected flags |
+| **fabricated** | evidence quotes (flags + structured facts) that do NOT verify — hard fail if > 0 |
+| **% verified** | verified quotes / total quotes in the analysis |
+
+Exit code is 0 only when recall >= `EVAL_MIN_RECALL` (default 0.8) AND
+fabricated quotes = 0. Seeded case: `eval/north-hill-terrace-2026`
+(7 expected flags against the 4 2026 demo PDFs + `sample-report-2026.json`;
+currently 100% recall, 0 fabricated, 100% verified).
+
 ## Prior work disclosure (for Devpost)
 
 Per the Build North rules, everything below was created **during** Build Week
