@@ -14,6 +14,7 @@ import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { extractPdfText } from "../lib/extract.ts";
 import { verifyQuote } from "../lib/verify.ts";
+import { redactText } from "../lib/redact.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, "..");
@@ -42,6 +43,13 @@ for (const f of pdfFiles) {
 const byId = new Map(docs.map((d) => [d.fileId, d]));
 
 const report = JSON.parse(readFileSync(join(repoRoot, inputPath), "utf8"));
+
+// Building identity must survive redaction: pass it as protected phrases.
+const prot = [
+  report.building?.name,
+  report.building?.address,
+  report.building?.corp_number,
+].filter(Boolean);
 
 let verified = 0;
 let total = 0;
@@ -86,6 +94,8 @@ for (const { e, flag } of allEvidences(report)) {
   e.matched_page = found.matchedPage;
   e.match_type = confirmed.matchType; // "exact_page"
   e.ocr = false;
+  // Display version with personal names redacted (no-op on name-free quotes).
+  e.quote_display = redactText(e.quote, prot);
   verified++;
 }
 for (const [f, ok] of flagOk) f.downgraded = !ok;

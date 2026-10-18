@@ -18,7 +18,8 @@
           "verified": true,
           "matched_page": 1,
           "match_type": "exact_page",
-          "ocr": false
+          "ocr": false,
+          "quote_display": "BE IT RESOLVED that a special assessment of $8,500 per unit ($714,000 in total) be levied, payable in four quarterly installments of $2,125 commencing July 1, 2026."
         },
         {
           "document_name": "demo-04-information-statement-unit-506.pdf",
@@ -28,7 +29,8 @@
           "verified": true,
           "matched_page": 1,
           "match_type": "exact_page",
-          "ocr": false
+          "ocr": false,
+          "quote_display": "$4,250 remains payable in two quarterly installments of $2,125 (January 1 and April 1, 2027). The installments run with the unit on sale."
         }
       ],
       "explanation": "Owners voted 71% in favour of a $714,000 special assessment to replace the parkade membrane. It is payable in four quarterly installments of $2,125 starting July 1, 2026. The unit information statement shows $4,250 still owing on a typical unit, and these installments run with the unit on sale — a buyer inherits the remaining payments.",
@@ -52,7 +54,8 @@
           "verified": true,
           "matched_page": 1,
           "match_type": "exact_page",
-          "ocr": false
+          "ocr": false,
+          "quote_display": "The reserve fund balance at year-end was $745,000 against a study-recommended balance of $1,221,000 — approximately 61% funded."
         },
         {
           "document_name": "demo-03-reserve-fund-plan-summary-2026.pdf",
@@ -62,7 +65,8 @@
           "verified": true,
           "matched_page": 1,
           "match_type": "exact_page",
-          "ocr": false
+          "ocr": false,
+          "quote_display": "61% (study rates 70%+ as “good”)"
         }
       ],
       "explanation": "The reserve fund holds $745,000 against a study-recommended $1,221,000 — about 61% funded. The study itself rates 70%+ as 'good', so this building sits below that bar. Underfunded reserves are the single best predictor of future special assessments, and the board is already raising contributions 12% per year through 2029 to catch up.",
@@ -86,7 +90,8 @@
           "verified": true,
           "matched_page": 1,
           "match_type": "exact_page",
-          "ocr": false
+          "ocr": false,
+          "quote_display": "The preliminary opinion of probable cost is $1,150,000, which is not currently funded in the reserve fund plan."
         },
         {
           "document_name": "demo-03-reserve-fund-plan-summary-2026.pdf",
@@ -96,7 +101,8 @@
           "verified": true,
           "matched_page": 1,
           "match_type": "exact_page",
-          "ocr": false
+          "ocr": false,
+          "quote_display": "Building envelope remediation 2028-2029 $1,150,000 (preliminary) NOT YET FUNDED"
         }
       ],
       "explanation": "An August 2026 engineering assessment found deteriorated sealant and cladding failures on the east elevation and recommends full remediation within three years at a preliminary cost of $1,150,000. The reserve fund plan explicitly lists this project as 'NOT YET FUNDED'. With reserves already at 61%, this is a strong candidate for the next special assessment — roughly $13,700 per unit if levied the same way.",
@@ -120,7 +126,8 @@
           "verified": true,
           "matched_page": 1,
           "match_type": "exact_page",
-          "ocr": false
+          "ocr": false,
+          "quote_display": "The window water-ingress claim affecting units 304, 305 and 406 remains in mediation; the next session is scheduled for October 28, 2026."
         }
       ],
       "explanation": "The corporation is in mediation over a window water-ingress claim affecting units 304, 305 and 406, with the next session set for October 28, 2026. Counsel says no provision is required yet, but active construction-defect disputes can drag on and sometimes end in settlements funded by owners. Worth a direct question to the seller's lawyer about exposure.",
@@ -140,7 +147,8 @@
           "verified": true,
           "matched_page": 1,
           "match_type": "exact_page",
-          "ocr": false
+          "ocr": false,
+          "quote_display": "The deductible has increased to $100,000 per occurrence following the June 2024 hail claim ($380,000 paid)."
         }
       ],
       "explanation": "Following a $380,000 hail claim in June 2024, the corporation's per-occurrence deductible jumped to $100,000 and the annual premium rose 18% to $96,400. If another major claim hits, owners can be assessed for the deductible. The information statement advises buyers to carry a unit owner's policy covering this deductible exposure.",
@@ -160,7 +168,8 @@
           "verified": true,
           "matched_page": 2,
           "match_type": "exact_page",
-          "ocr": false
+          "ocr": false,
+          "quote_display": "The Board reviewed a draft amendment that would cap rentals at 15% of units (22% of units are currently rented)."
         }
       ],
       "explanation": "The board will ask owners at the 2027 AGM to cap rentals at 15% of units, while 22% are rented today. If you are buying as an investor — or might rent the unit out later — this directly affects you. Existing rentals are often grandfathered, but the documents do not say so; confirm with the corporation.",
@@ -180,7 +189,8 @@
           "verified": true,
           "matched_page": 2,
           "match_type": "exact_page",
-          "ocr": false
+          "ocr": false,
+          "quote_display": "Unit 1204: fourth noise complaint in six months (late-night music). The Board authorized a final warning letter; fines under section 12.4 of the bylaws will apply to any recurrence."
         }
       ],
       "explanation": "Unit 1204 has drawn a fourth noise complaint in six months (late-night music) and received a final warning letter, with fines to follow on recurrence. One problem unit does not define a building, but if you are considering a nearby unit it is worth knowing how the board enforces its bylaws.",
@@ -225,7 +235,8 @@
           "verified": true,
           "matched_page": 1,
           "match_type": "exact_page",
-          "ocr": false
+          "ocr": false,
+          "quote_display": "BE IT RESOLVED that a special assessment of $8,500 per unit ($714,000 in total) be levied"
         }
       }
     ],
@@ -242,7 +253,8 @@
           "verified": true,
           "matched_page": 1,
           "match_type": "exact_page",
-          "ocr": false
+          "ocr": false,
+          "quote_display": "The window water-ingress claim affecting units 304, 305 and 406 remains in mediation"
         }
       }
     ],
@@ -255,7 +267,8 @@
       "verified": true,
       "matched_page": 2,
       "match_type": "exact_page",
-      "ocr": false
+      "ocr": false,
+      "quote_display": "The Board reviewed a draft amendment that would cap rentals at 15% of units (22% of units are currently rented)."
     },
     "fee_change_pct": 9
   }

@@ -23,6 +23,7 @@ import {
   type PageText,
 } from "@/lib/extract";
 import { verifyAnalysis, type VerifiableDoc } from "@/lib/verify";
+import { redactAnalysis } from "@/lib/redact";
 import { rememberBuildingFacts } from "@/lib/agent-memory";
 import { hasUploadConsent } from "@/lib/retention";
 import type { DocType } from "@/lib/report-schema";
@@ -193,6 +194,13 @@ export async function POST(req: Request) {
     );
   }
 
+  // Redact personal names from every report surface BEFORE verification
+  // and persistence. Evidence quotes are kept ORIGINAL for verification;
+  // the redacted text rides along as quote_display for the UI.
+  // The database, Agent Memory, and all API responses only ever see the
+  // redacted version.
+  const redacted = redactAnalysis(result.analysis);
+
   // Verify every cited quote against the stored page text. This is the
   // differentiation: unverified claims are downgraded and lose money figures.
   const verifiableDocs: VerifiableDoc[] = docs.map((d) => ({
@@ -201,7 +209,7 @@ export async function POST(req: Request) {
     pages: d.pages,
     ocr: d.status === "ocr",
   }));
-  const verified = verifyAnalysis(result.analysis, verifiableDocs);
+  const verified = verifyAnalysis(redacted, verifiableDocs);
 
   // Persist (when the database is configured).
   if (dbOn) {

@@ -20,6 +20,7 @@ import type {
   BuildingFacts,
   VerifiedStructuredFacts,
 } from "./report-schema";
+import { redactText } from "./redact.ts";
 
 /* ------------------------------------------------------------------ */
 /* Configuration                                                       */
@@ -93,12 +94,23 @@ function cad(n: number): string {
 /**
  * Serialize a verified analysis into factual sentences for Agent Memory.
  * Only verified, numeric/factual content goes in — no personal names from
- * minutes (those are stripped upstream), no freeform prose.
+ * minutes. The pipeline already redacts structured facts before this is
+ * called; redactText is applied AGAIN here as defense-in-depth so the
+ * belief layer can never learn a private individual's name even if an
+ * unredacted snapshot ever reaches it. Building identity (name, address,
+ * corp number) is never redacted.
  */
 export function factsToMemoryText(
   building: BuildingFacts,
   facts: VerifiedStructuredFacts
 ): string {
+  // Phrases that must survive redaction: building identity.
+  const prot = [
+    building.name,
+    building.address,
+    building.corp_number,
+  ].filter((s): s is string => Boolean(s));
+  const R = (s: string) => redactText(s, prot);
   const lines: string[] = [];
   const identity = [
     building.name,
@@ -149,19 +161,19 @@ export function factsToMemoryText(
       .filter(Boolean)
       .join(", ");
     lines.push(
-      `Special assessment (${sa.status}) for ${sa.purpose}${
+      `Special assessment (${sa.status}) for ${R(sa.purpose)}${
         amount ? `: ${amount}` : ""
       }.`
     );
   }
   for (const lit of facts.litigation ?? []) {
     lines.push(
-      `Litigation: ${lit.subject} — status: ${lit.status}${
-        lit.units_affected ? ` (units affected: ${lit.units_affected})` : ""
+      `Litigation: ${R(lit.subject)} — status: ${R(lit.status)}${
+        lit.units_affected ? ` (units affected: ${R(lit.units_affected)})` : ""
       }.`
     );
   }
-  if (facts.rental_rules) lines.push(`Rental rules: ${facts.rental_rules}.`);
+  if (facts.rental_rules) lines.push(`Rental rules: ${R(facts.rental_rules)}.`);
   if (facts.fee_change_pct != null)
     lines.push(
       `Contribution change: ${facts.fee_change_pct > 0 ? "+" : ""}${

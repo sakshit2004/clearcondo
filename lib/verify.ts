@@ -167,6 +167,9 @@ function verifyFactEvidence(
     page: e.page ?? 0,
     document_name: e.document_name,
     quote: e.quote,
+    // Display text is the redacted version when the redaction step ran;
+    // verification above always ran against the ORIGINAL quote.
+    quote_display: e.quote_display ?? e.quote,
     verified: out.verified,
     matched_page: out.matchedPage,
     match_type: out.matchType,
@@ -244,6 +247,9 @@ export function verifyAnalysis(
         page: e.page ?? 0,
         document_name: e.document_name,
         quote: e.quote,
+        // Display text is the redacted version when the redaction step ran;
+        // verification above always ran against the ORIGINAL quote.
+        quote_display: e.quote_display ?? e.quote,
         verified: e.verified,
         matched_page: e.matchedPage,
         match_type: e.matchType,
@@ -304,6 +310,8 @@ export interface VerifiableEvidence {
   page?: number | null;
   document_name: string;
   quote: string;
+  /** Set by the redaction step before verification; carried through untouched. */
+  quote_display?: string;
 }
 
 /**

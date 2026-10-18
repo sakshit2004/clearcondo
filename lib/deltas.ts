@@ -34,7 +34,8 @@ export interface Delta {
 function ev(e: VerifiedFactEvidence | null): DeltaEvidence | null {
   if (!e || !e.verified) return null;
   return {
-    quote: e.quote,
+    // Display the redacted quote; verification ran against the original.
+    quote: e.quote_display ?? e.quote,
     document_name: e.document_name,
     page: e.matched_page ?? e.page,
     verified: true,

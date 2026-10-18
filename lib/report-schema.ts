@@ -53,6 +53,12 @@ export const EvidenceSchema = z.object({
     .describe(
       "Verbatim excerpt from the cited page supporting this flag, max ~40 words. Copy it exactly — do not paraphrase, reword, or tidy it up."
     ),
+  quote_display: z
+    .string()
+    .optional()
+    .describe(
+      "Server-side redacted version of quote for UI display (personal names replaced). Added by the redaction step — never by the model. Verification always runs against quote."
+    ),
 });
 
 export const MATCH_TYPES = ["exact_page", "exact_file", "fuzzy", "none"] as const;
@@ -83,6 +89,12 @@ export const FactEvidenceSchema = z.object({
   page: z.number().int().positive().describe("1-based page number"),
   document_name: z.string().describe("Exact filename"),
   quote: z.string().describe("Verbatim excerpt, max ~25 words. Copy exactly."),
+  quote_display: z
+    .string()
+    .optional()
+    .describe(
+      "Server-side redacted version of quote for UI display. Added by the redaction step — never by the model."
+    ),
 });
 
 export const SpecialAssessmentFactSchema = z.object({
@@ -249,6 +261,8 @@ export interface VerifiedEvidence {
   page: number;
   document_name: string;
   quote: string;
+  /** Redacted display version of quote (personal names stripped). Falls back to quote when absent (pre-redaction data). */
+  quote_display?: string;
   verified: boolean;
   matched_page: number | null;
   match_type: MatchType;
@@ -269,6 +283,8 @@ export interface VerifiedFlag {
 
 /** A fact evidence item after server-side verification. */
 export interface VerifiedFactEvidence extends FactEvidence {
+  /** Redacted display version of quote (personal names stripped). Falls back to quote when absent. */
+  quote_display?: string;
   verified: boolean;
   matched_page: number | null;
   match_type: MatchType;

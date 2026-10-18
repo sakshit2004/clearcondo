@@ -27,7 +27,8 @@
           "verified": true,
           "matched_page": 1,
           "match_type": "exact_page",
-          "ocr": false
+          "ocr": false,
+          "quote_display": "The 2024 reserve fund study anticipates replacement in 2026 at an estimated cost of $700,000, which is not yet funded."
         }
       }
     ],
@@ -51,7 +52,8 @@
           "verified": true,
           "matched_page": 1,
           "match_type": "exact_page",
-          "ocr": false
+          "ocr": false,
+          "quote_display": "Funded status 63% (study rates 70%+ as \"good\")"
         }
       ],
       "money_exposure": null,
@@ -71,7 +73,8 @@
           "verified": true,
           "matched_page": 1,
           "match_type": "exact_page",
-          "ocr": false
+          "ocr": false,
+          "quote_display": "Parkade membrane replacement 2026 $700,000 (preliminary) NOT YET FUNDED"
         }
       ],
       "money_exposure": null,
@@ -91,7 +94,8 @@
           "verified": true,
           "matched_page": 1,
           "match_type": "exact_page",
-          "ocr": false
+          "ocr": false,
+          "quote_display": "Two units are more than 60 days in arrears (total $3,100)."
         }
       ],
       "money_exposure": null,

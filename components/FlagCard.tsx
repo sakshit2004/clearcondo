@@ -86,7 +86,7 @@ export default function FlagCard({ flag }: { flag: VerifiedFlag }) {
             key={i}
             className="border-l-2 border-teal-700/40 pl-3 py-1"
           >
-            <p className="text-sm text-stone-700 italic">“{e.quote}”</p>
+            <p className="text-sm text-stone-700 italic">“{e.quote_display ?? e.quote}”</p>
             <cite className="text-xs text-stone-500 not-italic block mt-1">
               <EvidenceBadge e={e} />
             </cite>
