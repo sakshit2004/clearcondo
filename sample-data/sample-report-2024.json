@@ -1,0 +1,112 @@
+{
+  "building": {
+    "name": "North Hill Terrace",
+    "corp_number": "0614321",
+    "address": "1234 North Hill Terrace NW, Calgary, Alberta",
+    "units": 84,
+    "year_built": null,
+    "monthly_contribution_avg_cad": 175
+  },
+  "structured_facts": {
+    "doc_date": "2024-09",
+    "reserve_balance_cad": 660000,
+    "reserve_recommended_cad": 1050000,
+    "contribution_monthly_cad": 175,
+    "insurance_deductible_cad": 25000,
+    "special_assessments": [
+      {
+        "amount_per_unit_cad": null,
+        "total_cad": 700000,
+        "purpose": "parkade membrane replacement",
+        "status": "discussed",
+        "evidence": {
+          "document_name": "demo-2024-01-board-minutes-2024-09-11.pdf",
+          "quote": "The 2024 reserve fund study anticipates replacement in 2026 at an estimated cost of $700,000, which is not yet funded.",
+          "file_id": "file-4",
+          "page": 1,
+          "verified": true,
+          "matched_page": 1,
+          "match_type": "exact_page",
+          "ocr": false
+        }
+      }
+    ],
+    "litigation": [],
+    "rental_rules": null,
+    "rental_rules_evidence": null,
+    "fee_change_pct": 4
+  },
+  "flags": [
+    {
+      "flag_type": "reserve_underfunded",
+      "severity": "warning",
+      "title": "Reserve fund at 63% of recommended level",
+      "explanation": "The reserve fund holds $660,000 against a study-recommended $1,050,000 — about 63% funded. The study rates 70%+ as 'good', so this building sits below that bar even before the anticipated parkade project.",
+      "evidence": [
+        {
+          "document_name": "demo-2024-02-reserve-fund-plan-summary-2024.pdf",
+          "quote": "Funded status 63% (study rates 70%+ as \"good\")",
+          "file_id": "file-5",
+          "page": 1,
+          "verified": true,
+          "matched_page": 1,
+          "match_type": "exact_page",
+          "ocr": false
+        }
+      ],
+      "money_exposure": null,
+      "downgraded": false
+    },
+    {
+      "flag_type": "unfunded_capital",
+      "severity": "warning",
+      "title": "Parkade membrane replacement anticipated 2026, not yet funded",
+      "explanation": "The 2024 reserve study anticipates parkade membrane replacement in 2026 at an estimated $700,000, explicitly listed as not yet funded. With reserves at 63%, this is a likely future special assessment — roughly $8,300 per unit if levied evenly.",
+      "evidence": [
+        {
+          "document_name": "demo-2024-02-reserve-fund-plan-summary-2024.pdf",
+          "quote": "Parkade membrane replacement 2026 $700,000 (preliminary) NOT YET FUNDED",
+          "file_id": "file-5",
+          "page": 1,
+          "verified": true,
+          "matched_page": 1,
+          "match_type": "exact_page",
+          "ocr": false
+        }
+      ],
+      "money_exposure": null,
+      "downgraded": false
+    },
+    {
+      "flag_type": "governance",
+      "severity": "info",
+      "title": "Two units in arrears",
+      "explanation": "Two units are more than 60 days in arrears ($3,100 total). Small in absolute terms, but arrears trends are worth watching in the next set of minutes.",
+      "evidence": [
+        {
+          "document_name": "demo-2024-01-board-minutes-2024-09-11.pdf",
+          "quote": "Two units are more than 60 days in arrears (total $3,100).",
+          "file_id": "file-4",
+          "page": 1,
+          "verified": true,
+          "matched_page": 1,
+          "match_type": "exact_page",
+          "ocr": false
+        }
+      ],
+      "money_exposure": null,
+      "downgraded": false
+    }
+  ],
+  "money_exposure_total_cad": null,
+  "money_exposure_basis": "No levied amounts in the 2024 documents; the parkade project is anticipated but not yet costed per unit.",
+  "questions_for_realtor_lawyer": [
+    "How will the board fund the $700,000 parkade membrane replacement anticipated for 2026?",
+    "Are contributions keeping pace with the reserve study, given the fund sits at 63% of recommended?"
+  ],
+  "summary": "North Hill Terrace's 2024 documents show a building in decent shape but with a known bill coming: the parkade membrane is expected to need replacement in 2026 at about $700,000, with no funding plan yet, and reserves sit at 63% of the recommended level.",
+  "verification": {
+    "verified_claims": 4,
+    "total_claims": 4
+  }
+}

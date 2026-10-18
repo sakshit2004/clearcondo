@@ -1,0 +1,262 @@
+{
+  "building": {
+    "address": "1234 North Hill Terrace NW, Calgary, Alberta",
+    "corp_number": "0614321",
+    "monthly_contribution_avg_cad": 196,
+    "name": "North Hill Terrace",
+    "units": 84,
+    "year_built": null
+  },
+  "flags": [
+    {
+      "evidence": [
+        {
+          "document_name": "demo-02-agm-minutes-2026-04-22.pdf",
+          "quote": "BE IT RESOLVED that a special assessment of $8,500 per unit ($714,000 in total) be levied, payable in four quarterly installments of $2,125 commencing July 1, 2026.",
+          "file_id": "file-1",
+          "page": 1,
+          "verified": true,
+          "matched_page": 1,
+          "match_type": "exact_page",
+          "ocr": false
+        },
+        {
+          "document_name": "demo-04-information-statement-unit-506.pdf",
+          "quote": "$4,250 remains payable in two quarterly installments of $2,125 (January 1 and April 1, 2027). The installments run with the unit on sale.",
+          "file_id": "file-3",
+          "page": 1,
+          "verified": true,
+          "matched_page": 1,
+          "match_type": "exact_page",
+          "ocr": false
+        }
+      ],
+      "explanation": "Owners voted 71% in favour of a $714,000 special assessment to replace the parkade membrane. It is payable in four quarterly installments of $2,125 starting July 1, 2026. The unit information statement shows $4,250 still owing on a typical unit, and these installments run with the unit on sale — a buyer inherits the remaining payments.",
+      "flag_type": "special_assessment",
+      "money_exposure": {
+        "amount_cad": 714000,
+        "basis": "$8,500 x 84 units = $714,000 (per AGM resolution); $4,250 remains owing per unit per information statement",
+        "per_unit_cad": 8500
+      },
+      "severity": "critical",
+      "title": "$8,500/unit special assessment levied for parkade membrane",
+      "downgraded": false
+    },
+    {
+      "evidence": [
+        {
+          "document_name": "demo-02-agm-minutes-2026-04-22.pdf",
+          "quote": "The reserve fund balance at year-end was $745,000 against a study-recommended balance of $1,221,000 — approximately 61% funded.",
+          "file_id": "file-1",
+          "page": 1,
+          "verified": true,
+          "matched_page": 1,
+          "match_type": "exact_page",
+          "ocr": false
+        },
+        {
+          "document_name": "demo-03-reserve-fund-plan-summary-2026.pdf",
+          "quote": "61% (study rates 70%+ as “good”)",
+          "file_id": "file-2",
+          "page": 1,
+          "verified": true,
+          "matched_page": 1,
+          "match_type": "exact_page",
+          "ocr": false
+        }
+      ],
+      "explanation": "The reserve fund holds $745,000 against a study-recommended $1,221,000 — about 61% funded. The study itself rates 70%+ as 'good', so this building sits below that bar. Underfunded reserves are the single best predictor of future special assessments, and the board is already raising contributions 12% per year through 2029 to catch up.",
+      "flag_type": "reserve_underfunded",
+      "money_exposure": {
+        "amount_cad": 476000,
+        "basis": "($1,221,000 - $745,000) shortfall / 84 units = ~$5,667 per unit to reach the recommended level",
+        "per_unit_cad": 5667
+      },
+      "severity": "critical",
+      "title": "Reserve fund at 61% of recommended level",
+      "downgraded": false
+    },
+    {
+      "evidence": [
+        {
+          "document_name": "demo-01-board-minutes-2026-09-09.pdf",
+          "quote": "The preliminary opinion of probable cost is $1,150,000, which is not currently funded in the reserve fund plan.",
+          "file_id": "file-0",
+          "page": 1,
+          "verified": true,
+          "matched_page": 1,
+          "match_type": "exact_page",
+          "ocr": false
+        },
+        {
+          "document_name": "demo-03-reserve-fund-plan-summary-2026.pdf",
+          "quote": "Building envelope remediation 2028-2029 $1,150,000 (preliminary) NOT YET FUNDED",
+          "file_id": "file-2",
+          "page": 1,
+          "verified": true,
+          "matched_page": 1,
+          "match_type": "exact_page",
+          "ocr": false
+        }
+      ],
+      "explanation": "An August 2026 engineering assessment found deteriorated sealant and cladding failures on the east elevation and recommends full remediation within three years at a preliminary cost of $1,150,000. The reserve fund plan explicitly lists this project as 'NOT YET FUNDED'. With reserves already at 61%, this is a strong candidate for the next special assessment — roughly $13,700 per unit if levied the same way.",
+      "flag_type": "unfunded_capital",
+      "money_exposure": {
+        "amount_cad": 1150000,
+        "basis": "$1,150,000 / 84 units = ~$13,690 per unit if levied as a future special assessment",
+        "per_unit_cad": 13690
+      },
+      "severity": "warning",
+      "title": "$1.15M envelope remediation identified but not funded",
+      "downgraded": false
+    },
+    {
+      "evidence": [
+        {
+          "document_name": "demo-01-board-minutes-2026-09-09.pdf",
+          "quote": "The window water-ingress claim affecting units 304, 305 and 406 remains in mediation; the next session is scheduled for October 28, 2026.",
+          "file_id": "file-0",
+          "page": 1,
+          "verified": true,
+          "matched_page": 1,
+          "match_type": "exact_page",
+          "ocr": false
+        }
+      ],
+      "explanation": "The corporation is in mediation over a window water-ingress claim affecting units 304, 305 and 406, with the next session set for October 28, 2026. Counsel says no provision is required yet, but active construction-defect disputes can drag on and sometimes end in settlements funded by owners. Worth a direct question to the seller's lawyer about exposure.",
+      "flag_type": "litigation",
+      "money_exposure": null,
+      "severity": "warning",
+      "title": "Window water-ingress claim in mediation (3 units)",
+      "downgraded": false
+    },
+    {
+      "evidence": [
+        {
+          "document_name": "demo-01-board-minutes-2026-09-09.pdf",
+          "quote": "The deductible has increased to $100,000 per occurrence following the June 2024 hail claim ($380,000 paid).",
+          "file_id": "file-0",
+          "page": 1,
+          "verified": true,
+          "matched_page": 1,
+          "match_type": "exact_page",
+          "ocr": false
+        }
+      ],
+      "explanation": "Following a $380,000 hail claim in June 2024, the corporation's per-occurrence deductible jumped to $100,000 and the annual premium rose 18% to $96,400. If another major claim hits, owners can be assessed for the deductible. The information statement advises buyers to carry a unit owner's policy covering this deductible exposure.",
+      "flag_type": "insurance_deductible",
+      "money_exposure": null,
+      "severity": "warning",
+      "title": "Insurance deductible raised to $100,000 after hail claim",
+      "downgraded": false
+    },
+    {
+      "evidence": [
+        {
+          "document_name": "demo-01-board-minutes-2026-09-09.pdf",
+          "quote": "The Board reviewed a draft amendment that would cap rentals at 15% of units (22% of units are currently rented).",
+          "file_id": "file-0",
+          "page": 2,
+          "verified": true,
+          "matched_page": 2,
+          "match_type": "exact_page",
+          "ocr": false
+        }
+      ],
+      "explanation": "The board will ask owners at the 2027 AGM to cap rentals at 15% of units, while 22% are rented today. If you are buying as an investor — or might rent the unit out later — this directly affects you. Existing rentals are often grandfathered, but the documents do not say so; confirm with the corporation.",
+      "flag_type": "rental_restriction",
+      "money_exposure": null,
+      "severity": "warning",
+      "title": "Proposed rental cap: 15% (22% of units currently rented)",
+      "downgraded": false
+    },
+    {
+      "evidence": [
+        {
+          "document_name": "demo-01-board-minutes-2026-09-09.pdf",
+          "quote": "Unit 1204: fourth noise complaint in six months (late-night music). The Board authorized a final warning letter; fines under section 12.4 of the bylaws will apply to any recurrence.",
+          "file_id": "file-0",
+          "page": 2,
+          "verified": true,
+          "matched_page": 2,
+          "match_type": "exact_page",
+          "ocr": false
+        }
+      ],
+      "explanation": "Unit 1204 has drawn a fourth noise complaint in six months (late-night music) and received a final warning letter, with fines to follow on recurrence. One problem unit does not define a building, but if you are considering a nearby unit it is worth knowing how the board enforces its bylaws.",
+      "flag_type": "nuisance",
+      "money_exposure": null,
+      "severity": "info",
+      "title": "Repeat noise complaints about unit 1204",
+      "downgraded": false
+    }
+  ],
+  "money_exposure_basis": "$4,250 remaining special-assessment installments per unit + ~$13,690 pro-rata share of the unfunded envelope project",
+  "money_exposure_total_cad": 17940,
+  "questions_for_realtor_lawyer": [
+    "Can the seller credit or clear the $4,250 in remaining special-assessment installments at closing?",
+    "What is the board's funding plan for the $1.15M envelope remediation, and when will owners vote on it?",
+    "What is the status of the window water-ingress mediation, and could a settlement result in owner assessments?",
+    "If I might rent the unit in future, would the proposed 15% rental cap grandfather existing owners?",
+    "Does my unit owner's insurance policy cover the $100,000 corporation deductible exposure?"
+  ],
+  "summary": "North Hill Terrace's documents tell a clear story: a major parkade project is being paid through a levied $8,500/unit special assessment, reserves sit at just 61% of the recommended level, and a $1.15M envelope remediation is on the horizon with no funding plan. Add active litigation and a spiked insurance deductible, and a buyer should price in roughly $17,940 of known or likely near-term exposure per unit.",
+  "verification": {
+    "verified_claims": 13,
+    "total_claims": 13
+  },
+  "structured_facts": {
+    "doc_date": "2026-10",
+    "reserve_balance_cad": 745000,
+    "reserve_recommended_cad": 1221000,
+    "contribution_monthly_cad": 196,
+    "insurance_deductible_cad": 100000,
+    "special_assessments": [
+      {
+        "amount_per_unit_cad": 8500,
+        "total_cad": 714000,
+        "purpose": "parkade membrane replacement",
+        "status": "levied",
+        "evidence": {
+          "document_name": "demo-02-agm-minutes-2026-04-22.pdf",
+          "quote": "BE IT RESOLVED that a special assessment of $8,500 per unit ($714,000 in total) be levied",
+          "file_id": "file-1",
+          "page": 1,
+          "verified": true,
+          "matched_page": 1,
+          "match_type": "exact_page",
+          "ocr": false
+        }
+      }
+    ],
+    "litigation": [
+      {
+        "subject": "window water-ingress claim",
+        "units_affected": "units 304, 305 and 406",
+        "status": "in mediation",
+        "evidence": {
+          "document_name": "demo-01-board-minutes-2026-09-09.pdf",
+          "quote": "The window water-ingress claim affecting units 304, 305 and 406 remains in mediation",
+          "file_id": "file-0",
+          "page": 1,
+          "verified": true,
+          "matched_page": 1,
+          "match_type": "exact_page",
+          "ocr": false
+        }
+      }
+    ],
+    "rental_rules": "Board to propose 15% rental cap at 2027 AGM; 22% of units currently rented",
+    "rental_rules_evidence": {
+      "document_name": "demo-01-board-minutes-2026-09-09.pdf",
+      "quote": "The Board reviewed a draft amendment that would cap rentals at 15% of units (22% of units are currently rented).",
+      "file_id": "file-0",
+      "page": 2,
+      "verified": true,
+      "matched_page": 2,
+      "match_type": "exact_page",
+      "ocr": false
+    },
+    "fee_change_pct": 9
+  }
+}
