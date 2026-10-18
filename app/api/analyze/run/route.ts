@@ -23,6 +23,7 @@ import {
   type PageText,
 } from "@/lib/extract";
 import { verifyAnalysis, type VerifiableDoc } from "@/lib/verify";
+import { rememberBuildingFacts } from "@/lib/agent-memory";
 import type { DocType } from "@/lib/report-schema";
 
 export const maxDuration = 120;
@@ -218,6 +219,15 @@ export async function POST(req: Request) {
           missing
         );
         if (stripeOn) await spendCredit(db, userId);
+        // Dual-write to SurrealDB Agent Memory: the verified facts are
+        // remembered as beliefs the service extracts, reconciles, and
+        // end-dates over time. Best-effort — never fails the request.
+        await rememberBuildingFacts({
+          ownerId: userId,
+          buildingRecordId: buildingId,
+          building: verified.building,
+          facts: verified.structured_facts,
+        });
         return { reportId: rid, deltas };
       });
       if (!out) throw new Error("Database connection failed.");

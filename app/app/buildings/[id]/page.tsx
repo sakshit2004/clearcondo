@@ -6,6 +6,7 @@ import { cad, formatDate } from "@/lib/format";
 import { FLAG_TYPE_LABELS } from "@/lib/report-schema";
 import SetupNotice from "@/components/SetupNotice";
 import SeverityBadge from "@/components/SeverityBadge";
+import AgentMemoryPanel from "@/components/AgentMemoryPanel";
 import type { Severity } from "@/lib/report-schema";
 
 
@@ -95,6 +96,9 @@ export default async function BuildingHistoryPage({
           </div>
         )}
       </section>
+
+      {/* Agent Memory recall — reconciled beliefs, when configured */}
+      <AgentMemoryPanel ownerId={userId} buildingRecordId={fullId} />
 
       {/* Report timeline */}
       <section>

@@ -1,5 +1,22 @@
 -- ClearCondo SurrealDB schema.
 --
+-- TWO-LAYER MEMORY ARCHITECTURE (see README "Architecture"):
+--   1. These tables are the deterministic application store. Every number the
+--      UI shows comes from here: buildings deduped per user, documents,
+--      reports with facts_snapshot, flags with provenance (source document +
+--      verbatim quote). Deltas ("what changed since the last review") are
+--      computed from consecutive facts_snapshots — fully deterministic and
+--      unit-tested (lib/deltas.ts).
+--   2. SurrealDB Agent Memory (lib/agent-memory.ts, env-gated via SPECTRON_*)
+--      is the belief layer: each completed analysis is remembered as factual
+--      text, the service extracts entities/attributes itself, reconciles them
+--      against prior beliefs, and end-dates superseded facts instead of
+--      overwriting them. The building page recalls those beliefs with hybrid
+--      retrieval. Plain tables alone would NOT qualify for "Best Use of
+--      SurrealDB Agent Memory" — the product is a distinct hosted layer
+--      (remember/extract/reconcile/store/recall), and this schema documents
+--      how we use it.
+--
 -- The memory story: every analysis persists into four linked tables.
 --   building  - one row per condo corporation per user (deduped)
 --   document  - each uploaded PDF, linked to its building

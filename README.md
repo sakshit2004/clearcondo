@@ -26,6 +26,8 @@ Upload (PDFs)
                          claims downgraded, money figures stripped
                        → SurrealDB persist (building/document/report/flag +
                          facts_snapshot)
+                       → remember verified facts in SurrealDB Agent Memory
+                         (best-effort, never fails the request)
                        → diff vs previous snapshot ("what changed")
                        → report page
 ```
@@ -33,12 +35,25 @@ Upload (PDFs)
 - **Two-step pipeline** so the UI shows real progress (extracting → analyzing)
   and Vercel's serverless timeout is never a blank screen. Both analyze routes
   set `maxDuration = 60`.
-- **Building memory (the SurrealDB story):** buildings are deduped per user;
-  every report's flags link to both their report *and* their building with
-  provenance (source doc + verbatim quote). On repeat uploads, prior flags are
-  fed back into the analysis prompt as "building memory" so the model notes
-  what is new, persisting, or resolved. `/app/buildings/[id]` shows the
-  accumulated memory: every report, every distinct issue, first-seen dates.
+- **Building memory (two layers):**
+  1. **Deterministic tables** (this schema): buildings are deduped per user;
+     every report's flags link to both their report *and* their building with
+     provenance (source doc + verbatim quote). On repeat uploads, prior flags
+     are fed back into the analysis prompt as "building memory" so the model
+     notes what is new, persisting, or resolved. `/app/buildings/[id]` shows
+     the accumulated memory: every report, every distinct issue, first-seen
+     dates. Every number the UI shows comes from these tables.
+  2. **SurrealDB Agent Memory** (`lib/agent-memory.ts`, env-gated): after each
+     persist, the verified facts are *remembered* as factual text with
+     `infer: "full"` — the service extracts entities/attributes/relations
+     itself, reconciles them against what it already believes about the
+     building, and end-dates superseded beliefs instead of overwriting them
+     (tri-temporal history). The building page recalls them with hybrid
+     retrieval (`AgentMemoryPanel`). This is the "Best Use of SurrealDB Agent
+     Memory" story: the tables are the auditable record, Agent Memory is the
+     belief layer that reasons over time. Partitioning uses labels
+     (`app=clearcondo`, `owner=…`, `building=…`) so no scope pre-registration
+     is needed; everything degrades gracefully when `SPECTRON_*` is unset.
 - **Graceful degradation:** without `ANTHROPIC_API_KEY`, `/api/analyze/run`
   returns a clear "add your key" state; without SurrealDB, reports render
   ephemerally; without Clerk keys, `/app/*` shows a setup notice. `/demo`
@@ -78,7 +93,20 @@ npm run build                # must pass before deploy
    - `SURREAL_TOKEN` (a record/token string).
 5. Verify: run an analysis; the building should appear under /app/buildings.
 
-### 4. Stripe (test mode) — optional, behind a flag
+### 4. SurrealDB Agent Memory (belief layer) — optional, prize-targeted
+1. Sign in to SurrealDB Cloud → open your org in SurrealDB Studio →
+   **Contexts** → create a context (name + region). Requires Agent Memory
+   access on your profile.
+2. Open the context → **API keys** → create a key; copy the secret once.
+3. Set `SPECTRON_URL` (the exact host shown in Studio), `SPECTRON_CONTEXT_ID`,
+   and `SPECTRON_API_KEY` in the deploy environment.
+4. No scope pre-registration needed: writes are partitioned by labels
+   (`app=clearcondo`, `owner=…`, `building=…`) and land in the key's default
+   write region. Verify: run an analysis, then open the building page — an
+   "Agent memory" section with recalled beliefs should appear below the
+   deterministic building memory.
+
+### 5. Stripe (test mode) — optional, behind a flag
 1. Keep `STRIPE_ENABLED=false` (default) for beta-free mode — the demo never
    blocks on payment.
 2. To enable: https://dashboard.stripe.com/test/apikeys → `STRIPE_SECRET_KEY`
