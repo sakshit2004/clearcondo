@@ -13,7 +13,15 @@ export interface ExtractedDoc {
   fileId: string;
   filename: string;
   pages: PageText[];
+  /** Page count capped at MAX_PAGES for the text path. */
   pageCount: number;
+  /** True page count, uncapped — the OCR path uses this (100-page ceiling).
+   *  Present when known (always set by extractPdfText). */
+  totalPages?: number;
+  /** True when pages/chars were dropped by the MAX_PAGES / MAX_CHARS caps.
+   *  Optional: only the extraction step sets it; the run route rebuilds
+   *  a partial doc for prompt rendering and doesn't need it. */
+  truncated?: boolean;
   charCount: number;
   status: ExtractionStatus;
   /** True when the file was detected as scanned/image-only. */
@@ -61,7 +69,9 @@ export async function extractPdfText(
 ): Promise<ExtractedDoc> {
   let result: { totalPages: number; text: string[] };
   try {
-    result = await extractText(data);
+    // unpdf transfers (detaches) the input buffer — pass a copy so the
+    // caller's bytes stay usable (the start route reuses them for OCR).
+    result = await extractText(data.slice());
   } catch (err) {
     throw new Error(
       `Could not read "${filename}" as a PDF. It may be corrupted or password-protected.`
@@ -79,6 +89,11 @@ export async function extractPdfText(
     pages.length > 0 && pages.every((p) => p.text.length < threshold);
 
   let charCount = pages.reduce((n, p) => n + p.text.length, 0);
+
+  // Track whether content was dropped so the UI can say so honestly —
+  // a 100-page PDF analyzed as 40 pages must never look complete.
+  const truncated =
+    result.totalPages > MAX_PAGES || charCount > MAX_CHARS_PER_DOC;
 
   // Hard cap on total characters: truncate from the last page backwards.
   if (charCount > MAX_CHARS_PER_DOC && !isScanned) {
@@ -99,6 +114,8 @@ export async function extractPdfText(
     filename,
     pages,
     pageCount: Math.min(result.totalPages, MAX_PAGES),
+    totalPages: result.totalPages,
+    truncated,
     charCount,
     status: "extracted",
     isScanned,

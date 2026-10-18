@@ -15,9 +15,10 @@
  * run a few at a time so a 100-page scan completes in ~2-3 waves.
  *
  * Claude API limits (checked Oct 2026): 32 MB max request size, up to 100
- * pages per request for full PDF analysis. Our upload caps (15 MB per file,
- * 40 pages per file) sit comfortably inside those; anything larger is
- * rejected with a clear error rather than chunked silently.
+ * pages per request for full PDF analysis. Upload caps: the text-extraction
+ * path allows 15 MB per file / 40 pages per file; the OCR path allows
+ * 30 MB / 100 pages (enforced in transcribeScannedPdf). Anything larger is
+ * rejected with a clear error rather than truncated silently.
  */
 
 import Anthropic from "@anthropic-ai/sdk";

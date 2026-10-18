@@ -3,11 +3,12 @@ import assert from "node:assert/strict";
 import {
   redactText,
   redactAnalysis,
+  toPublicAnalysis,
   protectedPhrasesFor,
   REDACTED_NAME,
 } from "../redact.ts";
 import { verifyQuote } from "../verify.ts";
-import type { Analysis } from "../report-schema";
+import type { Analysis, VerifiedAnalysis } from "../report-schema";
 import type { PageText } from "../extract.ts";
 
 const PROT = ["North Hill Terrace", "1234 North Hill Terrace NW", "0614321"];
@@ -229,5 +230,60 @@ describe("redactAnalysis", () => {
     const phrases = protectedPhrasesFor(minimalAnalysis().building);
     assert.ok(phrases.includes("North Hill Terrace"));
     assert.ok(phrases.includes("0614321"));
+  });
+});
+
+describe("toPublicAnalysis", () => {
+  it("replaces original quotes with redacted display versions", () => {
+    const verified = {
+      flags: [
+        {
+          evidence: [
+            {
+              quote: "moved by D. Whitfield",
+              quote_display: "moved by the President",
+            },
+          ],
+        },
+      ],
+      structured_facts: {
+        special_assessments: [
+          {
+            evidence: {
+              quote: "D. Whitfield voted yes",
+              quote_display: "the President voted yes",
+            },
+          },
+        ],
+        litigation: [],
+        rental_rules_evidence: null,
+      },
+    } as unknown as VerifiedAnalysis;
+    const pub = toPublicAnalysis(verified);
+    assert.equal(pub.flags[0].evidence[0].quote, "moved by the President");
+    assert.equal(
+      pub.structured_facts.special_assessments[0].evidence.quote,
+      "the President voted yes"
+    );
+    // quote_display itself survives
+    assert.equal(
+      pub.flags[0].evidence[0].quote_display,
+      "moved by the President"
+    );
+  });
+
+  it("falls back to quote when quote_display is absent (pre-redaction data)", () => {
+    const verified = {
+      flags: [
+        { evidence: [{ quote: "a plain historical quote" }] },
+      ],
+      structured_facts: {
+        special_assessments: [],
+        litigation: [],
+        rental_rules_evidence: null,
+      },
+    } as unknown as VerifiedAnalysis;
+    const pub = toPublicAnalysis(verified);
+    assert.equal(pub.flags[0].evidence[0].quote, "a plain historical quote");
   });
 });

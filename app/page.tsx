@@ -37,7 +37,7 @@ export default function LandingPage() {
             bylaws, meeting minutes — and expect you to spot the $8,500 special
             assessment buried on page 47. Professional document reviews
             typically cost $400–800 and take days. ClearCondo gives you a
-            verified red-flag report in about a minute.
+            verified red-flag report in a few minutes.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link

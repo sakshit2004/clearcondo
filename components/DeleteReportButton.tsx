@@ -39,7 +39,8 @@ export default function DeleteReportButton({ reportId }: { reportId: string }) {
     return (
       <div className="rounded-xl border border-teal-200 bg-teal-50 p-4 text-sm text-teal-900">
         Report deleted — the report, its flags, its documents, and the
-        extracted page text are gone.
+        extracted page text are gone. (If building memory is enabled, its
+        learned beliefs are removed on a best-effort basis.)
       </div>
     );
   }

@@ -596,7 +596,8 @@ export async function getPriorFlags(
 export function isStripeEnabled(): boolean {
   return (
     process.env.STRIPE_ENABLED === "true" &&
-    Boolean(process.env.STRIPE_SECRET_KEY)
+    // Test-mode only: a live key must never enable billing (see lib/stripe.ts).
+    (process.env.STRIPE_SECRET_KEY ?? "").startsWith("sk_test_")
   );
 }
 

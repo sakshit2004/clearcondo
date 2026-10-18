@@ -49,7 +49,9 @@ export default function PrivacyPage() {
             Open any report and use <strong>“Delete this report”</strong> at
             the bottom of the page. That permanently removes the report, its
             flags, its documents, and the extracted text. It cannot be
-            undone.
+            undone. One caveat: if building memory (Agent Memory) is enabled,
+            its learned beliefs about the building are removed on a
+            best-effort basis only — the service offers no guaranteed purge.
           </p>
         </section>
 
