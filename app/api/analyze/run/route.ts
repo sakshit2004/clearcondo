@@ -26,7 +26,15 @@ import { verifyAnalysis, type VerifiableDoc } from "@/lib/verify";
 import { rememberBuildingFacts } from "@/lib/agent-memory";
 import type { DocType } from "@/lib/report-schema";
 
-export const maxDuration = 120;
+/**
+ * Vercel Hobby (Fluid compute) allows up to 300s per function invocation.
+ * The Claude analysis call dominates this route: a 100-page text stack is
+ * ~35k input tokens + up to 5000 output tokens ≈ 90s estimated, and the
+ * worst case the upload caps allow (~180k tokens) is ~140s. 300s keeps
+ * comfortable headroom; the client surfaces a clear timeout error if the
+ * platform ever kills the invocation first.
+ */
+export const maxDuration = 300;
 
 interface RunDoc {
   fileId: string;
@@ -167,14 +175,14 @@ export async function POST(req: Request) {
       memoryContext,
     });
   } catch (err) {
+    // A timed-out analysis must never leave a stuck "processing" UI: the
+    // client maps code "timeout" to a clear message + retry.
+    const msg =
+      err instanceof Error ? err.message : "Analysis failed. Please try again.";
+    const timedOut = /timed out/i.test(msg);
     return NextResponse.json(
-      {
-        error:
-          err instanceof Error
-            ? err.message
-            : "Analysis failed. Please try again.",
-      },
-      { status: 502 }
+      { ...(timedOut ? { code: "timeout" as const } : {}), error: msg },
+      { status: timedOut ? 504 : 502 }
     );
   }
 

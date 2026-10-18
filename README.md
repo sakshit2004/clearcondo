@@ -13,10 +13,11 @@ SurrealDB building-memory layer where every analysis accumulates.
 ## Architecture
 
 ```
-Upload (PDFs)
+Upload (PDFs, 4 MB total — Vercel request-body cap)
   → /api/analyze/start → per-page text extraction (unpdf, server-side)
                          scanned/image-only PDFs → Claude native-PDF OCR
-                         transcription (per-page JSON, zod-validated)
+                         transcription in page-range chunks (10 pages/chunk,
+                         up to 4 concurrent, per-page JSON, zod-validated)
                          missing-documents check (Alberta resale checklist)
   → /api/analyze/run   → Claude Messages API, strict JSON contract
                          (flags + structured facts, file_id/page/verbatim
@@ -34,7 +35,10 @@ Upload (PDFs)
 
 - **Two-step pipeline** so the UI shows real progress (extracting → analyzing)
   and Vercel's serverless timeout is never a blank screen. Both analyze routes
-  set `maxDuration = 60`.
+  set `maxDuration = 300` (the Vercel Hobby/Fluid maximum). Claude calls carry
+  their own abort timeouts (analysis 240s, OCR chunk 120s — both env-tunable),
+  and timeouts surface as a clear "timed out, try again" state in the UI,
+  never a stuck spinner.
 - **Building memory (two layers):**
   1. **Deterministic tables** (this schema): buildings are deduped per user;
      every report's flags link to both their report *and* their building with
@@ -125,6 +129,44 @@ npm run build                # must pass before deploy
    `NEXT_PUBLIC_APP_URL` to your production URL.
 4. Deploy. The `proxy.ts` (Next 16's middleware convention) protects `/app/*`
    via Clerk; `/`, `/demo`, and `/api/stripe/webhook` stay public.
+
+### Vercel limits & measured budgets
+
+Platform limits (Vercel Hobby with Fluid compute, checked Oct 2026 —
+[changelog](https://vercel.com/changelog/higher-defaults-and-limits-for-vercel-functions-running-fluid-compute)):
+
+| Limit | Value | What we do about it |
+|---|---|---|
+| Function max duration | 300s (Hobby max) | Both analyze routes set `maxDuration = 300`; Claude calls abort earlier (240s analysis, 120s OCR chunk) so timeouts are ours, with clear errors |
+| Request/response body | 4.5 MB | Total upload capped at 4 MB in `/api/analyze/start` (clear 413 message); run-route JSON stays ~720 KB max |
+
+Measured on the demo stack (`node --experimental-strip-types scripts/measure-pipeline.mjs`;
+17 pages / 23.7k chars; Claude numbers are token-math estimates, no API key in CI):
+
+| Stage | Measured | 100-page text stack (extrapolated) |
+|---|---|---|
+| PDF text extraction | 24 ms/page | ~2.4s |
+| Evidence verification | 0.2 ms/quote | <0.1s |
+| Claude analysis (~35k in-tokens, 5k out) | — | ~90s (estimate) |
+| DB persist | — | <2s (assumed) |
+| **Total, sync** | — | **~93s vs 300s budget** |
+
+OCR transcription (scanned PDFs) is chunked: 10 pages/chunk, up to 4
+concurrent (`OCR_CHUNK_PAGES`, `OCR_MAX_CONCURRENCY`). A 100-page scan is
+~10 chunks ≈ 2–3 waves ≈ 3–4 min worst case — inside the 300s start-route
+budget. Beyond that, the route returns a clear timeout error, not a silent
+empty report.
+
+**Background-job verdict:** not needed. The whole synchronous pipeline fits
+in the 300s Hobby budget with margin for any stack the upload caps allow
+(≤12 files, ≤40 pages/file, ≤60k chars/doc). The upload caps — not a job
+queue — are the backpressure mechanism. If stacks grow beyond that later,
+revisit.
+
+**On timeout:** the UI shows "The analysis timed out — your files are fine"
+with a Try again button. No report is ever persisted half-finished: the run
+route verifies and persists atomically after the Claude call, so a killed
+invocation leaves nothing behind to confuse the user.
 
 ## SurrealDB schema
 

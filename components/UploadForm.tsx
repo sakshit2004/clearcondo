@@ -22,9 +22,46 @@ interface ApiError {
   checkoutUrl?: string;
 }
 
+/** Read a JSON body that may not be JSON (e.g. a platform 504 page). */
+async function readJsonSafe(res: Response): Promise<any | null> {
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Map an HTTP response to an ApiError. A platform timeout (Vercel kills the
+ * function at maxDuration) comes back as a non-JSON 504 — that must surface
+ * as a clear "timed out, try again", never a stuck spinner or blank screen.
+ */
+function toApiError(res: Response, json: any | null, fallback: string): ApiError {
+  if (json?.error) {
+    return {
+      error: json.error,
+      code: json.code,
+      checkoutUrl: json.checkoutUrl,
+    };
+  }
+  if (res.status === 504 || res.status === 408) {
+    return {
+      code: "timeout",
+      error:
+        "The request timed out — your files are fine. Please try again with fewer or smaller files.",
+    };
+  }
+  if (res.status === 413) {
+    return {
+      error: "The upload was too large. Please try fewer or smaller files.",
+    };
+  }
+  return { error: `${fallback} (HTTP ${res.status}). Please try again.` };
+}
+
 const STAGES: { id: Exclude<Stage, "idle" | "done" | "error">; label: string; hint: string }[] = [
   { id: "extracting", label: "Reading your PDFs", hint: "Extracting text from each document…" },
-  { id: "analyzing", label: "Analyzing with AI", hint: "Cross-referencing the stack for red flags. This takes about a minute." },
+  { id: "analyzing", label: "Analyzing with AI", hint: "Cross-referencing the stack for red flags. Usually about a minute; large stacks can take several." },
 ];
 
 export default function UploadForm({
@@ -106,8 +143,9 @@ export default function UploadForm({
         method: "POST",
         body: form,
       });
-      const startJson = await startRes.json();
-      if (!startRes.ok) throw { error: startJson.error || "Extraction failed", code: startJson.code };
+      const startJson = await readJsonSafe(startRes);
+      if (!startRes.ok)
+        throw toApiError(startRes, startJson, "Extraction failed");
 
       setFileStatuses(
         (startJson.docs ?? []).map((d: { filename: string; status: string }) => ({
@@ -130,13 +168,9 @@ export default function UploadForm({
           missing: startJson.missing ?? [],
         }),
       });
-      const runJson = await runRes.json();
+      const runJson = await readJsonSafe(runRes);
       if (!runRes.ok)
-        throw {
-          error: runJson.error || "Analysis failed",
-          code: runJson.code,
-          checkoutUrl: runJson.checkoutUrl,
-        };
+        throw toApiError(runRes, runJson, "Analysis failed");
 
       if (runJson.reportId) {
         router.push(`/app/reports/${shortId(runJson.reportId)}`);
@@ -277,7 +311,7 @@ export default function UploadForm({
           Drag &amp; drop PDFs here, or click to browse
         </div>
         <div className="text-sm text-stone-500">
-          Reserve fund study, bylaws, minutes, information statements — up to 12 files
+          Reserve fund study, bylaws, minutes, information statements — up to 12 files, 4&nbsp;MB total
         </div>
       </div>
 
@@ -433,6 +467,22 @@ export default function UploadForm({
               >
                 Buy a report credit
               </a>
+            </>
+          ) : error.code === "timeout" ? (
+            <>
+              <h3 className="font-semibold text-red-900 mb-1">
+                The analysis timed out
+              </h3>
+              <p className="text-sm text-red-800">{error.error}</p>
+              <button
+                onClick={() => {
+                  setStage("idle");
+                  setError(null);
+                }}
+                className="mt-3 text-sm font-semibold text-red-900 underline"
+              >
+                Try again
+              </button>
             </>
           ) : (
             <>

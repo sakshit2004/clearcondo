@@ -10,10 +10,21 @@ import { transcribeScannedPdf } from "@/lib/ocr";
 import { isAnthropicConfigured } from "@/lib/analyze";
 import { findMissingDocs } from "@/lib/doc-checklist";
 
-export const maxDuration = 60;
+/**
+ * Vercel Hobby (Fluid compute) allows up to 300s per function invocation.
+ * Extraction is fast, but the OCR fallback transcribes scanned PDFs via
+ * Claude and can take minutes on large scans — 60s would kill it.
+ */
+export const maxDuration = 300;
 
 const MAX_FILES = 12;
 const MAX_FILE_BYTES = 15 * 1024 * 1024;
+/**
+ * Vercel rejects request bodies over 4.5 MB with 413 before the handler
+ * runs. Cap total upload size below that so users get our clear error
+ * instead of a platform rejection.
+ */
+const MAX_TOTAL_BYTES = 4 * 1024 * 1024;
 
 export interface ExtractedPayload {
   fileId: string;
@@ -66,6 +77,15 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { error: `Too many files — the limit is ${MAX_FILES}.` },
       { status: 400 }
+    );
+  }
+  const totalBytes = files.reduce((n, f) => n + f.size, 0);
+  if (totalBytes > MAX_TOTAL_BYTES) {
+    return NextResponse.json(
+      {
+        error: `Those files total ${(totalBytes / 1024 / 1024).toFixed(1)} MB — the upload limit is 4 MB total. Try fewer or smaller files.`,
+      },
+      { status: 413 }
     );
   }
 

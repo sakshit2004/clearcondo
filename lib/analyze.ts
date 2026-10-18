@@ -8,6 +8,16 @@ export function isAnthropicConfigured(): boolean {
   return Boolean(process.env.ANTHROPIC_API_KEY);
 }
 
+/**
+ * Max time for one Claude analysis call. The run route gets 300s on Vercel
+ * Hobby; 240s leaves room for verification + persistence afterwards.
+ * Tunable via ANTHROPIC_TIMEOUT_MS.
+ */
+export function analysisTimeoutMs(): number {
+  const v = Number(process.env.ANTHROPIC_TIMEOUT_MS);
+  return Number.isFinite(v) && v > 0 ? Math.floor(v) : 240_000;
+}
+
 function getClient(): Anthropic {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) throw new Error("ANTHROPIC_API_KEY is not set");
@@ -154,12 +164,25 @@ async function callClaude(
   model: string,
   userPrompt: string
 ): Promise<string> {
-  const message = await client.messages.create({
-    model,
-    max_tokens: 5000,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content: userPrompt }],
-  });
+  let message;
+  try {
+    message = await client.messages.create(
+      {
+        model,
+        max_tokens: 5000,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: "user", content: userPrompt }],
+      },
+      { signal: AbortSignal.timeout(analysisTimeoutMs()) }
+    );
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error(
+        "The AI analysis timed out. Please try again with fewer or smaller files."
+      );
+    }
+    throw err;
+  }
 
   const text = message.content
     .filter((b) => b.type === "text")
