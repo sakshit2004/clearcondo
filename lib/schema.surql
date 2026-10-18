@@ -43,11 +43,18 @@ DEFINE INDEX IF NOT EXISTS building_dedupe ON TABLE building COLUMNS dedupe_key 
 
 DEFINE TABLE IF NOT EXISTS document SCHEMAFULL;
 DEFINE FIELD IF NOT EXISTS building ON TABLE document TYPE record<building>;
+-- Which analysis run produced this document. Lets "delete this report" remove
+-- exactly its own documents, and lets retention explain what each row was for.
+DEFINE FIELD IF NOT EXISTS report ON TABLE document TYPE option<record<report>> DEFAULT NONE;
 DEFINE FIELD IF NOT EXISTS filename ON TABLE document TYPE string;
 DEFINE FIELD IF NOT EXISTS doc_type ON TABLE document TYPE string;
 DEFINE FIELD IF NOT EXISTS page_count ON TABLE document TYPE int;
 DEFINE FIELD IF NOT EXISTS char_count ON TABLE document TYPE int;
 DEFINE FIELD IF NOT EXISTS status ON TABLE document TYPE string DEFAULT "extracted";
+-- Extracted page text, [{ page_number, text }]. Raw PDF bytes are never stored;
+-- this is the most sensitive bulk data we keep, and the retention cron deletes
+-- the whole document row (metadata + text) after RETENTION_DAYS.
+DEFINE FIELD IF NOT EXISTS pages ON TABLE document TYPE array<object> DEFAULT [];
 DEFINE FIELD IF NOT EXISTS owner_id ON TABLE document TYPE string;
 DEFINE FIELD IF NOT EXISTS created_at ON TABLE document TYPE datetime DEFAULT time::now();
 

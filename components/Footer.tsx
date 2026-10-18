@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Footer() {
   return (
     <footer className="border-t border-stone-200 bg-white">
@@ -6,7 +8,12 @@ export default function Footer() {
           ClearCondo summarizes condominium documents. It is not legal,
           financial, or real-estate advice.
         </p>
-        <p>Built for Build North 2026.</p>
+        <div className="flex items-center gap-4">
+          <Link href="/privacy" className="hover:text-stone-800 underline underline-offset-2">
+            Privacy
+          </Link>
+          <p>Built for Build North 2026.</p>
+        </div>
       </div>
     </footer>
   );

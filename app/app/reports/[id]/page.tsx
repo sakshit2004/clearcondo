@@ -3,6 +3,7 @@ import { getUserId, isClerkConfigured } from "@/lib/auth";
 import { withDb, getReport, getPreviousFactsSnapshot, isDbConfigured } from "@/lib/db";
 import { computeDeltas, type Delta } from "@/lib/deltas";
 import SetupNotice from "@/components/SetupNotice";
+import DeleteReportButton from "@/components/DeleteReportButton";
 import ReportView, { type ReportVM } from "@/components/ReportView";
 import type { VerifiedAnalysis, VerifiedStructuredFacts } from "@/lib/report-schema";
 
@@ -91,6 +92,9 @@ export default async function ReportDetailPage({
   return (
     <div className="max-w-4xl">
       <ReportView report={vm} />
+      <div className="mt-10 pt-6 border-t border-stone-200">
+        <DeleteReportButton reportId={id} />
+      </div>
     </div>
   );
 }

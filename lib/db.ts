@@ -9,6 +9,7 @@ import type {
   VerifiedEvidence,
   VerifiedStructuredFacts,
 } from "./report-schema";
+import type { PageText } from "./extract";
 
 /* ------------------------------------------------------------------ */
 /* Connection                                                          */
@@ -247,29 +248,42 @@ export async function upsertBuilding(
   return rid(created[0].id);
 }
 
+/**
+ * Persist one uploaded document: metadata + extracted page text, linked to
+ * both its building and the report (analysis run) that produced it.
+ * Raw PDF bytes are never stored — only the extracted text.
+ * Returns the document record id.
+ */
 export async function createDocument(
   db: Surreal,
   ownerId: string,
   buildingId: string,
-  meta: DocumentMeta
-): Promise<void> {
-  await q(
+  reportId: string,
+  meta: DocumentMeta,
+  pages: PageText[]
+): Promise<string> {
+  const created = await q<{ id: unknown }[]>(
     db,
     `CREATE document CONTENT {
-       building: type::thing($building), filename: $filename,
-       doc_type: $docType, page_count: $pages, char_count: $chars,
-       status: $status, owner_id: $owner
-     }`,
+       building: type::thing($building), report: type::thing($report),
+       filename: $filename, doc_type: $docType,
+       page_count: $pageCount, char_count: $chars,
+       status: $status, owner_id: $owner,
+       pages: $pageTexts
+     } RETURN id`,
     {
       building: buildingId,
+      report: reportId,
       filename: meta.filename,
       docType: meta.docType,
-      pages: meta.pageCount,
+      pageCount: meta.pageCount,
       chars: meta.charCount,
       status: meta.status,
       owner: ownerId,
+      pageTexts: pages.map((p) => ({ page_number: p.page, text: p.text })),
     }
   );
+  return rid(created[0].id);
 }
 
 export interface MissingDoc {
@@ -340,6 +354,83 @@ export async function persistAnalysis(
     );
   }
   return reportId;
+}
+
+/* ------------------------------------------------------------------ */
+/* Delete cascade                                                        */
+/* ------------------------------------------------------------------ */
+
+/** Minimal query surface for the delete cascade (real Surreal or test fake). */
+export interface CascadeDb {
+  query: (
+    sql: string,
+    params?: Record<string, unknown>
+  ) => Promise<unknown[]>;
+}
+
+export interface DeleteCascadeResult {
+  buildingId: string;
+  buildingDeleted: boolean;
+}
+
+/**
+ * Delete a report and everything that analysis run produced: its flags, its
+ * documents (metadata + extracted page text), and the report row itself.
+ *
+ * If the building has no remaining reports afterwards, the building shell is
+ * removed too — an empty building is cruft, and future uploads re-create it
+ * via the normal dedupe path. Returns null when the report doesn't exist or
+ * isn't owned by the user.
+ *
+ * Agent Memory beliefs are NOT removed here — the hosted service only offers
+ * semantic forget, so that happens best-effort via forgetReportBeliefs in
+ * lib/agent-memory.ts (documented limitation in lib/retention.ts).
+ */
+export async function deleteReportCascade(
+  db: CascadeDb,
+  ownerId: string,
+  reportId: string
+): Promise<DeleteCascadeResult | null> {
+  const first = async <T>(
+    sql: string,
+    params: Record<string, unknown>
+  ): Promise<T[]> => {
+    const res = await db.query(sql, params);
+    return ((res[0] ?? []) as T[]);
+  };
+  const reports = await first<{ id: unknown; building: unknown }>(
+    "SELECT id, building FROM report WHERE id = type::thing($id) AND owner_id = $owner LIMIT 1",
+    { id: reportId, owner: ownerId }
+  );
+  if (reports.length === 0) return null;
+  const buildingId = String(reports[0].building);
+  const scope = { id: reportId, owner: ownerId };
+  // Order matters: children first, then the report row.
+  await db.query(
+    "DELETE flag WHERE report = type::thing($id) AND owner_id = $owner",
+    scope
+  );
+  await db.query(
+    "DELETE document WHERE report = type::thing($id) AND owner_id = $owner",
+    scope
+  );
+  await db.query(
+    "DELETE report WHERE id = type::thing($id) AND owner_id = $owner",
+    scope
+  );
+  const remaining = await first<{ id: unknown }>(
+    "SELECT id FROM report WHERE building = type::thing($building) AND owner_id = $owner LIMIT 1",
+    { building: buildingId, owner: ownerId }
+  );
+  let buildingDeleted = false;
+  if (remaining.length === 0) {
+    await db.query(
+      "DELETE building WHERE id = type::thing($building) AND owner_id = $owner",
+      { building: buildingId, owner: ownerId }
+    );
+    buildingDeleted = true;
+  }
+  return { buildingId, buildingDeleted };
 }
 
 /* ------------------------------------------------------------------ */

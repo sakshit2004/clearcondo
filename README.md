@@ -198,6 +198,40 @@ invocation leaves nothing behind to confuse the user.
 | `GET /api/checkout` | ✓ | Stripe Checkout (flag-gated) |
 | `POST /api/stripe/webhook` | — | Credit fulfillment |
 | `GET /api/me/credits` | ✓ | Credit balance |
+| `DELETE /api/reports/[id]` | ✓ | Delete report + flags + documents (+ best-effort Agent Memory forget) |
+| `GET /api/retention/cleanup` | cron secret | Daily retention cleanup (Vercel Cron) |
+| `/privacy` | — | Plain-language privacy & retention note |
+
+## Privacy & data retention
+
+The full policy lives in one place: `lib/retention.ts` (the `RETENTION_POLICY`
+table). Summary:
+
+| Data | Retention | Why |
+|------|-----------|-----|
+| Raw PDF bytes | Never stored (memory only during extraction) | Minimizes sensitive data at rest |
+| Extracted page text + document rows | Auto-deleted after `RETENTION_DAYS` (default 30) via daily Vercel Cron → `GET /api/retention/cleanup` (authorized by `CRON_SECRET`) | Bulk sensitive text; only needed for the verification audit window |
+| Report shell (summary, flags, facts, verification stats) | Kept until the user deletes the report | The deliverable; never auto-deleted |
+| Flags + evidence quotes | Kept with the report | Short excerpts the user already saw |
+| Building row | Kept until its last report is deleted | Dedupe anchor; removed when empty |
+| Agent Memory beliefs (hosted service) | Best-effort semantic forget on report delete; no auto-delete | The service exposes no bulk age-based purge (documented limitation) |
+
+User-facing controls:
+
+- **Upload consent:** required checkbox on the upload form ("I confirm I have
+  the right to upload these documents…"), enforced client-side and
+  server-side in both analyze routes (400 without it).
+- **Delete this report:** bottom of every report page — two-step confirm,
+  removes the report, its flags, its documents (metadata + page text), and
+  the building shell when it was the last report. Clear success state, then
+  redirects to the dashboard.
+- **Privacy note:** `/privacy` page, linked from the footer, the landing
+  page's "Your documents, your control" section, and the upload form.
+
+Env vars: `RETENTION_DAYS` (default 30, max 3650, invalid values fall back to
+the default), `CRON_SECRET` (generate with `openssl rand -hex 32`; Vercel
+sends it as `Authorization: Bearer <CRON_SECRET>` on cron requests — the
+route fails closed when unset).
 
 ## Prior work disclosure (for Devpost)
 

@@ -9,6 +9,7 @@ import {
 import { transcribeScannedPdf } from "@/lib/ocr";
 import { isAnthropicConfigured } from "@/lib/analyze";
 import { findMissingDocs } from "@/lib/doc-checklist";
+import { hasUploadConsent } from "@/lib/retention";
 
 /**
  * Vercel Hobby (Fluid compute) allows up to 300s per function invocation.
@@ -66,6 +67,13 @@ export async function POST(req: Request) {
 
   const files = form.getAll("files").filter((f): f is File => f instanceof File);
   const buildingNameHint = (form.get("buildingName") as string | null)?.trim() || null;
+
+  if (!hasUploadConsent(form.get("consent"))) {
+    return NextResponse.json(
+      { error: "Upload consent is required. Please check the consent box and try again." },
+      { status: 400 }
+    );
+  }
 
   if (files.length === 0) {
     return NextResponse.json(

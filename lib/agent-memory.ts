@@ -222,6 +222,46 @@ export async function rememberBuildingFacts(
 }
 
 /* ------------------------------------------------------------------ */
+/* Forget: best-effort removal of one report's beliefs                 */
+/* ------------------------------------------------------------------ */
+
+export interface ForgetResult {
+  ok: boolean;
+  skipped?: "unconfigured" | "error";
+}
+
+/**
+ * Best-effort removal of one analysis run's beliefs from Agent Memory.
+ * The hosted service only offers *semantic* forget (POST /forget matches
+ * memories by similarity and soft-deletes them) — there is no hard-delete or
+ * bulk age-based purge, which is why auto-retention does not cover beliefs
+ * (documented in lib/retention.ts). The query names the building record and
+ * document date to scope the match; other reports' facts should survive, but
+ * this is approximate by nature. Never throws.
+ */
+export async function forgetReportBeliefs(
+  opts: {
+    ownerId: string;
+    buildingRecordId: string;
+    docDate?: string | null;
+  },
+  fetchImpl?: typeof fetch
+): Promise<ForgetResult> {
+  const client = createClient(fetchImpl);
+  if (!client) return { ok: false, skipped: "unconfigured" };
+  try {
+    await client.forget(
+      `Forget all facts remembered from the ClearCondo condominium document analysis for building record ${opts.buildingRecordId}${
+        opts.docDate ? ` with document date ${opts.docDate}` : ""
+      }.`
+    );
+    return { ok: true };
+  } catch {
+    return { ok: false, skipped: "error" };
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* Recall: what Agent Memory believes about a building                 */
 /* ------------------------------------------------------------------ */
 

@@ -85,6 +85,7 @@ export default function UploadForm({
   const [warnings, setWarnings] = useState<string[]>([]);
   const [candidates, setCandidates] = useState<BuildingCandidate[]>([]);
   const [buildingId, setBuildingId] = useState<string | null>(null);
+  const [consent, setConsent] = useState(false);
   const [missing, setMissing] = useState<
     { id: string; label: string; askFor: string }[]
   >([]);
@@ -127,7 +128,7 @@ export default function UploadForm({
   };
 
   async function run() {
-    if (files.length === 0) return;
+    if (files.length === 0 || !consent) return;
     setStage("extracting");
     setError(null);
     setEphemeral(null);
@@ -139,6 +140,7 @@ export default function UploadForm({
       const form = new FormData();
       files.forEach((f) => form.append("files", f));
       form.append("buildingName", buildingName);
+      form.append("consent", "true");
       const startRes = await fetch("/api/analyze/start", {
         method: "POST",
         body: form,
@@ -166,6 +168,7 @@ export default function UploadForm({
           buildingNameHint: startJson.buildingNameHint,
           buildingId,
           missing: startJson.missing ?? [],
+          consent,
         }),
       });
       const runJson = await readJsonSafe(runRes);
@@ -504,10 +507,36 @@ export default function UploadForm({
         </div>
       )}
 
+      <label className="mt-6 flex items-start gap-3 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={consent}
+          onChange={(e) => setConsent(e.target.checked)}
+          disabled={busy}
+          className="mt-1 w-4 h-4 flex-none accent-teal-800"
+        />
+        <span className="text-sm text-stone-600">
+          I confirm I have the right to upload these documents and I
+          understand they will be processed to generate my report and stored
+          per the retention policy.{" "}
+          <Link
+            href="/privacy"
+            className="underline underline-offset-2 text-stone-800"
+          >
+            Privacy note
+          </Link>
+        </span>
+      </label>
+      <p className="text-xs text-stone-500 mt-2">
+        PDFs are read in memory and never stored as files. Extracted text and
+        document details auto-delete after 30 days; your report stays until
+        you delete it.
+      </p>
+
       <button
         onClick={run}
-        disabled={busy || files.length === 0}
-        className="mt-6 w-full bg-teal-800 hover:bg-teal-900 disabled:bg-stone-300 disabled:cursor-not-allowed text-white px-6 py-3.5 rounded-lg font-semibold"
+        disabled={busy || files.length === 0 || !consent}
+        className="mt-4 w-full bg-teal-800 hover:bg-teal-900 disabled:bg-stone-300 disabled:cursor-not-allowed text-white px-6 py-3.5 rounded-lg font-semibold"
       >
         {stage === "extracting"
           ? "Reading PDFs…"

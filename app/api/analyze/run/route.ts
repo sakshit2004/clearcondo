@@ -24,6 +24,7 @@ import {
 } from "@/lib/extract";
 import { verifyAnalysis, type VerifiableDoc } from "@/lib/verify";
 import { rememberBuildingFacts } from "@/lib/agent-memory";
+import { hasUploadConsent } from "@/lib/retention";
 import type { DocType } from "@/lib/report-schema";
 
 /**
@@ -74,11 +75,17 @@ export async function POST(req: Request) {
     );
   }
 
-  let body: { docs?: RunDoc[]; buildingNameHint?: string | null; buildingId?: string | null; missing?: { id: string; label: string; askFor: string }[] };
+  let body: { docs?: RunDoc[]; buildingNameHint?: string | null; buildingId?: string | null; missing?: { id: string; label: string; askFor: string }[]; consent?: unknown };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
+  if (!hasUploadConsent(body.consent)) {
+    return NextResponse.json(
+      { error: "Upload consent is required." },
+      { status: 400 }
+    );
   }
   // buildingId is the short id (after "building:"); re-qualify it.
   const chosenBuildingId = body.buildingId
@@ -209,15 +216,6 @@ export async function POST(req: Request) {
         const deltas: Delta[] = prev
           ? computeDeltas(prev.snapshot, verified.structured_facts)
           : [];
-        for (const d of docs) {
-          await createDocument(db, userId, buildingId, {
-            filename: d.filename,
-            docType: d.docType as DocType,
-            pageCount: d.pageCount,
-            charCount: d.charCount,
-            status: d.status,
-          });
-        }
         const rid = await persistAnalysis(
           db,
           userId,
@@ -226,6 +224,25 @@ export async function POST(req: Request) {
           result.model,
           missing
         );
+        // Documents are created after the report so each row links to the
+        // analysis run that produced it. Raw PDF bytes are never stored —
+        // only metadata + extracted page text (see retention policy).
+        for (const d of docs) {
+          await createDocument(
+            db,
+            userId,
+            buildingId,
+            rid,
+            {
+              filename: d.filename,
+              docType: d.docType as DocType,
+              pageCount: d.pageCount,
+              charCount: d.charCount,
+              status: d.status,
+            },
+            d.pages
+          );
+        }
         if (stripeOn) await spendCredit(db, userId);
         // Dual-write to SurrealDB Agent Memory: the verified facts are
         // remembered as beliefs the service extracts, reconciles, and

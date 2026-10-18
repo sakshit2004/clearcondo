@@ -185,6 +185,30 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Privacy */}
+      <section className="border-t border-stone-200">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-14">
+          <div className="max-w-3xl">
+            <h2 className="text-2xl font-bold text-stone-900 mb-4">
+              Your documents, your control.
+            </h2>
+            <p className="text-stone-600 leading-relaxed mb-4">
+              Your PDFs are read in memory and never stored as files. We keep
+              the extracted text and document details for 30 days, then delete
+              them automatically. Your report stays until you delete it — and
+              “Delete this report” on any report page removes it, its
+              documents, and the extracted text, permanently.
+            </p>
+            <Link
+              href="/privacy"
+              className="text-sm font-semibold text-teal-800 hover:text-teal-900"
+            >
+              Read the privacy note →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="mx-auto max-w-6xl px-4 sm:px-6 py-16 text-center">
         <h2 className="text-3xl font-bold text-stone-900 mb-4">
