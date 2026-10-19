@@ -19,8 +19,11 @@ test("landing page loads with 200 and no console errors", async ({ page }) => {
   const resp = await page.goto(BASE + "/", { waitUntil: "networkidle" });
   expect(resp?.status()).toBe(200);
   await expect(page).toHaveTitle(/ClearCondo/);
-  // Brand + primary CTAs visible
-  await expect(page.getByRole("link", { name: /sample report/i })).toBeVisible();
+  // Brand + primary CTAs visible (exact name: the hero also has a
+  // "See a sample report" link, so a fuzzy match hits two elements)
+  await expect(
+    page.getByRole("link", { name: "Sample report", exact: true })
+  ).toBeVisible();
   expect(errors).toEqual([]);
 });
 
