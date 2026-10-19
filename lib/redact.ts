@@ -7,16 +7,21 @@
  * them server-side, BEFORE verification and persistence, so the database,
  * the UI, and Agent Memory only ever hold redacted text.
  *
- * HOW IT WORKS (two passes)
+ * HOW IT WORKS (three passes)
  *  Pass 1 — stash protected spans behind placeholders (case-insensitive):
  *           caller-supplied phrases (building name, address, corp id),
  *           "Condominium Corporation No. X" phrases.
  *  Pass 2 — case-SENSITIVE name redaction (the `i` flag is deliberately
  *           absent: `[A-Z]` must not match lowercase, otherwise ordinary
  *           prose like "the president called" would be destroyed):
- *           role-annotated names -> role display, initial+surname and
- *           surviving "Firstname Lastname" bigrams -> "[name redacted]",
- *           with company/structural guards.
+ *           emails -> "[name redacted]"; titled names ("Dr. D. Whitfield")
+ *           -> "[name redacted]"; role-annotated names -> role display;
+ *           initial+surname ("J. Park", "J Park"), "LAST, First"
+ *           ("Whitfield, Daryl"), ALL-CAPS bigrams ("DARYL WHITFIELD",
+ *           guarded by a structural denylist), and surviving
+ *           "Firstname Lastname" bigrams/trigrams -> "[name redacted]",
+ *           with company/structural guards. Trailing possessives
+ *           ("Whitfield's") are redacted with the name.
  *  Pass 3 — restore the stashed spans verbatim.
  *
  * HEURISTIC TRADEOFFS (documented honestly)
@@ -25,19 +30,27 @@
  *   leaked real name is a privacy failure.
  * - Catches: role-annotated names ("D. Whitfield (President)",
  *   "Maya Chen, Property Manager", "President D. Whitfield"),
- *   initial+surname ("J. Park", "R. Alvarez"), and bare
- *   "Firstname Lastname" bigrams that survive the guards.
+ *   initial+surname ("J. Park", "R. Alvarez", "J Park"), "LAST, First",
+ *   ALL-CAPS bigrams, titled names ("Dr. Whitfield"), hyphenated and
+ *   apostrophe names ("Mary-Jane Watson", "O'Brien"), names with
+ *   diacritics ("José García"), possessives ("Whitfield's"), email
+ *   addresses, and bare "Firstname Lastname" bigrams/trigrams that
+ *   survive the guards.
  * - NEVER redacted: building names / addresses / corp numbers (caller
  *   phrases + CORP_RE), company names (a capitalized run whose last or
  *   next word is a company keyword: Ltd/Inc/Engineering/Management…),
  *   unit references ("Unit 1204" — digits never match the name patterns),
  *   dollar amounts, dates, percentages (no pattern matches them).
- * - Known limits: three-word names may leave a stray first word
- *   ("Mary [name redacted]"); hyphenated surnames match the first
- *   segment only; all-caps headers are skipped deliberately (structural,
- *   not personal references); a structural bigram on the denylist that
- *   happens to be someone's name will be missed; quoted person names ARE
- *   redacted (only the caller phrases are protected, not quotes).
+ * - Known limits: first-name-only mentions ("Daryl said…"), all-lowercase
+ *   names, and surname-alone mentions cannot be told apart from ordinary
+ *   prose and are NOT redacted; 2-letter ALL-CAPS words ("AL BO") are
+ *   skipped to protect boilerplate like "BE IT"; an ALL-CAPS bigram whose
+ *   words are both absent from the structural/boilerplate denylist is
+ *   redacted even if it is not a name (documented over-redaction bias);
+ *   "City, Province" pairs ("Toronto, Ontario") match the LAST,FIRST
+ *   pattern and are redacted — building addresses are protected phrases,
+ *   but stray ones in prose are not; quoted person names ARE redacted
+ *   (only the caller phrases are protected, not quotes).
  */
 
 import type { Analysis, VerifiedAnalysis } from "./report-schema";
@@ -114,15 +127,112 @@ const STRUCTURAL_BIGRAMS = new Set([
   "north hill",
 ]);
 
+/**
+ * Single ALL-CAPS words that mark a bigram as document structure or
+ * motion boilerplate, not a person. Compared lowercased; either word
+ * matching keeps the bigram. Calibrated against real minutes vocabulary:
+ * headers ("MEETING MINUTES"), motion language ("BE IT RESOLVED THAT",
+ * "MOVED BY", "SECONDED", "CARRIED"), and the company-keyword list.
+ */
+const STRUCTURAL_ALLCAPS_WORDS = new Set([
+  "meeting",
+  "meetings",
+  "minutes",
+  "board",
+  "annual",
+  "general",
+  "financial",
+  "statement",
+  "statements",
+  "reserve",
+  "fund",
+  "funds",
+  "special",
+  "assessment",
+  "assessments",
+  "condominium",
+  "corporation",
+  "information",
+  "building",
+  "envelope",
+  "parkade",
+  "membrane",
+  "action",
+  "items",
+  "business",
+  "budget",
+  "budgets",
+  "report",
+  "reports",
+  "member",
+  "members",
+  "old",
+  "new",
+  "property",
+  "manager",
+  "management",
+  "sample",
+  "document",
+  "documents",
+  "demo",
+  "data",
+  // Motion / boilerplate vocabulary.
+  "resolved",
+  "resolution",
+  "moved",
+  "mover",
+  "seconded",
+  "seconder",
+  "carried",
+  "adopted",
+  "approved",
+  "whereas",
+  "therefore",
+  "that",
+  "this",
+  "with",
+  "from",
+  "for",
+  "and",
+  "the",
+  "not",
+  "yet",
+  "all",
+  "any",
+  "are",
+  "was",
+  "were",
+  "has",
+  "have",
+  "will",
+  "shall",
+  "per",
+  "via",
+  ...COMPANY_KEYWORDS,
+]);
+
 /* ------------------------------------------------------------------ */
 /* Patterns                                                            */
 /* ------------------------------------------------------------------ */
 
-// A capitalized word that is NOT all-caps ("MINUTES" must not match).
-// Allows internal capitals for names like "McDonald".
-const WORD = String.raw`[A-Z][a-z]+(?:[A-Z][a-z]+)*`;
-// A person-name candidate: "D. Whitfield" or "Maya Chen".
-const PERSON = String.raw`(?:[A-Z]\.\s*${WORD}|${WORD}\s+${WORD})`;
+// A capitalized word, Unicode-aware ("José", "García"), allowing internal
+// capitals ("McDonald") and hyphen/apostrophe joins ("O'Brien",
+// "Mary-Jane", "Jean-Pierre"). A lone capital ("O", "I") also matches —
+// the bare-name guards decide its fate, and the module prefers
+// over-redaction to a leaked name.
+const WORD = String.raw`\p{Lu}\p{Ll}*(?:['\u2019-]?\p{Lu}\p{Ll}*)*`;
+// A person-name candidate: "D. Whitfield", "J Park", "Maya Chen",
+// or a three-word name ("Mary Jane Watson").
+const PERSON = String.raw`(?:\p{Lu}\.?\s*${WORD}|${WORD}(?:\s+${WORD}){1,2})`;
+// Honorifics: "Dr. Daryl Whitfield", "Mr. Park" (the title is dropped
+// with the name).
+const TITLE = String.raw`(?:Dr|Mr|Mrs|Ms|Miss)\.`;
+// An ALL-CAPS word ("DARYL", "WHITFIELD"). Only matched as a bigram, and
+// only when neither word is structural/boilerplate — headers like
+// "MEETING MINUTES" and motion text like "BE IT RESOLVED THAT" must
+// survive. Minimum 3 letters: 2-letter words are overwhelmingly
+// initials, abbreviations ("ST", "NW"), or boilerplate ("BE", "IT").
+const ACAP = String.raw`\p{Lu}{3,}(?:['\u2019-]\p{Lu}+)*`;
 const CORP_RE = String.raw`Condominium Corporation No\.?\s*[\d-]+`;
 
 function escapeRegExp(s: string): string {
@@ -206,43 +316,102 @@ export function redactText(
   });
 
   // ---- Pass 2: redact names (CASE-SENSITIVE by design — see header).
+  // The `u` flag enables the Unicode property escapes in WORD/PERSON/ACAP.
+  // Emails go first: they are contact PII even when they contain no
+  // space-separated name ("d.whitfield@example.com").
+  const noEmails = staged.replace(
+    /[\p{L}\p{N}._%+-]+@[\p{L}\p{N}.-]+\.[\p{L}]{2,}/gu,
+    REDACTED_NAME
+  );
+
   const nameRe = new RegExp(
     [
+      // "Dr. Daryl Whitfield" / "Mr. Park" — title dropped with the name.
+      `(?<titled>${TITLE}\\s*(?:${PERSON}|${WORD}))`,
       // "D. Whitfield (President)" / "Hartley Engineering (August 2026)"
       `(?<roleParen>(?<rpName>${PERSON})\\s*\\((?<rpRole>[^)]{1,40})\\))`,
       // "Maya Chen, Property Manager" / "J. Park, Secretary"
       `(?<roleComma>(?<rcName>${PERSON}),\\s*(?<rcRole>[A-Z][a-z]+(?:\\s+[A-Z][a-z]+){0,2}))`,
       // "President D. Whitfield"
       `(?<roleLead>(?<rlRole>[A-Z][a-z]+(?:\\s+[A-Z][a-z]+)?)\\s+(?<rlName>${PERSON}))`,
-      `(?<bare>${PERSON})`,
+      // "Whitfield, Daryl" (attendance-list style)
+      `(?<commaName>(?<cnFirst>${WORD}),\\s*(?<cnLast>${WORD}))`,
+      // "DARYL WHITFIELD" (all-caps sign-offs)
+      `(?<allCaps>(?<acFirst>${ACAP})\\s+(?<acLast>${ACAP}))`,
+      // "Maya Chen" / "J. Park" / "J Park" / "Whitfield's"
+      `(?<bare>${PERSON})(?<poss>'s|\\u2019s)?`,
     ].join("|"),
-    "g"
+    "gu"
   );
 
-  const redacted = staged.replace(nameRe, (...args: unknown[]): string => {
-    const groups = args[args.length - 1] as Record<string, string | undefined>;
-    if (groups.roleParen) {
-      const disp = roleDisplay(groups.rpRole ?? "");
-      if (disp) return disp;
-      // Unknown parenthetical ("Hartley Engineering (August 2026)"):
-      // still screen the name part through the bare-name guards.
-      return `${redactBareName(groups.rpName ?? "")} (${groups.rpRole})`;
+  const redacted = noEmails.replace(
+    nameRe,
+    (...args: unknown[]): string => {
+      const groups = args[args.length - 1] as Record<
+        string,
+        string | undefined
+      >;
+      const full = args[0] as string;
+      if (groups.titled) return REDACTED_NAME;
+      if (groups.roleParen) {
+        const disp = roleDisplay(groups.rpRole ?? "");
+        if (disp) return disp;
+        // Unknown parenthetical ("Hartley Engineering (August 2026)"):
+        // still screen the name part through the bare-name guards.
+        return `${redactBareName(groups.rpName ?? "")} (${groups.rpRole})`;
+      }
+      if (groups.roleComma) {
+        const disp = roleDisplay(groups.rcRole ?? "");
+        if (disp) return disp;
+        return `${redactBareName(groups.rcName ?? "")}, ${groups.rcRole}`;
+      }
+      if (groups.roleLead) {
+        const disp = roleDisplay(groups.rlRole ?? "");
+        if (disp) return disp;
+        // Unrecognized leading word. It may be the first word of a
+        // three-word name ("Mary Jane Watson" split as lead "Mary" +
+        // "Jane Watson"), so screen the whole span first: when the guards
+        // don't keep it, the entire span is one name. Otherwise keep the
+        // lead word ("Ask Maya Chen", "Board Meeting Minutes") and screen
+        // just the name part through the bare guards.
+        const combined = `${groups.rlRole} ${groups.rlName ?? ""}`;
+        if (redactBareName(combined) === REDACTED_NAME) return REDACTED_NAME;
+        return `${groups.rlRole} ${redactBareName(groups.rlName ?? "")}`;
+      }
+      if (groups.commaName) {
+        // "SECONDED"/"MOVED" etc. after a comma are motion language, not a
+        // first name ("D. Whitfield, SECONDED BY …").
+        const w1 = (groups.cnFirst ?? "").toLowerCase();
+        const w2 = (groups.cnLast ?? "").toLowerCase();
+        if (STRUCTURAL_ALLCAPS_WORDS.has(w1) || STRUCTURAL_ALLCAPS_WORDS.has(w2)) {
+          return full;
+        }
+        const pair = `${groups.cnFirst} ${groups.cnLast}`;
+        // Kept: return the original span (comma included), not the
+        // guard-screened pair.
+        return redactBareName(pair) === REDACTED_NAME ? REDACTED_NAME : full;
+      }
+      if (groups.allCaps) {
+        const w1 = (groups.acFirst ?? "").toLowerCase();
+        const w2 = (groups.acLast ?? "").toLowerCase();
+        if (
+          STRUCTURAL_ALLCAPS_WORDS.has(w1) ||
+          STRUCTURAL_ALLCAPS_WORDS.has(w2)
+        ) {
+          return full;
+        }
+        return REDACTED_NAME;
+      }
+      if (groups.bare) {
+        // The possessive was screened out of the guards; a kept name gets
+        // its "'s" back via the original span.
+        return redactBareName(groups.bare) === REDACTED_NAME
+          ? REDACTED_NAME
+          : full;
+      }
+      return full;
     }
-    if (groups.roleComma) {
-      const disp = roleDisplay(groups.rcRole ?? "");
-      if (disp) return disp;
-      return `${redactBareName(groups.rcName ?? "")}, ${groups.rcRole}`;
-    }
-    if (groups.roleLead) {
-      const disp = roleDisplay(groups.rlRole ?? "");
-      if (disp) return disp;
-      // Unrecognized leading word ("Ask Maya Chen", "Board Meeting Minutes"):
-      // keep the lead word, screen the name part through the bare guards.
-      return `${groups.rlRole} ${redactBareName(groups.rlName ?? "")}`;
-    }
-    if (groups.bare) return redactBareName(groups.bare);
-    return args[0] as string;
-  });
+  );
 
   // ---- Pass 3: restore protected spans verbatim.
   return redacted.replace(/\u0001PROT(\d+)\u0001/g, (_, i) => stash[Number(i)]);

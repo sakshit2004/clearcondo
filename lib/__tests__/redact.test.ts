@@ -111,6 +111,108 @@ describe("redactText — never-redact list", () => {
   });
 });
 
+describe("redactText — hardened formats (adversarial probe follow-up)", () => {
+  it("redacts LAST, FIRST attendance-list style", () => {
+    const out = redactText("Attendees: Whitfield, Daryl; Chen, Maya.", PROT);
+    assert.equal(out, `Attendees: ${REDACTED_NAME}; ${REDACTED_NAME}.`);
+  });
+
+  it("redacts ALL-CAPS names but keeps headers and motion boilerplate", () => {
+    assert.equal(
+      redactText("DARYL WHITFIELD seconded the motion.", PROT),
+      `${REDACTED_NAME} seconded the motion.`
+    );
+    assert.equal(
+      redactText("MEETING MINUTES — September 9, 2026.", PROT),
+      "MEETING MINUTES — September 9, 2026."
+    );
+    assert.equal(
+      redactText("BE IT RESOLVED THAT a special assessment be levied.", PROT),
+      "BE IT RESOLVED THAT a special assessment be levied."
+    );
+    // Names redacted, motion boilerplate untouched.
+    assert.equal(
+      redactText("MOVED BY D. Whitfield, SECONDED BY J. Park, CARRIED.", PROT),
+      `MOVED BY ${REDACTED_NAME}, SECONDED BY ${REDACTED_NAME}, CARRIED.`
+    );
+  });
+
+  it("redacts apostrophe, hyphenated, and diacritic names", () => {
+    assert.equal(
+      redactText("Daryl O'Brien raised the parkade issue.", PROT),
+      `${REDACTED_NAME} raised the parkade issue.`
+    );
+    assert.equal(
+      redactText("D. O'Brien seconded.", PROT),
+      `${REDACTED_NAME} seconded.`
+    );
+    assert.equal(
+      redactText("Mary-Jane Watson voted against.", PROT),
+      `${REDACTED_NAME} voted against.`
+    );
+    assert.equal(
+      redactText("José García asked about insurance.", PROT),
+      `${REDACTED_NAME} asked about insurance.`
+    );
+  });
+
+  it("redacts initials without a dot", () => {
+    assert.equal(
+      redactText("Seconded by J Park.", PROT),
+      `Seconded by ${REDACTED_NAME}.`
+    );
+  });
+
+  it("redacts possessives with the name", () => {
+    assert.equal(
+      redactText("Daryl Whitfield's motion carried unanimously.", PROT),
+      `${REDACTED_NAME} motion carried unanimously.`
+    );
+  });
+
+  it("documents the surname-alone limit (possessive included)", () => {
+    // A lone surname cannot be told apart from prose ("Whitfield" could be
+    // a street), so it — and its possessive — are deliberately left alone.
+    const s = "Whitfield's street is nearby.";
+    assert.equal(redactText(s, PROT), s);
+  });
+
+  it("redacts email addresses", () => {
+    assert.equal(
+      redactText("Contact daryl.whitfield@example.com for details.", PROT),
+      `Contact ${REDACTED_NAME} for details.`
+    );
+  });
+
+  it("redacts titled names, dropping the title", () => {
+    assert.equal(
+      redactText("Dr. Daryl Whitfield presented the study.", PROT),
+      `${REDACTED_NAME} presented the study.`
+    );
+    assert.equal(
+      redactText("Mr. Park certified the minutes.", PROT),
+      `${REDACTED_NAME} certified the minutes.`
+    );
+  });
+
+  it("redacts three-word names whole", () => {
+    assert.equal(
+      redactText("Mary Jane Watson attended as observer.", PROT),
+      `${REDACTED_NAME} attended as observer.`
+    );
+  });
+
+  it("still keeps companies, units, money, and dates", () => {
+    for (const s of [
+      "Hartley Engineering (August 2026) delivered the report.",
+      "Unit 1204 filed another complaint.",
+      "The deductible is $100,000 after the June 2024 hail claim.",
+    ]) {
+      assert.equal(redactText(s, PROT), s, `mangled: ${s}`);
+    }
+  });
+});
+
 function minimalAnalysis(): Analysis {
   return {
     building: {
