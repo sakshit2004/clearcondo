@@ -83,7 +83,8 @@ npm run build                # must pass before deploy
 
 ### 2. Anthropic (AI analysis) — required for real analyses
 1. https://console.anthropic.com → API Keys → create key → `ANTHROPIC_API_KEY`.
-2. Optional: `ANTHROPIC_MODEL` (default `claude-sonnet-4-5-20250929`).
+2. Optional: `ANTHROPIC_MODEL` (default `claude-sonnet-5-5`; adaptive
+   thinking on by default, billed as output).
 3. The user holds their own key (incl. the $100 hackathon credit) — paste it
    into the deploy environment, never into chat or code.
 
@@ -138,35 +139,48 @@ Platform limits (Vercel Hobby with Fluid compute, checked Oct 2026 —
 | Limit | Value | What we do about it |
 |---|---|---|
 | Function max duration | 300s (Hobby max) | Both analyze routes set `maxDuration = 300`; Claude calls abort earlier (240s analysis, 120s OCR chunk) so timeouts are ours, with clear errors |
-| Request/response body | 4.5 MB | Total upload capped at 4 MB in `/api/analyze/start` (clear 413 message); run-route JSON stays ~720 KB max |
+| Request/response body | 4.5 MB | Total upload capped at 4 MB in `/api/analyze/start` (clear 413 message); run-route responses are bounded by the 1200-page payload cap |
 
 Measured on the demo stack (`node --experimental-strip-types scripts/measure-pipeline.mjs`;
 17 pages / 23.7k chars; Claude numbers are token-math estimates, no API key in CI):
 
-| Stage | Measured | 100-page text stack (extrapolated) |
+| Stage | Measured | 100-page text stack (150k chars, extrapolated) |
 |---|---|---|
 | PDF text extraction | 24 ms/page | ~2.4s |
 | Evidence verification | 0.2 ms/quote | <0.1s |
-| Claude analysis (~35k in-tokens, 5k out) | — | ~90s (estimate) |
+| Claude analysis (~42k in-tokens, ≤8k out incl. thinking) | — | ~30–90s (estimate) |
 | DB persist | — | <2s (assumed) |
-| **Total, sync** | — | **~93s vs 300s budget** |
+| **Total, sync** | — | **well under the 300s budget** |
 
-OCR transcription (scanned PDFs) is chunked: 10 pages/chunk, up to 4
+Cost (Sonnet 5.5 list pricing: $2 / $10 per MTok input/output, checked Oct 2026;
+thinking tokens bill as output):
+
+| Stack | Input | Output | ≈ Cost |
+|---|---|---|---|
+| Demo stack (17 pp, 23.7k chars) | ~10k tok | ~8k tok | **≈ $0.10** |
+| 100-page text stack (150k chars) | ~42k tok | ~8k tok | **≈ $0.16** |
+| Worst case (12 files × 150k chars ≈ 450k tok) | ~450k tok | ~8k tok | **≈ $0.98** |
+
+OCR transcription (scanned PDFs) is chunked: 10 pages/chunk, up to 8
 concurrent (`OCR_CHUNK_PAGES`, `OCR_MAX_CONCURRENCY`). A 100-page scan is
-~10 chunks ≈ 2–3 waves ≈ 3–4 min worst case — inside the 300s start-route
+~10 chunks ≈ 2 waves ≈ 1–2 min worst case — inside the 300s start-route
 budget. Beyond that, the route returns a clear timeout error, not a silent
 empty report.
 
 **Background-job verdict:** not needed. The whole synchronous pipeline fits
 in the 300s Hobby budget with margin for any stack the upload caps allow
-(≤12 files, ≤40 pages/file, ≤60k chars/doc). The upload caps — not a job
-queue — are the backpressure mechanism. If stacks grow beyond that later,
-revisit.
+(≤12 files, ≤100 pages/file, ≤150k chars/doc). The 240s analysis abort is
+the hard guard: a worst-case 450k-token stack may approach it and get a
+clear "timed out, try again" instead of ever hitting the 300s platform
+limit. The upload caps — not a job queue — are the backpressure mechanism.
+If stacks grow beyond that later, revisit.
 
 **On timeout:** the UI shows "The analysis timed out — your files are fine"
-with a Try again button. No report is ever persisted half-finished: the run
-route verifies and persists atomically after the Claude call, so a killed
-invocation leaves nothing behind to confuse the user.
+with a Try again button. Persistence is sequential, not atomic: the run
+route verifies after the Claude call, then writes the report, flags,
+documents, and facts with individual statements. If an invocation is
+killed mid-persist, a partial report can remain — re-running the analysis
+creates a fresh, complete report.
 
 ## SurrealDB schema
 
@@ -276,9 +290,32 @@ Three metrics, printed with a per-flag table:
 | **% verified** | verified quotes / total quotes in the analysis |
 
 Exit code is 0 only when recall >= `EVAL_MIN_RECALL` (default 0.8) AND
-fabricated quotes = 0. Seeded case: `eval/north-hill-terrace-2026`
-(7 expected flags against the 4 2026 demo PDFs + `sample-report-2026.json`;
-currently 100% recall, 0 fabricated, 100% verified).
+fabricated quotes = 0. The committed case `eval/north-hill-terrace-2026`
+is a **synthetic seeded case**: 7 hand-labeled flags scored against a
+hand-written sample report and fictional demo PDFs (currently 100% recall,
+0 fabricated, 100% verified). It proves the harness works — not that the
+model finds real red flags.
+
+### Eval on a hand-labeled REAL stack
+
+To measure the real pipeline, label a genuine resale package by hand:
+
+1. Put the real PDFs in a private folder that is **not** committed
+   (`/private-samples/<building>/` — gitignored). Never commit real condo
+   documents to this public repo.
+2. Copy `eval/real-stack-template.json` to `eval/<stack-name>/expected.json`
+   and fill it in. Create `eval/<stack-name>/case.json`:
+   `{ "name", "docs_dir", "docs": [...], "analysis" }` — `docs_dir` and
+   `analysis` may be absolute paths outside the repo.
+3. Produce the analysis JSON: run the app's upload flow against the stack,
+   then save the ephemeral `{ analysis }` payload from the
+   `/api/analyze/run` response. **Label first, look later** — write the
+   expected flags from your own reading of the PDFs *before* opening the
+   produced analysis, so the eval measures the model instead of echoing it.
+4. Run `npm run eval -- eval/<stack-name>` (no API key needed — quotes are
+   re-verified against freshly extracted page text).
+5. Keep the real-data case untracked (add `eval/<stack-name>/` to
+   `.gitignore`) or keep it entirely outside the repo and pass its path.
 
 ## Prior work disclosure (for Devpost)
 

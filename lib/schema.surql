@@ -93,3 +93,10 @@ DEFINE FIELD IF NOT EXISTS owner_id ON TABLE credit TYPE string;
 DEFINE FIELD IF NOT EXISTS balance ON TABLE credit TYPE int DEFAULT 0;
 DEFINE FIELD IF NOT EXISTS updated_at ON TABLE credit TYPE datetime DEFAULT time::now();
 DEFINE INDEX IF NOT EXISTS credit_owner ON TABLE credit COLUMNS owner_id UNIQUE;
+
+-- Per-user daily analysis counters (cost guard, lib/rate-limit.ts).
+DEFINE TABLE IF NOT EXISTS daily_usage SCHEMAFULL;
+DEFINE FIELD IF NOT EXISTS owner_id ON TABLE daily_usage TYPE string;
+DEFINE FIELD IF NOT EXISTS day ON TABLE daily_usage TYPE string;
+DEFINE FIELD IF NOT EXISTS count ON TABLE daily_usage TYPE int DEFAULT 0;
+DEFINE INDEX IF NOT EXISTS daily_usage_owner_day ON TABLE daily_usage COLUMNS owner_id, day UNIQUE;

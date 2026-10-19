@@ -22,8 +22,27 @@ interface ApiError {
   checkoutUrl?: string;
 }
 
+interface StartResponse {
+  docs?: {
+    filename: string;
+    status: string;
+    truncated?: boolean;
+    totalPages?: number;
+    pageCount?: number;
+  }[];
+  failures?: string[];
+  missing?: { id: string; label: string; askFor: string }[];
+  buildingNameHint?: string;
+}
+
+interface RunResponse {
+  reportId?: string;
+  analysis?: unknown;
+  missing?: { id: string; label: string; askFor: string }[];
+}
+
 /** Read a JSON body that may not be JSON (e.g. a platform 504 page). */
-async function readJsonSafe(res: Response): Promise<any | null> {
+async function readJsonSafe(res: Response): Promise<unknown> {
   try {
     return await res.json();
   } catch {
@@ -36,13 +55,17 @@ async function readJsonSafe(res: Response): Promise<any | null> {
  * function at maxDuration) comes back as a non-JSON 504 — that must surface
  * as a clear "timed out, try again", never a stuck spinner or blank screen.
  */
-function toApiError(res: Response, json: any | null, fallback: string): ApiError {
-  if (json?.error) {
-    return {
-      error: json.error,
-      code: json.code,
-      checkoutUrl: json.checkoutUrl,
-    };
+function toApiError(res: Response, json: unknown, fallback: string): ApiError {
+  if (json && typeof json === "object" && "error" in json) {
+    const j = json as { error: unknown; code?: unknown; checkoutUrl?: unknown };
+    if (typeof j.error === "string") {
+      return {
+        error: j.error,
+        code: typeof j.code === "string" ? j.code : undefined,
+        checkoutUrl:
+          typeof j.checkoutUrl === "string" ? j.checkoutUrl : undefined,
+      };
+    }
   }
   if (res.status === 504 || res.status === 408) {
     return {
@@ -61,7 +84,7 @@ function toApiError(res: Response, json: any | null, fallback: string): ApiError
 
 const STAGES: { id: Exclude<Stage, "idle" | "done" | "error">; label: string; hint: string }[] = [
   { id: "extracting", label: "Reading your PDFs", hint: "Extracting text from each document…" },
-  { id: "analyzing", label: "Analyzing with AI", hint: "Cross-referencing the stack for red flags. Usually about a minute; large stacks can take several." },
+  { id: "analyzing", label: "Analyzing with AI", hint: "Cross-referencing the stack for red flags. Usually a few minutes; large scanned stacks can take longer." },
 ];
 
 export default function UploadForm({
@@ -83,6 +106,9 @@ export default function UploadForm({
     { filename: string; status: string }[]
   >([]);
   const [warnings, setWarnings] = useState<string[]>([]);
+  const [truncatedDocs, setTruncatedDocs] = useState<
+    { filename: string; totalPages: number }[]
+  >([]);
   const [candidates, setCandidates] = useState<BuildingCandidate[]>([]);
   const [buildingId, setBuildingId] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
@@ -92,11 +118,11 @@ export default function UploadForm({
 
   // Confirm/merge: look up existing buildings as the user types a name.
   useEffect(() => {
-    setBuildingId(null);
     const hint = buildingName.trim();
     if (hint.length < 2) {
-      setCandidates([]);
-      return;
+      // Deferred: the effect must not call setState synchronously.
+      const t = setTimeout(() => setCandidates([]), 0);
+      return () => clearTimeout(t);
     }
     const t = setTimeout(async () => {
       try {
@@ -134,6 +160,7 @@ export default function UploadForm({
     setEphemeral(null);
     setFileStatuses([]);
     setWarnings([]);
+    setTruncatedDocs([]);
     setMissing([]);
     try {
       // Step 1: extract text from the PDFs.
@@ -145,17 +172,25 @@ export default function UploadForm({
         method: "POST",
         body: form,
       });
-      const startJson = await readJsonSafe(startRes);
-      if (!startRes.ok)
+      const startJson = (await readJsonSafe(startRes)) as StartResponse | null;
+      if (!startRes.ok || !startJson)
         throw toApiError(startRes, startJson, "Extraction failed");
 
       setFileStatuses(
-        (startJson.docs ?? []).map((d: { filename: string; status: string }) => ({
+        (startJson.docs ?? []).map((d) => ({
           filename: d.filename,
           status: d.status,
         }))
       );
       setWarnings(startJson.failures ?? []);
+      setTruncatedDocs(
+        (startJson.docs ?? [])
+          .filter((d) => d.truncated)
+          .map((d) => ({
+            filename: d.filename,
+            totalPages: d.totalPages ?? d.pageCount ?? 0,
+          }))
+      );
       setMissing(startJson.missing ?? []);
 
       // Step 2: run the AI analysis over the extracted text.
@@ -171,8 +206,8 @@ export default function UploadForm({
           consent,
         }),
       });
-      const runJson = await readJsonSafe(runRes);
-      if (!runRes.ok)
+      const runJson = (await readJsonSafe(runRes)) as RunResponse | null;
+      if (!runRes.ok || !runJson)
         throw toApiError(runRes, runJson, "Analysis failed");
 
       if (runJson.reportId) {
@@ -237,7 +272,11 @@ export default function UploadForm({
       <input
         type="text"
         value={buildingName}
-        onChange={(e) => setBuildingName(e.target.value)}
+        onChange={(e) => {
+          setBuildingName(e.target.value);
+          // A changed name invalidates any previously picked building.
+          setBuildingId(null);
+        }}
         placeholder="e.g. North Hill Terrace"
         disabled={busy}
         className="w-full rounded-lg border border-stone-300 bg-white px-4 py-2.5 mb-2 text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-800/30"
@@ -285,6 +324,9 @@ export default function UploadForm({
       )}
 
       <div
+        role="button"
+        tabIndex={busy ? -1 : 0}
+        aria-label="Upload condo documents as PDFs"
         onDragOver={(e) => {
           e.preventDefault();
           setDragOver(true);
@@ -296,7 +338,14 @@ export default function UploadForm({
           addFiles(e.dataTransfer.files);
         }}
         onClick={() => !busy && inputRef.current?.click()}
-        className={`rounded-xl border-2 border-dashed p-10 text-center cursor-pointer transition-colors ${
+        onKeyDown={(e) => {
+          // Keyboard users can't use drag & drop: Enter/Space opens the picker.
+          if (!busy && (e.key === "Enter" || e.key === " ")) {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
+        className={`rounded-xl border-2 border-dashed p-10 text-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800/50 ${
           dragOver
             ? "border-teal-700 bg-teal-50"
             : "border-stone-300 bg-white hover:border-stone-400"
@@ -366,6 +415,21 @@ export default function UploadForm({
                 >
                   {f.status === "ocr" ? "Read via OCR" : "Extracted"}
                 </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {truncatedDocs.length > 0 && (
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-5">
+          <div className="text-sm font-semibold text-amber-900 mb-2">
+            Some documents were too long to read fully
+          </div>
+          <ul className="space-y-1">
+            {truncatedDocs.map((t) => (
+              <li key={t.filename} className="text-sm text-amber-800">
+                {t.filename} — analyzed the first 40 of {t.totalPages} pages.
+                Content past that point was not reviewed.
               </li>
             ))}
           </ul>

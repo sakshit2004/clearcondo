@@ -15,9 +15,11 @@
  * run a few at a time so a 100-page scan completes in ~2-3 waves.
  *
  * Claude API limits (checked Oct 2026): 32 MB max request size, up to 100
- * pages per request for full PDF analysis. Our upload caps (15 MB per file,
- * 40 pages per file) sit comfortably inside those; anything larger is
- * rejected with a clear error rather than chunked silently.
+ * pages per request for full PDF analysis. Upload caps: the text-extraction
+ * path allows 15 MB per file / 100 pages per file (MAX_TEXT_PAGES,
+ * default 100); the OCR path allows 30 MB / 100 pages (enforced in
+ * transcribeScannedPdf). Anything larger is rejected with a clear error
+ * rather than truncated silently.
  */
 
 import Anthropic from "@anthropic-ai/sdk";
@@ -36,7 +38,7 @@ export function ocrChunkPages(): number {
 /** Max concurrent chunk transcriptions. Tunable via OCR_MAX_CONCURRENCY. */
 export function ocrMaxConcurrency(): number {
   const v = Number(process.env.OCR_MAX_CONCURRENCY);
-  return Number.isFinite(v) && v > 0 ? Math.floor(v) : 4;
+  return Number.isFinite(v) && v > 0 ? Math.floor(v) : 8;
 }
 
 /**
@@ -225,7 +227,7 @@ export async function transcribeScannedPdf(
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) throw new Error("ANTHROPIC_API_KEY is not set");
   const client = new Anthropic({ apiKey: key });
-  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5-20250929";
+  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
 
   const ranges = pageRanges(pageCount, ocrChunkPages());
   const chunks = await mapWithConcurrency(ranges, ocrMaxConcurrency(), ([s, e]) =>

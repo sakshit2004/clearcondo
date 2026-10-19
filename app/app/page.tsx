@@ -49,7 +49,7 @@ export default async function DashboardPage() {
           </h2>
           <p className="text-stone-600 text-sm mb-6 max-w-md mx-auto">
             Upload a condo&apos;s document stack — reserve fund study, bylaws,
-            minutes — and get a red-flag report in about a minute.
+            minutes — and get a red-flag report in a few minutes.
           </p>
           <Link
             href="/app/new"
