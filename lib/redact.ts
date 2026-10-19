@@ -40,7 +40,7 @@
  *   redacted (only the caller phrases are protected, not quotes).
  */
 
-import type { Analysis } from "./report-schema";
+import type { Analysis, VerifiedAnalysis } from "./report-schema";
 
 export const REDACTED_NAME = "[name redacted]";
 
@@ -323,5 +323,41 @@ export function redactAnalysis(analysis: Analysis): Analysis {
     summary: R(analysis.summary),
     money_exposure_basis: R(analysis.money_exposure_basis),
     questions_for_realtor_lawyer: analysis.questions_for_realtor_lawyer.map(R),
+  };
+}
+
+/**
+ * Build the client-safe version of a verified analysis for API responses
+ * and server-component props. Every evidence `quote` is replaced by its
+ * redacted `quote_display` (falling back to the original only when no
+ * redacted version exists, e.g. pre-redaction data).
+ *
+ * WHY: the database keeps original quotes for the verification audit, but
+ * originals can contain personal names from minutes. Verification already
+ * ran server-side, so the browser never needs them — serving them would
+ * leak names through API JSON and React Flight data even though the UI
+ * renders quote_display.
+ */
+export function toPublicAnalysis(a: VerifiedAnalysis): VerifiedAnalysis {
+  const pub = <T extends { quote: string; quote_display?: string }>(
+    e: T
+  ): T => ({ ...e, quote: e.quote_display ?? e.quote });
+  return {
+    ...a,
+    flags: a.flags.map((f) => ({ ...f, evidence: f.evidence.map(pub) })),
+    structured_facts: {
+      ...a.structured_facts,
+      special_assessments: a.structured_facts.special_assessments.map((s) => ({
+        ...s,
+        evidence: pub(s.evidence),
+      })),
+      litigation: a.structured_facts.litigation.map((l) => ({
+        ...l,
+        evidence: pub(l.evidence),
+      })),
+      rental_rules_evidence: a.structured_facts.rental_rules_evidence
+        ? pub(a.structured_facts.rental_rules_evidence)
+        : null,
+    },
   };
 }

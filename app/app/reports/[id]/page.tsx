@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { getUserId, isClerkConfigured } from "@/lib/auth";
 import { withDb, getReport, getPreviousFactsSnapshot, isDbConfigured } from "@/lib/db";
 import { computeDeltas, type Delta } from "@/lib/deltas";
+import { toPublicAnalysis } from "@/lib/redact";
 import SetupNotice from "@/components/SetupNotice";
 import DeleteReportButton from "@/components/DeleteReportButton";
 import ReportView, { type ReportVM } from "@/components/ReportView";
@@ -84,7 +85,8 @@ export default async function ReportDetailPage({
     buildingName: report.building_name || facts.name || "Unnamed building",
     buildingMeta: meta || undefined,
     createdAt: String(report.created_at),
-    analysis,
+    // Strip original evidence quotes: the browser only ever sees redacted text.
+    analysis: toPublicAnalysis(analysis),
     deltas,
     missing: report.missing_documents ?? [],
   };

@@ -33,6 +33,10 @@ export interface ExtractedPayload {
   docType: string;
   pages: PageText[];
   pageCount: number;
+  /** Uncapped page count (present for text-extracted docs). */
+  totalPages?: number;
+  /** True when pages/chars were dropped by the extraction caps. */
+  truncated: boolean;
   charCount: number;
   /** extracted | ocr | failed */
   status: "extracted" | "ocr" | "failed";
@@ -117,6 +121,8 @@ export async function POST(req: Request) {
           docType: classifyDocType(extracted.filename, docPlainText(extracted)),
           pages: extracted.pages,
           pageCount: extracted.pageCount,
+          totalPages: extracted.totalPages,
+          truncated: extracted.truncated ?? false,
           charCount: extracted.charCount,
           status: "extracted",
           isScanned: false,
@@ -131,11 +137,10 @@ export async function POST(req: Request) {
         continue;
       }
       try {
-        const pages = await transcribeScannedPdf(
-          buf,
-          file.name,
-          extracted.pageCount
-        );
+        // NOTE: pass totalPages (uncapped), not pageCount — the text path
+        // caps pageCount at 40, but the OCR path supports up to 100 pages.
+        const totalPages = extracted.totalPages ?? extracted.pageCount;
+        const pages = await transcribeScannedPdf(buf, file.name, totalPages);
         const charCount = pages.reduce((n, p) => n + p.text.length, 0);
         docs.push({
           fileId: extracted.fileId,
@@ -145,7 +150,9 @@ export async function POST(req: Request) {
             pages.map((p) => p.text).join("\n").slice(0, 2000)
           ),
           pages,
-          pageCount: extracted.pageCount,
+          pageCount: totalPages,
+          totalPages,
+          truncated: false, // OCR transcribes the full page range (≤100)
           charCount,
           status: "ocr",
           isScanned: true,

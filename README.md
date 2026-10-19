@@ -138,7 +138,7 @@ Platform limits (Vercel Hobby with Fluid compute, checked Oct 2026 —
 | Limit | Value | What we do about it |
 |---|---|---|
 | Function max duration | 300s (Hobby max) | Both analyze routes set `maxDuration = 300`; Claude calls abort earlier (240s analysis, 120s OCR chunk) so timeouts are ours, with clear errors |
-| Request/response body | 4.5 MB | Total upload capped at 4 MB in `/api/analyze/start` (clear 413 message); run-route JSON stays ~720 KB max |
+| Request/response body | 4.5 MB | Total upload capped at 4 MB in `/api/analyze/start` (clear 413 message); run-route responses are bounded by the 480-page payload cap |
 
 Measured on the demo stack (`node --experimental-strip-types scripts/measure-pipeline.mjs`;
 17 pages / 23.7k chars; Claude numbers are token-math estimates, no API key in CI):
@@ -164,9 +164,11 @@ queue — are the backpressure mechanism. If stacks grow beyond that later,
 revisit.
 
 **On timeout:** the UI shows "The analysis timed out — your files are fine"
-with a Try again button. No report is ever persisted half-finished: the run
-route verifies and persists atomically after the Claude call, so a killed
-invocation leaves nothing behind to confuse the user.
+with a Try again button. Persistence is sequential, not atomic: the run
+route verifies after the Claude call, then writes the report, flags,
+documents, and facts with individual statements. If an invocation is
+killed mid-persist, a partial report can remain — re-running the analysis
+creates a fresh, complete report.
 
 ## SurrealDB schema
 
@@ -276,9 +278,32 @@ Three metrics, printed with a per-flag table:
 | **% verified** | verified quotes / total quotes in the analysis |
 
 Exit code is 0 only when recall >= `EVAL_MIN_RECALL` (default 0.8) AND
-fabricated quotes = 0. Seeded case: `eval/north-hill-terrace-2026`
-(7 expected flags against the 4 2026 demo PDFs + `sample-report-2026.json`;
-currently 100% recall, 0 fabricated, 100% verified).
+fabricated quotes = 0. The committed case `eval/north-hill-terrace-2026`
+is a **synthetic seeded case**: 7 hand-labeled flags scored against a
+hand-written sample report and fictional demo PDFs (currently 100% recall,
+0 fabricated, 100% verified). It proves the harness works — not that the
+model finds real red flags.
+
+### Eval on a hand-labeled REAL stack
+
+To measure the real pipeline, label a genuine resale package by hand:
+
+1. Put the real PDFs in a private folder that is **not** committed
+   (`/private-samples/<building>/` — gitignored). Never commit real condo
+   documents to this public repo.
+2. Copy `eval/real-stack-template.json` to `eval/<stack-name>/expected.json`
+   and fill it in. Create `eval/<stack-name>/case.json`:
+   `{ "name", "docs_dir", "docs": [...], "analysis" }` — `docs_dir` and
+   `analysis` may be absolute paths outside the repo.
+3. Produce the analysis JSON: run the app's upload flow against the stack,
+   then save the ephemeral `{ analysis }` payload from the
+   `/api/analyze/run` response. **Label first, look later** — write the
+   expected flags from your own reading of the PDFs *before* opening the
+   produced analysis, so the eval measures the model instead of echoing it.
+4. Run `npm run eval -- eval/<stack-name>` (no API key needed — quotes are
+   re-verified against freshly extracted page text).
+5. Keep the real-data case untracked (add `eval/<stack-name>/` to
+   `.gitignore`) or keep it entirely outside the repo and pass its path.
 
 ## Prior work disclosure (for Devpost)
 

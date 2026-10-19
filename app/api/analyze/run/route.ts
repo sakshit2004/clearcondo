@@ -19,11 +19,15 @@ import {
 } from "@/lib/db";
 import { computeDeltas, type Delta } from "@/lib/deltas";
 import {
+  checkDailyAnalysisLimit,
+  checkRunPayloadCap,
+} from "@/lib/rate-limit";
+import {
   docTextWithPageMarkers,
   type PageText,
 } from "@/lib/extract";
 import { verifyAnalysis, type VerifiableDoc } from "@/lib/verify";
-import { redactAnalysis } from "@/lib/redact";
+import { redactAnalysis, toPublicAnalysis } from "@/lib/redact";
 import { rememberBuildingFacts } from "@/lib/agent-memory";
 import { hasUploadConsent } from "@/lib/retention";
 import type { DocType } from "@/lib/report-schema";
@@ -104,6 +108,13 @@ export async function POST(req: Request) {
     );
   }
 
+  // Stateless cost guard: the client must not send more pages than the
+  // start route could ever produce (a crafted POST can bypass it).
+  const overCap = checkRunPayloadCap(docs);
+  if (overCap) {
+    return NextResponse.json({ error: overCap.error }, { status: overCap.status });
+  }
+
   const stripeOn = isStripeEnabled();
   const dbOn = isDbConfigured();
 
@@ -119,6 +130,21 @@ export async function POST(req: Request) {
           checkoutUrl: "/api/checkout",
         },
         { status: 402 }
+      );
+    }
+  }
+
+  // Cost guard (beta mode): per-user daily analysis cap. Only when the DB
+  // is configured — serverless has nowhere durable to count otherwise.
+  if (dbOn && !stripeOn) {
+    const usage = await withDb((db) => checkDailyAnalysisLimit(db, userId));
+    if (usage && !usage.allowed) {
+      return NextResponse.json(
+        {
+          code: "daily_limit",
+          error: `Daily analysis limit reached (${usage.limit}/day). Try again tomorrow.`,
+        },
+        { status: 429 }
       );
     }
   }
@@ -197,8 +223,9 @@ export async function POST(req: Request) {
   // Redact personal names from every report surface BEFORE verification
   // and persistence. Evidence quotes are kept ORIGINAL for verification;
   // the redacted text rides along as quote_display for the UI.
-  // The database, Agent Memory, and all API responses only ever see the
-  // redacted version.
+  // NOTE: the database keeps original quotes for the verification audit,
+  // so toPublicAnalysis() must be applied at every server->client boundary
+  // (below) — otherwise names leak via API JSON / Flight data.
   const redacted = redactAnalysis(result.analysis);
 
   // Verify every cited quote against the stored page text. This is the
@@ -267,9 +294,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ reportId: out.reportId, deltas: out.deltas });
     } catch (err) {
       // Persistence failed but analysis succeeded: return it ephemerally
-      // rather than failing the whole request.
+      // rather than failing the whole request. Strip original quotes —
+      // the client only ever sees the redacted versions.
       return NextResponse.json({
-        analysis: verified,
+        analysis: toPublicAnalysis(verified),
         buildingName: verified.building.name || buildingNameHint,
         missing,
         persistenceError:
@@ -278,9 +306,9 @@ export async function POST(req: Request) {
     }
   }
 
-  // No database: ephemeral report.
+  // No database: ephemeral report. Strip original quotes here too.
   return NextResponse.json({
-    analysis: verified,
+    analysis: toPublicAnalysis(verified),
     buildingName: verified.building.name || buildingNameHint,
     missing,
   });
