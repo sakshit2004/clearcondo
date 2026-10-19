@@ -3,6 +3,7 @@ import {
   AnalysisSchema,
   type Analysis,
 } from "./report-schema";
+import { repairPrompt } from "./repair";
 
 export function isAnthropicConfigured(): boolean {
   return Boolean(process.env.ANTHROPIC_API_KEY);
@@ -123,7 +124,7 @@ export async function analyzeDocuments(input: {
   memoryContext?: string | null;
 }): Promise<{ analysis: Analysis; model: string }> {
   const client = getClient();
-  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5-20250929";
+  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
 
   const fileList = input.docs
     .map((d) => `- ${d.fileId}: "${d.filename}" (type: ${d.docType})`)
@@ -155,12 +156,14 @@ ${docsBlock}`;
   const parsed = tryParseAnalysis(raw);
   if (parsed) return { analysis: parsed, model };
 
-  // One repair attempt with the validation errors spelled out.
+  // One repair attempt: validation errors + the source documents (see
+  // lib/repair.ts — the repair used to resend only the errors, so it
+  // could never succeed on a real stack).
   const { errors } = tryParseAnalysisWithErrors(raw);
   const repair = await callClaude(
     client,
     model,
-    `Your previous response was not valid. Validation errors:\n${errors}\n\nReturn ONLY the corrected JSON object, no prose. The original documents are the same as before; reproduce the full report in valid form.`
+    repairPrompt(errors, input.docs, raw)
   );
   const repaired = tryParseAnalysis(repair);
   if (repaired) return { analysis: repaired, model };
@@ -179,7 +182,10 @@ async function callClaude(
     message = await client.messages.create(
       {
         model,
-        max_tokens: 5000,
+        // 8000 leaves room for Sonnet 5.5's default thinking (billed as
+        // output) plus the full JSON report. No temperature/top_p: the
+        // 5.5 API rejects them when thinking is on, and we never set them.
+        max_tokens: 8000,
         system: SYSTEM_PROMPT,
         messages: [{ role: "user", content: userPrompt }],
       },

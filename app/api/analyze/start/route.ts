@@ -138,7 +138,7 @@ export async function POST(req: Request) {
       }
       try {
         // NOTE: pass totalPages (uncapped), not pageCount — the text path
-        // caps pageCount at 40, but the OCR path supports up to 100 pages.
+        // caps pageCount at 100, but the OCR path supports up to 100 pages.
         const totalPages = extracted.totalPages ?? extracted.pageCount;
         const pages = await transcribeScannedPdf(buf, file.name, totalPages);
         const charCount = pages.reduce((n, p) => n + p.text.length, 0);

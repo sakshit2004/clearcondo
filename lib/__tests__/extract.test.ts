@@ -51,9 +51,9 @@ function makePdf(numPages: number): Uint8Array {
 
 describe("extractPdfText page counts", () => {
   it("exposes the uncapped totalPages alongside the capped pageCount", async () => {
-    const doc = await extractPdfText("file-0", "big.pdf", makePdf(45));
-    assert.equal(doc.totalPages, 45);
-    assert.equal(doc.pageCount, 40); // MAX_PAGES cap for the text path
+    const doc = await extractPdfText("file-0", "big.pdf", makePdf(105));
+    assert.equal(doc.totalPages, 105);
+    assert.equal(doc.pageCount, 100); // maxTextPages() cap for the text path
     assert.equal(doc.truncated, true);
     assert.ok(!doc.isScanned);
   });

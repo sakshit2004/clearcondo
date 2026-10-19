@@ -19,9 +19,9 @@ afterEach(() => {
 });
 
 describe("maxAnalysesPerDay / maxPagesPerRun", () => {
-  it("default to 10 / 480", () => {
+  it("default to 10 / 1200", () => {
     assert.equal(maxAnalysesPerDay(), 10);
-    assert.equal(maxPagesPerRun(), 480);
+    assert.equal(maxPagesPerRun(), 1200);
   });
   it("accept valid env overrides", () => {
     process.env.MAX_ANALYSES_PER_DAY = "25";
@@ -34,7 +34,7 @@ describe("maxAnalysesPerDay / maxPagesPerRun", () => {
       process.env.MAX_ANALYSES_PER_DAY = v;
       process.env.MAX_PAGES_PER_RUN = v;
       assert.equal(maxAnalysesPerDay(), 10);
-      assert.equal(maxPagesPerRun(), 480);
+      assert.equal(maxPagesPerRun(), 1200);
     }
   });
 });
@@ -44,14 +44,14 @@ describe("checkRunPayloadCap", () => {
     pages: Array.from({ length: pages }, () => ({ text: "x".repeat(100) })),
   });
   it("allows stacks within the cap", () => {
-    assert.equal(checkRunPayloadCap([doc(40), doc(40)]), null);
-    assert.equal(checkRunPayloadCap([doc(480)]), null);
+    assert.equal(checkRunPayloadCap([doc(100), doc(100)]), null);
+    assert.equal(checkRunPayloadCap([doc(1200)]), null);
   });
   it("rejects stacks over the cap with a 413", () => {
-    const res = checkRunPayloadCap([doc(481)]);
+    const res = checkRunPayloadCap([doc(1201)]);
     assert.ok(res);
     assert.equal(res.status, 413);
-    assert.match(res.error, /481 pages/);
+    assert.match(res.error, /1201 pages/);
   });
   it("respects MAX_PAGES_PER_RUN override", () => {
     process.env.MAX_PAGES_PER_RUN = "10";

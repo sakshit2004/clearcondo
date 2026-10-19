@@ -33,11 +33,9 @@ disclaimer, `/api/health` 200 `"status":"degraded"`).
 ### 1b. Anthropic (required for real analyses)
 1. console.anthropic.com → API Keys → create key → `ANTHROPIC_API_KEY`.
    This key pays for every analysis — keep it in Vercel env vars, never in
-   chat or code. Typical cost ≈ $0.06–0.13 per report (worst case ≈ $0.54).
-2. Optional: `ANTHROPIC_MODEL` (default `claude-sonnet-4-5-20250929`).
-   ⚠️ That model **retires 2026-11-30** — plan to switch to
-   `claude-sonnet-5-5` and re-run `npm run eval` before then (see
-   VERIFICATION.md open issue #1).
+   chat or code. Typical cost ≈ $0.16 per report (worst case ≈ $0.98 —
+   Sonnet 5.5 pricing: $2 / $10 per MTok in/out; see README for the math).
+2. Optional: `ANTHROPIC_MODEL` (default `claude-sonnet-5-5`).
 3. Optional: `ANTHROPIC_TIMEOUT_MS` (default 240000).
 
 ### 1c. SurrealDB Cloud (required for persistence/history)
@@ -81,9 +79,10 @@ none needed for deploy).
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | for `/app/*` | Clerk dashboard → API Keys |
 | `CLERK_SECRET_KEY` | for `/app/*` | Clerk dashboard → API Keys |
 | `ANTHROPIC_API_KEY` | for analyses | console.anthropic.com → API Keys |
-| `ANTHROPIC_MODEL` | optional | default `claude-sonnet-4-5-20250929` (retires 2026-11-30) |
+| `ANTHROPIC_MODEL` | optional | default `claude-sonnet-5-5` |
 | `ANTHROPIC_TIMEOUT_MS` | optional | default 240000 |
-| `OCR_CHUNK_PAGES` / `OCR_MAX_CONCURRENCY` / `OCR_CHUNK_TIMEOUT_MS` / `SCAN_TEXT_THRESHOLD_CHARS` | optional | tuning; defaults 10 / 4 / 120000 / 50 |
+| `OCR_CHUNK_PAGES` / `OCR_MAX_CONCURRENCY` / `OCR_CHUNK_TIMEOUT_MS` / `SCAN_TEXT_THRESHOLD_CHARS` | optional | tuning; defaults 10 / 8 / 120000 / 50 |
+| `MAX_TEXT_PAGES` / `MAX_TEXT_CHARS` | optional | text-extraction caps per doc; defaults 100 / 150000 |
 | `SURREAL_URL` | for persistence | SurrealDB Cloud instance |
 | `SURREAL_NS` / `SURREAL_DB` | for persistence | your choice, e.g. `clearcondo` / `prod` |
 | `SURREAL_USER` + `SURREAL_PASS` OR `SURREAL_TOKEN` | for persistence | SurrealDB Cloud |
@@ -91,7 +90,7 @@ none needed for deploy).
 | `RETENTION_DAYS` | optional | default 30 |
 | `CRON_SECRET` | for retention cron | generate: `openssl rand -hex 32` |
 | `MAX_ANALYSES_PER_DAY` | optional | default 10 (beta cost guard; DB-backed) |
-| `MAX_PAGES_PER_RUN` | optional | default 480 (stateless run-payload cap) |
+| `MAX_PAGES_PER_RUN` | optional | default 1200 (stateless run-payload cap) |
 | `STRIPE_ENABLED` | optional | `false` default; `true` to enable |
 | `STRIPE_SECRET_KEY` | if Stripe on | Stripe dashboard (**test** keys — enforced) |
 | `STRIPE_WEBHOOK_SECRET` | if Stripe on | Stripe webhook endpoint |
@@ -154,8 +153,9 @@ fails in this sandbox.]**
 
 ## 7. Remaining gaps after verification (from VERIFICATION.md)
 
-1. **Model retirement 2026-11-30** — switch `ANTHROPIC_MODEL` to
-   `claude-sonnet-5-5` and re-run `npm run eval` before then.
+1. ~~**Model retirement 2026-11-30**~~ — **resolved** on this branch: default
+   is now `claude-sonnet-5-5` (Anthropic commits to no retirement before
+   2027-09-28). `npm run eval` re-run: PASS (100% / 0 / 100%).
 2. **Name-redaction heuristic** leaks 14 formats on adversarial input
    (ALL-CAPS, `LAST, FIRST`, first-name-only, emails, diacritics…); the
    dangerous API/Flight leak is fixed, these are UI-text leaks.

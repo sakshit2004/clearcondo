@@ -83,7 +83,8 @@ npm run build                # must pass before deploy
 
 ### 2. Anthropic (AI analysis) — required for real analyses
 1. https://console.anthropic.com → API Keys → create key → `ANTHROPIC_API_KEY`.
-2. Optional: `ANTHROPIC_MODEL` (default `claude-sonnet-4-5-20250929`).
+2. Optional: `ANTHROPIC_MODEL` (default `claude-sonnet-5-5`; adaptive
+   thinking on by default, billed as output).
 3. The user holds their own key (incl. the $100 hackathon credit) — paste it
    into the deploy environment, never into chat or code.
 
@@ -138,30 +139,41 @@ Platform limits (Vercel Hobby with Fluid compute, checked Oct 2026 —
 | Limit | Value | What we do about it |
 |---|---|---|
 | Function max duration | 300s (Hobby max) | Both analyze routes set `maxDuration = 300`; Claude calls abort earlier (240s analysis, 120s OCR chunk) so timeouts are ours, with clear errors |
-| Request/response body | 4.5 MB | Total upload capped at 4 MB in `/api/analyze/start` (clear 413 message); run-route responses are bounded by the 480-page payload cap |
+| Request/response body | 4.5 MB | Total upload capped at 4 MB in `/api/analyze/start` (clear 413 message); run-route responses are bounded by the 1200-page payload cap |
 
 Measured on the demo stack (`node --experimental-strip-types scripts/measure-pipeline.mjs`;
 17 pages / 23.7k chars; Claude numbers are token-math estimates, no API key in CI):
 
-| Stage | Measured | 100-page text stack (extrapolated) |
+| Stage | Measured | 100-page text stack (150k chars, extrapolated) |
 |---|---|---|
 | PDF text extraction | 24 ms/page | ~2.4s |
 | Evidence verification | 0.2 ms/quote | <0.1s |
-| Claude analysis (~35k in-tokens, 5k out) | — | ~90s (estimate) |
+| Claude analysis (~42k in-tokens, ≤8k out incl. thinking) | — | ~30–90s (estimate) |
 | DB persist | — | <2s (assumed) |
-| **Total, sync** | — | **~93s vs 300s budget** |
+| **Total, sync** | — | **well under the 300s budget** |
 
-OCR transcription (scanned PDFs) is chunked: 10 pages/chunk, up to 4
+Cost (Sonnet 5.5 list pricing: $2 / $10 per MTok input/output, checked Oct 2026;
+thinking tokens bill as output):
+
+| Stack | Input | Output | ≈ Cost |
+|---|---|---|---|
+| Demo stack (17 pp, 23.7k chars) | ~10k tok | ~8k tok | **≈ $0.10** |
+| 100-page text stack (150k chars) | ~42k tok | ~8k tok | **≈ $0.16** |
+| Worst case (12 files × 150k chars ≈ 450k tok) | ~450k tok | ~8k tok | **≈ $0.98** |
+
+OCR transcription (scanned PDFs) is chunked: 10 pages/chunk, up to 8
 concurrent (`OCR_CHUNK_PAGES`, `OCR_MAX_CONCURRENCY`). A 100-page scan is
-~10 chunks ≈ 2–3 waves ≈ 3–4 min worst case — inside the 300s start-route
+~10 chunks ≈ 2 waves ≈ 1–2 min worst case — inside the 300s start-route
 budget. Beyond that, the route returns a clear timeout error, not a silent
 empty report.
 
 **Background-job verdict:** not needed. The whole synchronous pipeline fits
 in the 300s Hobby budget with margin for any stack the upload caps allow
-(≤12 files, ≤40 pages/file, ≤60k chars/doc). The upload caps — not a job
-queue — are the backpressure mechanism. If stacks grow beyond that later,
-revisit.
+(≤12 files, ≤100 pages/file, ≤150k chars/doc). The 240s analysis abort is
+the hard guard: a worst-case 450k-token stack may approach it and get a
+clear "timed out, try again" instead of ever hitting the 300s platform
+limit. The upload caps — not a job queue — are the backpressure mechanism.
+If stacks grow beyond that later, revisit.
 
 **On timeout:** the UI shows "The analysis timed out — your files are fine"
 with a Try again button. Persistence is sequential, not atomic: the run

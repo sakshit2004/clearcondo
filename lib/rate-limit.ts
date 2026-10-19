@@ -3,12 +3,12 @@
  *
  * With STRIPE_ENABLED=false (the default beta mode) there is no payment
  * gate, so without these a signed-in stranger could run unlimited analyses
- * and burn the owner's Anthropic budget (a 100-page stack is ~35k input
- * tokens; worst case ~180k). Two guards:
+ * and burn the owner's Anthropic budget (a 100-page stack is ~40k input
+ * tokens; worst case ~450k). Two guards:
  *
  *  1. checkRunPayloadCap — stateless, always enforced: the run route must
  *     not accept more pages than the start route could ever produce
- *     (12 files x 40 pages). A crafted POST that bypasses /api/analyze/start
+ *     (12 files x 100 pages). A crafted POST that bypasses /api/analyze/start
  *     gets a 413 here.
  *  2. checkDailyAnalysisLimit — per-user daily counter in SurrealDB
  *     (env MAX_ANALYSES_PER_DAY, default 10). Only applies when the DB is
@@ -23,12 +23,12 @@ export function maxAnalysesPerDay(): number {
 
 /**
  * Max total pages the run route accepts in one request. Mirrors the
- * start-route caps (12 files x 40 pages/file in lib/extract.ts).
+ * start-route caps (12 files x 100 pages/file in lib/extract.ts).
  * Tunable via MAX_PAGES_PER_RUN.
  */
 export function maxPagesPerRun(): number {
   const v = Number(process.env.MAX_PAGES_PER_RUN);
-  return Number.isFinite(v) && v > 0 ? Math.floor(v) : 480;
+  return Number.isFinite(v) && v > 0 ? Math.floor(v) : 1200;
 }
 
 export interface DailyUsage {
@@ -82,7 +82,7 @@ export async function checkDailyAnalysisLimit(
 /**
  * Server-side guard for the run route's client-supplied pages. The start
  * route caps uploads (12 files / 4 MB) and lib/extract.ts caps pages per
- * doc (40) and chars per doc (60k), but /api/analyze/run accepts `pages`
+ * doc (100) and chars per doc (150k), but /api/analyze/run accepts `pages`
  * arrays straight from the client — a crafted request can bypass all of
  * those and send an arbitrarily large prompt to Claude.
  *
