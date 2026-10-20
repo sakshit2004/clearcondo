@@ -1,0 +1,4 @@
+{
+  "_note": "STUB. Replace with a real produced analysis to score recall: run the ClearCondo pipeline on m3-sample-reserve-fund-study.pdf (needs a Claude key), save the flags JSON here, or pass --analysis <path> to npm run eval.",
+  "flags": []
+}
