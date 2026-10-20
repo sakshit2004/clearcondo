@@ -29,7 +29,9 @@ test("/demo renders the sample report with zero keys", async ({ page }) => {
 
   // "X of Y verified" stat
   await expect(page.getByText(/claims verified against source documents/)).toBeVisible();
-  await expect(page.getByText("13", { exact: true }).first()).toBeVisible();
+  // "X of Y verified" stat — the count renders inside "13 of 13", not
+  // as a standalone text node, so match the full phrase.
+  await expect(page.getByText("13 of 13")).toBeVisible();
 
   // Verified evidence badges on flag cards
   const badges = page.getByText(/✓.*Verified/);
@@ -43,8 +45,10 @@ test("/demo renders the sample report with zero keys", async ({ page }) => {
     page.getByRole("heading", { name: /what changed since the last review/i })
   ).toBeVisible();
 
-  // Disclaimer
-  await expect(page.getByText(/It is not legal, financial, or real-estate advice/)).toBeVisible();
+  // Disclaimer (appears in both the report and the footer — either proves it)
+  await expect(
+    page.getByText(/It is not legal, financial, or real-estate advice/).first()
+  ).toBeVisible();
 
   expect(errors).toEqual([]);
 });
