@@ -217,12 +217,133 @@ export function verifyStructuredFacts(
 }
 
 /**
+ * Deterministic money cross-check (no model call).
+ *
+ * Every dollar figure the model puts in a flag's title/explanation must
+ * appear (by value) in the source documents. money_exposure numerics must
+ * appear by value OR be directly computable in one step (+,-,x,/) from
+ * numbers that appear in the source — the "directly computable" allowance
+ * the prompt grants (e.g. "$8,500 x 84 units = $714,000"). A figure that
+ * is neither verbatim nor computable is treated like an unverified quote:
+ * the flag is downgraded and loses its money figures.
+ */
+
+const MONEY_FIGURE_RE =
+  /\$[\d,]+(?:\.\d+)?\s*(?:k|m|b|thousand|million|billion)?/gi;
+
+/** Parse "$1.15M" / "$8,500" / "$4,250" to a number. Null if unparseable. */
+export function parseMoneyFigure(s: string): number | null {
+  const m = s
+    .trim()
+    .match(/^\$?\s*([\d,]+(?:\.\d+)?)\s*(k|m|b|thousand|million|billion)?$/i);
+  if (!m) return null;
+  const num = parseFloat(m[1].replace(/,/g, ""));
+  if (!Number.isFinite(num)) return null;
+  const suf = (m[2] || "").toLowerCase();
+  const mult =
+    suf === "k" || suf === "thousand"
+      ? 1e3
+      : suf === "m" || suf === "million"
+        ? 1e6
+        : suf === "b" || suf === "billion"
+          ? 1e9
+          : 1;
+  return num * mult;
+}
+
+/** All dollar values mentioned in a text, parsed to numbers. */
+export function extractMoneyValues(text: string): number[] {
+  const out: number[] = [];
+  for (const m of text.matchAll(MONEY_FIGURE_RE)) {
+    const v = parseMoneyFigure(m[0]);
+    if (v != null) out.push(v);
+  }
+  return out;
+}
+
+/** All bare numbers in a text (derivation operands like "84 units"). */
+export function extractBareNumbers(text: string): number[] {
+  const out: number[] = [];
+  for (const m of text.matchAll(/(?<![\d.,$])[\d,]+(?:\.\d+)?(?![\d.])/g)) {
+    const v = parseFloat(m[0].replace(/,/g, ""));
+    if (Number.isFinite(v)) out.push(v);
+  }
+  return out;
+}
+
+function moneyClose(a: number, b: number): boolean {
+  return Math.abs(a - b) <= Math.max(1, 0.001 * Math.abs(b));
+}
+
+/**
+ * Check one flag's money figures against the source documents.
+ * Returns the figures that are neither verbatim nor computable.
+ */
+export function checkFlagMoney(
+  flag: Flag,
+  sourceMoneyValues: number[],
+  sourceNumbers: number[]
+): { ok: boolean; ungrounded: string[] } {
+  const ungrounded: string[] = [];
+  const hasMoneyValue = (v: number) =>
+    sourceMoneyValues.some((s) => moneyClose(v, s));
+
+  // Title + explanation: every $ figure must appear by value in the source.
+  for (const text of [flag.title, flag.explanation]) {
+    for (const m of text.matchAll(MONEY_FIGURE_RE)) {
+      const v = parseMoneyFigure(m[0]);
+      if (v != null && !hasMoneyValue(v)) ungrounded.push(m[0]);
+    }
+  }
+
+  const me = flag.money_exposure;
+  if (me) {
+    // One round of derivations from verbatim source numbers, for the
+    // "directly computable" allowance (e.g. 8500 x 84 = 714000).
+    // The pool includes both bare numbers ("84 units") and $ figures.
+    const uniq = [...new Set([...sourceNumbers, ...sourceMoneyValues])].slice(
+      0,
+      2000
+    );
+    const derived: number[] = [];
+    for (const a of uniq) {
+      for (const b of uniq) {
+        derived.push(a * b, a + b, a - b);
+        if (b !== 0) derived.push(a / b);
+      }
+    }
+    const groundedNumber = (n: number) =>
+      hasMoneyValue(n) ||
+      uniq.some((g) => moneyClose(n, g)) ||
+      derived.some((d) => moneyClose(n, d));
+
+    for (const n of [me.amount_cad, me.per_unit_cad]) {
+      if (n != null && !groundedNumber(n)) ungrounded.push(`$${n}`);
+    }
+    // $ figures in the basis: verbatim, or the shown derivation result.
+    for (const m of (me.basis ?? "").matchAll(MONEY_FIGURE_RE)) {
+      const v = parseMoneyFigure(m[0]);
+      if (
+        v != null &&
+        !hasMoneyValue(v) &&
+        !derived.some((d) => moneyClose(v, d))
+      ) {
+        ungrounded.push(m[0]);
+      }
+    }
+  }
+  return { ok: ungrounded.length === 0, ungrounded };
+}
+
+/**
  * Verify a full Claude analysis against the extracted page text.
  *
  * Enforcement rules (non-negotiable):
  * - A flag with ANY unverified evidence is downgraded to at most "warning"
  *   and loses its money-exposure figures (they can only come from verified
  *   evidence).
+ * - A flag with ANY ungrounded money figure (see checkFlagMoney) is
+ *   treated the same: downgraded, money nulled.
  * - money_exposure_total_cad is recomputed from verified flags only.
  */
 export function verifyAnalysis(
@@ -231,6 +352,13 @@ export function verifyAnalysis(
 ): VerifiedAnalysis {
   let verifiedClaims = 0;
   let totalClaims = 0;
+
+  // Source-side numbers for the deterministic money cross-check (once).
+  const sourceText = docs
+    .map((d) => d.pages.map((p) => p.text).join("\n"))
+    .join("\n");
+  const sourceMoneyValues = extractMoneyValues(sourceText);
+  const sourceNumbers = extractBareNumbers(sourceText);
 
   const flags: VerifiedFlag[] = analysis.flags.map((flag: Flag) => {
     const evidence: VerifiedEvidence[] = verifyEvidences(
@@ -258,7 +386,12 @@ export function verifyAnalysis(
     });
 
     const allVerified = evidence.every((e) => e.verified);
-    const downgraded = !allVerified;
+    const moneyGrounded = checkFlagMoney(
+      flag,
+      sourceMoneyValues,
+      sourceNumbers
+    ).ok;
+    const downgraded = !allVerified || !moneyGrounded;
     return {
       flag_type: flag.flag_type,
       severity: downgraded
@@ -269,8 +402,9 @@ export function verifyAnalysis(
       title: flag.title,
       explanation: flag.explanation,
       evidence,
-      // Money figures only survive on fully verified evidence.
-      money_exposure: allVerified ? flag.money_exposure : null,
+      // Money figures only survive on fully verified evidence AND grounded
+      // figures (an invented dollar amount is treated like a bad quote).
+      money_exposure: allVerified && moneyGrounded ? flag.money_exposure : null,
       downgraded,
     };
   });

@@ -13,12 +13,12 @@ export interface ExtractedDoc {
   fileId: string;
   filename: string;
   pages: PageText[];
-  /** Page count capped at MAX_PAGES for the text path. */
+  /** Page count capped at maxTextPages() for the text path. */
   pageCount: number;
   /** True page count, uncapped — the OCR path uses this (100-page ceiling).
    *  Present when known (always set by extractPdfText). */
   totalPages?: number;
-  /** True when pages/chars were dropped by the MAX_PAGES / MAX_CHARS caps.
+  /** True when pages/chars were dropped by the maxTextPages()/maxTextChars() caps.
    *  Optional: only the extraction step sets it; the run route rebuilds
    *  a partial doc for prompt rendering and doesn't need it. */
   truncated?: boolean;
@@ -28,8 +28,17 @@ export interface ExtractedDoc {
   isScanned: boolean;
 }
 
-const MAX_CHARS_PER_DOC = 60_000;
-const MAX_PAGES = 40;
+/** Max pages of text extracted per doc. Tunable via MAX_TEXT_PAGES. */
+export function maxTextPages(): number {
+  const v = Number(process.env.MAX_TEXT_PAGES);
+  return Number.isFinite(v) && v > 0 ? Math.floor(v) : 100;
+}
+
+/** Max characters of text kept per doc. Tunable via MAX_TEXT_CHARS. */
+export function maxTextChars(): number {
+  const v = Number(process.env.MAX_TEXT_CHARS);
+  return Number.isFinite(v) && v > 0 ? Math.floor(v) : 150_000;
+}
 
 /** Pages below this many extracted characters are treated as image-only. Configurable. */
 export function scanThresholdChars(): number {
@@ -79,7 +88,9 @@ export async function extractPdfText(
   }
 
   const threshold = scanThresholdChars();
-  const rawPages = result.text.slice(0, MAX_PAGES);
+  const maxPages = maxTextPages();
+  const maxChars = maxTextChars();
+  const rawPages = result.text.slice(0, maxPages);
   const pages: PageText[] = rawPages.map((t, i) => ({
     page: i + 1,
     text: (t || "").replace(/[ \t]+\n/g, "\n").trim(),
@@ -91,13 +102,13 @@ export async function extractPdfText(
   let charCount = pages.reduce((n, p) => n + p.text.length, 0);
 
   // Track whether content was dropped so the UI can say so honestly —
-  // a 100-page PDF analyzed as 40 pages must never look complete.
+  // a 200-page PDF analyzed as 100 pages must never look complete.
   const truncated =
-    result.totalPages > MAX_PAGES || charCount > MAX_CHARS_PER_DOC;
+    result.totalPages > maxPages || charCount > maxChars;
 
   // Hard cap on total characters: truncate from the last page backwards.
-  if (charCount > MAX_CHARS_PER_DOC && !isScanned) {
-    let remaining = MAX_CHARS_PER_DOC;
+  if (charCount > maxChars && !isScanned) {
+    let remaining = maxChars;
     for (const p of pages) {
       if (p.text.length <= remaining) {
         remaining -= p.text.length;
@@ -106,14 +117,14 @@ export async function extractPdfText(
         remaining = 0;
       }
     }
-    charCount = MAX_CHARS_PER_DOC;
+    charCount = maxChars;
   }
 
   return {
     fileId,
     filename,
     pages,
-    pageCount: Math.min(result.totalPages, MAX_PAGES),
+    pageCount: Math.min(result.totalPages, maxPages),
     totalPages: result.totalPages,
     truncated,
     charCount,

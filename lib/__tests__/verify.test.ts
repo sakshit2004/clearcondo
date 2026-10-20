@@ -1,4 +1,4 @@
-import { describe, it } from "node:test";
+import { describe, it, before } from "node:test";
 import assert from "node:assert/strict";
 import {
   normalizeForMatch,
@@ -6,6 +6,7 @@ import {
   verifyEvidences,
 } from "../verify.ts";
 import type { PageText } from "../extract.ts";
+import type { Flag } from "../report-schema.ts";
 
 const pages: PageText[] = [
   {
@@ -148,5 +149,154 @@ describe("verifyEvidences", () => {
     assert.equal(out[0].verified, true);
     assert.equal(out[1].verified, true); // filename fallback
     assert.equal(out[2].verified, false); // no such doc
+  });
+});
+
+describe("parseMoneyFigure", () => {
+  it("parses plain, comma, and abbreviated figures", async () => {
+    const { parseMoneyFigure } = await import("../verify.ts");
+    assert.equal(parseMoneyFigure("$8,500"), 8500);
+    assert.equal(parseMoneyFigure("$1.15M"), 1150000);
+    assert.equal(parseMoneyFigure("$1,150,000"), 1150000);
+    assert.equal(parseMoneyFigure("$100k"), 100000);
+    assert.equal(parseMoneyFigure("$4,250"), 4250);
+    assert.equal(parseMoneyFigure("nonsense"), null);
+  });
+});
+
+describe("checkFlagMoney", () => {
+  let checkFlagMoney: typeof import("../verify.ts").checkFlagMoney;
+  let extractMoneyValues: typeof import("../verify.ts").extractMoneyValues;
+  let extractBareNumbers: typeof import("../verify.ts").extractBareNumbers;
+  before(async () => {
+    const m = await import("../verify.ts");
+    checkFlagMoney = m.checkFlagMoney;
+    extractMoneyValues = m.extractMoneyValues;
+    extractBareNumbers = m.extractBareNumbers;
+  });
+
+  const src =
+    "The board voted a special assessment of $8,500 per unit for the parkade membrane. " +
+    "There are 84 units. The envelope remediation will cost $1,150,000.";
+  const moneyVals = () => extractMoneyValues(src);
+  const bareNums = () => extractBareNumbers(src);
+
+  const flag = (over: Partial<Flag> = {}): Flag => ({
+    flag_type: "special_assessment",
+    severity: "critical",
+    title: "$8,500/unit special assessment levied for parkade membrane",
+    explanation: "The board voted $8,500 per unit.",
+    evidence: [],
+    money_exposure: {
+      amount_cad: 714000,
+      per_unit_cad: 8500,
+      basis: "$8,500 x 84 units = $714,000",
+    },
+    ...over,
+  });
+
+  it("passes verbatim figures", () => {
+    const r = checkFlagMoney(flag(), moneyVals(), bareNums());
+    assert.equal(r.ok, true);
+    assert.deepEqual(r.ungrounded, []);
+  });
+
+  it("passes computed amounts shown in the basis (8500 x 84 = 714000)", () => {
+    const r = checkFlagMoney(flag(), moneyVals(), bareNums());
+    assert.equal(r.ok, true); // 714000 is derivable, not invented
+  });
+
+  it("treats $1.15M and $1,150,000 as the same value", () => {
+    const r = checkFlagMoney(
+      flag({ title: "$1.15M envelope remediation not funded", money_exposure: null }),
+      moneyVals(),
+      bareNums()
+    );
+    assert.equal(r.ok, true);
+  });
+
+  it("flags an invented dollar figure in the title", () => {
+    const r = checkFlagMoney(
+      flag({ title: "Mystery $99,000 charge discovered", money_exposure: null }),
+      moneyVals(),
+      bareNums()
+    );
+    assert.equal(r.ok, false);
+    assert.ok(r.ungrounded.some((u) => u.includes("99,000")));
+  });
+
+  it("flags an invented money_exposure amount", () => {
+    const r = checkFlagMoney(
+      flag({
+        money_exposure: {
+          amount_cad: 999999,
+          per_unit_cad: 8500,
+          basis: "$8,500 x 84 units",
+        },
+      }),
+      moneyVals(),
+      bareNums()
+    );
+    assert.equal(r.ok, false);
+    assert.ok(r.ungrounded.some((u) => u.includes("999999")));
+  });
+});
+
+describe("verifyAnalysis money cross-check", () => {
+  it("downgrades a flag with an invented figure and nulls its money", async () => {
+    const { verifyAnalysis } = await import("../verify.ts");
+    const moneyPages: PageText[] = [
+      {
+        page: 1,
+        text: "The board voted a special assessment of $8,500 per unit for the parkade membrane. There are 84 units.",
+      },
+    ];
+    const docs = [{ fileId: "file-0", fileName: "minutes.pdf", pages: moneyPages, ocr: false }];
+    const baseFlag = {
+      flag_type: "special_assessment",
+      severity: "critical",
+      evidence: [
+        {
+          file_id: "file-0",
+          page: 1,
+          document_name: "minutes.pdf",
+          quote:
+            "The board voted a special assessment of $8,500 per unit for the parkade membrane",
+        },
+      ],
+    };
+    const analysis = {
+      building: { name: null, corp_number: null, address: null, units: 84, year_built: null, monthly_contribution_avg_cad: null },
+      structured_facts: {
+        doc_date: null, reserve_balance_cad: null, reserve_recommended_cad: null,
+        contribution_monthly_cad: null, insurance_deductible_cad: null,
+        special_assessments: [], litigation: [], rental_rules: null,
+        rental_rules_evidence: null, fee_change_pct: null,
+      },
+      flags: [
+        {
+          ...baseFlag,
+          title: "$8,500/unit special assessment levied",
+          explanation: "The board voted $8,500 per unit.",
+          money_exposure: { amount_cad: 714000, per_unit_cad: 8500, basis: "$8,500 x 84 units = $714,000" },
+        },
+        {
+          ...baseFlag,
+          title: "Mystery $99,000 charge discovered",
+          explanation: "An unexplained $99,000 appears.",
+          money_exposure: { amount_cad: 99000, per_unit_cad: 99000, basis: "$99,000 found" },
+        },
+      ],
+      money_exposure_total_cad: null,
+      money_exposure_basis: "n/a",
+      questions_for_realtor_lawyer: [],
+      summary: "s",
+    };
+    const out = verifyAnalysis(analysis as never, docs);
+    assert.equal(out.flags[0].severity, "critical");
+    assert.ok(out.flags[0].money_exposure);
+    assert.equal(out.flags[1].severity, "warning"); // invented figure -> downgraded
+    assert.equal(out.flags[1].money_exposure, null);
+    assert.equal(out.flags[1].downgraded, true);
   });
 });
