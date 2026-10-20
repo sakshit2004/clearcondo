@@ -11,14 +11,14 @@ export default function Header() {
           <span className="w-8 h-8 rounded-lg bg-teal-800 text-white flex items-center justify-center font-bold text-sm">
             CC
           </span>
-          <span className="font-semibold text-lg tracking-tight text-stone-900">
+          <span className="font-semibold text-base sm:text-lg tracking-tight text-stone-900">
             ClearCondo
           </span>
         </Link>
-        <nav className="flex items-center gap-2 sm:gap-4 text-sm">
+        <nav className="flex items-center gap-1 sm:gap-4 text-sm">
           <Link
             href="/demo"
-            className="text-stone-600 hover:text-stone-900 px-2 py-1"
+            className="hidden sm:inline text-stone-600 hover:text-stone-900 px-2 py-1"
           >
             Sample report
           </Link>
@@ -27,13 +27,13 @@ export default function Header() {
               <SignedOut>
                 <Link
                   href="/sign-in"
-                  className="text-stone-600 hover:text-stone-900 px-2 py-1"
+                  className="text-stone-600 hover:text-stone-900 px-2 py-1 whitespace-nowrap"
                 >
                   Sign in
                 </Link>
                 <Link
                   href="/app/new"
-                  className="bg-teal-800 hover:bg-teal-900 text-white px-4 py-2 rounded-lg font-medium"
+                  className="bg-teal-800 hover:bg-teal-900 text-white px-3 sm:px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap"
                 >
                   Analyze documents
                 </Link>
@@ -41,7 +41,7 @@ export default function Header() {
               <SignedIn>
                 <Link
                   href="/app"
-                  className="text-stone-600 hover:text-stone-900 px-2 py-1"
+                  className="text-stone-600 hover:text-stone-900 px-2 py-1 whitespace-nowrap"
                 >
                   Dashboard
                 </Link>
@@ -49,7 +49,7 @@ export default function Header() {
               </SignedIn>
             </>
           ) : (
-            <span className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
+            <span className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-3 py-1 whitespace-nowrap">
               Auth not configured
             </span>
           )}
