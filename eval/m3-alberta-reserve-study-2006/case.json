@@ -1,0 +1,8 @@
+{
+  "name": "m3-alberta-reserve-study-2006",
+  "docs_dir": "../../demo-docs",
+  "docs": [
+    "m3-sample-reserve-fund-study.pdf"
+  ],
+  "analysis": "analysis-pending.json"
+}

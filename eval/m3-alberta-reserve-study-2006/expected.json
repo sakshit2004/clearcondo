@@ -1,0 +1,57 @@
+{
+  "_comment": "Hand-labeled 2026-10-18 from M3 Consulting's public Alberta reserve-fund-study SAMPLE (My Condominium, Plan 012 3456, 36 units, built 2001, study dated Aug 8 2006). Format/financials are real reserve-study content; building identity is M3's anonymized sample. Labeled from the PDF before any model analysis of this stack — evidence quotes are verbatim from the repo's own PDF extraction (lib/extract.ts).",
+  "flags": [
+    {
+      "id": "plumbing-underfunded-near-term",
+      "severity": "warning",
+      "title_keywords": ["plumbing"],
+      "evidence_quote": "Plumbing Systems 8 8 4 4 6,500$ 813$ 9% 1,510$ 3,250$ (1,740)$",
+      "source_doc": "m3-sample-reserve-fund-study.pdf",
+      "min_amount_cad": 6500
+    },
+    {
+      "id": "hvac-underfunded",
+      "severity": "warning",
+      "title_keywords": ["hvac"],
+      "evidence_quote": "Heating, Ventilation and Air Conditioning 25 26 10 15 12,500$ 500$ 5% 929$ 5,000$ (4,071)$",
+      "source_doc": "m3-sample-reserve-fund-study.pdf",
+      "min_amount_cad": 12500
+    },
+    {
+      "id": "fire-protection-shortfall",
+      "severity": "info",
+      "title_keywords": ["fire protection"],
+      "evidence_quote": "Fire Protection, Access Controls & Safety Systems 25 5 5 20 1,500$ 60$ 1% 111$ 300$ (189)$",
+      "source_doc": "m3-sample-reserve-fund-study.pdf"
+    },
+    {
+      "id": "reserve-fund-healthy-109pct",
+      "severity": "info",
+      "title_keywords": ["109", "funded"],
+      "evidence_quote": "Shortfall / Surplus in Reserve Fund to date 1393 Percent Funded 109%",
+      "source_doc": "m3-sample-reserve-fund-study.pdf"
+    },
+    {
+      "id": "window-replacement-2025-largest",
+      "severity": "info",
+      "title_keywords": ["window", "28,728"],
+      "evidence_quote": "Window Assemblies 20 1 1 19 28,728$ 1,436$ 15% 2,669$ 1,436$ 1,232$",
+      "source_doc": "m3-sample-reserve-fund-study.pdf",
+      "min_amount_cad": 28728
+    },
+    {
+      "id": "annual-contribution-9419",
+      "severity": "info",
+      "title_keywords": ["annual", "contribution"],
+      "evidence_quote": "Annual Replacement Contribution 9419.18 Monthly Replacement Contribution 784.93",
+      "source_doc": "m3-sample-reserve-fund-study.pdf"
+    },
+    {
+      "id": "next-reserve-study-2011",
+      "severity": "info",
+      "title_keywords": ["reserve fund study", "2011"],
+      "evidence_quote": "Reserve Fund Study 2,450$ 2011",
+      "source_doc": "m3-sample-reserve-fund-study.pdf"
+    }
+  ]
+}
