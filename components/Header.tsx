@@ -5,20 +5,18 @@ import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 export default function Header() {
   const configured = isClerkConfigured();
   return (
-    <header className="border-b border-stone-200 bg-white/80 backdrop-blur sticky top-0 z-40">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5">
-          <span className="w-8 h-8 rounded-lg bg-teal-800 text-white flex items-center justify-center font-bold text-sm">
-            CC
-          </span>
-          <span className="font-semibold text-base sm:text-lg tracking-tight text-stone-900">
+    <header className="bg-white sticky top-0 z-40 border-b border-ink">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center justify-between">
+        <Link href="/" className="flex items-baseline gap-2.5">
+          <span className="w-2.5 h-2.5 bg-signal inline-block translate-y-[-1px]" aria-hidden />
+          <span className="font-bold text-[17px] tracking-tight text-ink">
             ClearCondo
           </span>
         </Link>
-        <nav className="flex items-center gap-1 sm:gap-4 text-sm">
+        <nav className="flex items-center gap-5 sm:gap-7">
           <Link
             href="/demo"
-            className="hidden sm:inline text-stone-600 hover:text-stone-900 px-2 py-1"
+            className="micro-label hidden sm:inline text-stone-500 hover:text-ink transition-colors"
           >
             Sample report
           </Link>
@@ -27,13 +25,13 @@ export default function Header() {
               <SignedOut>
                 <Link
                   href="/sign-in"
-                  className="text-stone-600 hover:text-stone-900 px-2 py-1 whitespace-nowrap"
+                  className="micro-label text-stone-500 hover:text-ink whitespace-nowrap transition-colors"
                 >
                   Sign in
                 </Link>
                 <Link
                   href="/app/new"
-                  className="bg-teal-800 hover:bg-teal-900 text-white px-3 sm:px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap"
+                  className="bg-ink hover:bg-signal text-white micro-label px-4 py-2.5 whitespace-nowrap transition-colors"
                 >
                   Analyze documents
                 </Link>
@@ -41,7 +39,7 @@ export default function Header() {
               <SignedIn>
                 <Link
                   href="/app"
-                  className="text-stone-600 hover:text-stone-900 px-2 py-1 whitespace-nowrap"
+                  className="micro-label text-stone-500 hover:text-ink whitespace-nowrap transition-colors"
                 >
                   Dashboard
                 </Link>
@@ -49,7 +47,7 @@ export default function Header() {
               </SignedIn>
             </>
           ) : (
-            <span className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-3 py-1 whitespace-nowrap">
+            <span className="micro-label text-stone-500 border border-stone-300 px-3 py-1.5 whitespace-nowrap">
               Auth not configured
             </span>
           )}

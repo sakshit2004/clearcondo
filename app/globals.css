@@ -1,8 +1,29 @@
 @import "tailwindcss";
 
+/*
+ * ClearCondo design — Swiss / International Typographic Style.
+ * White ground, strict grid, grotesque type at small sizes, hairline
+ * rules, numbered sections. One accent: Swiss red, used sparingly —
+ * it marks risk (critical flags), the exposure figure, and nothing
+ * decorative. No gradients, no glows, no shadows for effect.
+ */
+
 :root {
-  --background: #fafaf9;
-  --foreground: #1c1917;
+  --background: #ffffff;
+  --foreground: #111110;
+  --ink: #111110;
+  --paper: #ffffff;
+  --cream: #ffffff;
+  --signal: #e2001a;
+}
+
+@theme {
+  --color-ink: #111110;
+  --color-ink2: #2b2b28;
+  --color-paper: #ffffff;
+  --color-cream: #ffffff;
+  --color-signal: #e2001a;
+  --color-signal-dark: #b00015;
 }
 
 @theme inline {
@@ -10,17 +31,99 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-geist-sans);
+  --font-serif: var(--font-geist-sans);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-geist-sans), "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 15.5px;
 }
 
-/* Subtle paper texture for the report view */
+::selection {
+  background: var(--signal);
+  color: #fff;
+}
+
+/* Small uppercase label — section indices, metadata, table heads */
+.micro-label {
+  font-family: var(--font-geist-sans), "Helvetica Neue", Helvetica, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Data label — filenames, dates, figures that must align */
+.data-label {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Document card: white, one hairline, no shadow */
 .report-paper {
   background: #ffffff;
-  border: 1px solid #e7e5e4;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  border: 1px solid #dcdcd6;
+}
+
+/* Scroll reveal — opacity only, quick; decoration-free */
+.reveal {
+  opacity: 0;
+  transition: opacity 0.45s ease-out;
+}
+.reveal.in {
+  opacity: 1;
+}
+
+/* Entrance — same, on load */
+@keyframes rise-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.rise-in {
+  animation: rise-in 0.5s ease-out both;
+}
+
+/* Thin indeterminate bar (analysis progress) */
+.loadbar {
+  position: relative;
+  overflow: hidden;
+  height: 2px;
+  background: #e6e6e1;
+}
+.loadbar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -40%;
+  height: 100%;
+  width: 40%;
+  background: var(--signal);
+  animation: loadslide 1.3s ease-in-out infinite;
+}
+@keyframes loadslide {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transition: none;
+  }
+  .rise-in,
+  .loadbar::after {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
 }
