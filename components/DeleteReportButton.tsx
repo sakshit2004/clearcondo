@@ -37,7 +37,7 @@ export default function DeleteReportButton({ reportId }: { reportId: string }) {
 
   if (deleted) {
     return (
-      <div className="rounded-xl border border-teal-200 bg-teal-50 p-4 text-sm text-teal-900">
+      <div className=" border border-[#067647]/30 bg-[#067647]/[0.06] p-4 text-sm text-[#067647]">
         Report deleted — the report, its flags, its documents, and the
         extracted page text are gone. (If building memory is enabled, its
         learned beliefs are removed on a best-effort basis.)
@@ -57,7 +57,7 @@ export default function DeleteReportButton({ reportId }: { reportId: string }) {
   }
 
   return (
-    <div className="rounded-xl border border-red-200 bg-red-50 p-4 max-w-xl">
+    <div className=" border border-red-200 bg-red-50 p-4 max-w-xl">
       <p className="text-sm font-semibold text-red-900 mb-1">
         Delete this report permanently?
       </p>
@@ -69,14 +69,14 @@ export default function DeleteReportButton({ reportId }: { reportId: string }) {
         <button
           onClick={() => setConfirming(false)}
           disabled={deleting}
-          className="px-4 py-2 rounded-lg border border-stone-300 bg-white text-sm font-medium text-stone-700 hover:border-stone-400 disabled:opacity-60"
+          className="px-4 py-2 border border-stone-300 bg-white text-sm font-medium text-stone-700 hover:border-stone-400 disabled:opacity-60"
         >
           Cancel
         </button>
         <button
           onClick={doDelete}
           disabled={deleting}
-          className="px-4 py-2 rounded-lg bg-red-700 hover:bg-red-800 text-white text-sm font-medium disabled:opacity-60"
+          className="px-4 py-2 bg-red-700 hover:bg-red-800 text-white text-sm font-medium disabled:opacity-60"
         >
           {deleting ? "Deleting…" : "Yes, delete it"}
         </button>

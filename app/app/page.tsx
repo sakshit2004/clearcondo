@@ -32,19 +32,24 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-stone-900">My reports</h1>
+      <div className="flex items-end justify-between mb-7">
+        <div>
+          <span className="micro-label text-stone-400">Dashboard</span>
+          <h1 className="font-bold text-4xl tracking-[-0.02em] text-ink mt-1.5">
+            My reports
+          </h1>
+        </div>
         <Link
           href="/app/new"
-          className="bg-teal-800 hover:bg-teal-900 text-white px-4 py-2 rounded-lg font-medium text-sm"
+          className="bg-ink text-white hover:bg-signal px-5 py-2.5 font-semibold text-sm transition-colors"
         >
           New analysis
         </Link>
       </div>
 
       {reports.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-stone-300 bg-white p-10 text-center">
-          <h2 className="font-semibold text-stone-900 mb-2">
+        <div className="border-2 border-dashed border-stone-300 bg-white p-10 text-center">
+          <h2 className="font-bold text-2xl tracking-tight text-ink mb-2">
             No reports yet
           </h2>
           <p className="text-stone-600 text-sm mb-6 max-w-md mx-auto">
@@ -53,7 +58,7 @@ export default async function DashboardPage() {
           </p>
           <Link
             href="/app/new"
-            className="inline-block bg-teal-800 hover:bg-teal-900 text-white px-6 py-2.5 rounded-lg font-medium text-sm"
+            className="inline-block bg-ink text-white hover:bg-signal px-6 py-3 font-semibold text-sm transition-colors"
           >
             Analyze your first building
           </Link>
@@ -64,23 +69,23 @@ export default async function DashboardPage() {
             <Link
               key={String(r.id)}
               href={`/app/reports/${encodeURIComponent(String(r.id).split(":")[1] ?? String(r.id))}`}
-              className="report-paper rounded-xl p-5 hover:shadow-md transition-shadow"
+              className="report-paper p-5 hover:border-ink transition-colors"
             >
-              <div className="font-semibold text-stone-900 mb-1">
+              <div className="font-bold text-ink mb-1">
                 {r.building_name || "Unnamed building"}
               </div>
-              <div className="text-xs text-stone-500 mb-3">
+              <div className="micro-label !text-[10px] text-stone-500 mb-3">
                 {formatDate(String(r.created_at))} · {timeAgo(String(r.created_at))}
               </div>
               <p className="text-sm text-stone-600 line-clamp-3 mb-4">
                 {r.summary}
               </p>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-stone-500">
+                <span className="micro-label text-stone-500">
                   {r.flagCount} flag{r.flagCount === 1 ? "" : "s"}
                 </span>
                 {r.money_exposure_total_cad != null && (
-                  <span className="font-bold text-stone-900">
+                  <span className="font-bold text-xl text-ink tabular-nums">
                     {cad(r.money_exposure_total_cad)}
                   </span>
                 )}
@@ -95,7 +100,7 @@ export default async function DashboardPage() {
 
 function DbNotice() {
   return (
-    <div className="rounded-xl border border-amber-200 bg-amber-50 p-6">
+    <div className=" border border-amber-200 bg-amber-50 p-6">
       <h1 className="text-lg font-bold text-amber-900 mb-2">
         Database isn&apos;t configured
       </h1>

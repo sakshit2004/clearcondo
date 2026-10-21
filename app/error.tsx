@@ -26,12 +26,12 @@ export default function Error({
 
   return (
     <div className="mx-auto max-w-2xl px-4 sm:px-6 py-16 text-center">
-      <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-2xl">
+      <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center border border-stone-300 text-2xl">
         <span role="img" aria-label="Warning">
           ⚠️
         </span>
       </div>
-      <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
+      <h1 className="font-bold text-3xl tracking-tight text-ink">
         Something went wrong
       </h1>
       <p className="mt-3 text-stone-600">
@@ -42,14 +42,14 @@ export default function Error({
         {tryAgain && (
           <button
             onClick={tryAgain}
-            className="rounded-lg bg-teal-800 px-5 py-2.5 font-medium text-white hover:bg-teal-900"
+            className="bg-ink px-6 py-2.5 font-semibold text-white hover:bg-signal transition-colors"
           >
             Try again
           </button>
         )}
         <Link
           href="/"
-          className="rounded-lg border border-stone-300 px-5 py-2.5 font-medium text-stone-700 hover:bg-stone-50"
+          className="border border-stone-400 px-6 py-2.5 font-semibold text-ink hover:border-ink transition-colors"
         >
           Back to home
         </Link>

@@ -7,7 +7,8 @@ import Link from "next/link";
 export default function PrivacyPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 py-14">
-      <h1 className="text-3xl font-bold text-stone-900 mb-2">
+      <span className="micro-label text-stone-400">Privacy</span>
+      <h1 className="font-bold text-4xl tracking-[-0.02em] text-ink mt-2 mb-2">
         Privacy &amp; data retention
       </h1>
       <p className="text-stone-500 text-sm mb-10">
@@ -99,7 +100,7 @@ export default function PrivacyPage() {
       <div className="mt-12">
         <Link
           href="/app/new"
-          className="inline-block bg-teal-800 hover:bg-teal-900 text-white px-6 py-3 rounded-lg font-semibold"
+          className="inline-block bg-ink text-white hover:bg-signal px-7 py-3 font-semibold transition-colors"
         >
           Analyze your documents
         </Link>

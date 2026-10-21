@@ -242,7 +242,7 @@ export default function UploadForm({
             setEphemeral(null);
             setFiles([]);
           }}
-          className="text-sm font-semibold text-teal-800 hover:text-teal-900 mb-6"
+          className="micro-label text-ink underline underline-offset-4 decoration-stone-300 hover:decoration-signal mb-6 inline-block"
         >
           ← Analyze another building
         </button>
@@ -255,8 +255,10 @@ export default function UploadForm({
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold text-stone-900 mb-2">New analysis</h1>
-      <p className="text-stone-600 mb-6">
+      <h1 className="font-bold text-4xl tracking-[-0.02em] text-ink mb-3">
+        New analysis
+      </h1>
+      <p className="text-stone-600 mb-7 leading-relaxed">
         Upload the condo&apos;s document stack as PDFs. We&apos;ll read every
         page and produce a red-flag report.
         {stripeEnabled && credits !== null && (
@@ -266,8 +268,8 @@ export default function UploadForm({
         )}
       </p>
 
-      <label className="block text-sm font-medium text-stone-700 mb-1.5">
-        Building name <span className="text-stone-400 font-normal">(optional — we&apos;ll also read it from the documents)</span>
+      <label className="micro-label block text-stone-600 mb-2">
+        Building name <span className="normal-case tracking-normal font-sans text-[13px] text-stone-400">(optional — we&apos;ll also read it from the documents)</span>
       </label>
       <input
         type="text"
@@ -279,12 +281,12 @@ export default function UploadForm({
         }}
         placeholder="e.g. North Hill Terrace"
         disabled={busy}
-        className="w-full rounded-lg border border-stone-300 bg-white px-4 py-2.5 mb-2 text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-800/30"
+        className="w-full border border-stone-300 bg-white px-4 py-3 mb-2 text-ink placeholder:text-stone-400 focus:outline-none focus:border-ink focus:ring-2 focus:ring-ink/10"
       />
 
       {candidates.length > 0 && !busy && (
-        <div className="mb-6 rounded-xl border border-stone-200 bg-white p-4">
-          <div className="text-sm font-medium text-stone-800 mb-2">
+        <div className="mb-6 report-paper p-5">
+          <div className="text-sm font-bold text-ink mb-2">
             Is this one of your existing buildings?
           </div>
           <label className="flex items-center gap-2 text-sm text-stone-700 py-1 cursor-pointer">
@@ -293,7 +295,7 @@ export default function UploadForm({
               name="building"
               checked={buildingId === null}
               onChange={() => setBuildingId(null)}
-              className="accent-teal-800"
+              className="accent-signal"
             />
             New building
           </label>
@@ -307,7 +309,7 @@ export default function UploadForm({
                 name="building"
                 checked={buildingId === c.id}
                 onChange={() => setBuildingId(c.id)}
-                className="accent-teal-800"
+                className="accent-signal"
               />
               <span className="font-medium">{c.name}</span>
               <span className="text-stone-500">
@@ -345,10 +347,10 @@ export default function UploadForm({
             inputRef.current?.click();
           }
         }}
-        className={`rounded-xl border-2 border-dashed p-10 text-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800/50 ${
+        className={`border-2 border-dashed p-10 text-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/30 ${
           dragOver
-            ? "border-teal-700 bg-teal-50"
-            : "border-stone-300 bg-white hover:border-stone-400"
+            ? "border-signal bg-red-50/50"
+            : "border-stone-300 bg-white hover:border-ink"
         } ${busy ? "opacity-60 pointer-events-none" : ""}`}
       >
         <input
@@ -359,11 +361,11 @@ export default function UploadForm({
           className="hidden"
           onChange={(e) => e.target.files && addFiles(e.target.files)}
         />
-        <div className="text-stone-700 font-medium mb-1">
+        <div className="font-bold text-lg text-ink mb-1.5">
           Drag &amp; drop PDFs here, or click to browse
         </div>
         <div className="text-sm text-stone-500">
-          Reserve fund study, bylaws, minutes, information statements — up to 12 files, 4&nbsp;MB total
+          Drag &amp; drop here, or click to browse — reserve fund study, bylaws, minutes, information statements — up to 12 files, 4&nbsp;MB total
         </div>
       </div>
 
@@ -372,11 +374,11 @@ export default function UploadForm({
           {files.map((f) => (
             <li
               key={f.name}
-              className="flex items-center justify-between rounded-lg border border-stone-200 bg-white px-4 py-2.5 text-sm"
+              className="flex items-center justify-between border border-stone-200 bg-white px-4 py-2.5 text-sm"
             >
-              <span className="text-stone-800 truncate">{f.name}</span>
+              <span className="text-ink truncate">{f.name}</span>
               <span className="flex items-center gap-3">
-                <span className="text-stone-400">
+                <span className="font-mono text-xs text-stone-400">
                   {(f.size / 1024).toFixed(0)} KB
                 </span>
                 {!busy && (
@@ -398,8 +400,8 @@ export default function UploadForm({
 
       {/* Per-file extraction status + warnings */}
       {(busy || warnings.length > 0) && fileStatuses.length > 0 && (
-        <div className="mt-6 rounded-xl border border-stone-200 bg-white p-5">
-          <div className="text-xs font-semibold uppercase tracking-wide text-stone-500 mb-3">
+        <div className="mt-6 report-paper p-5">
+          <div className="micro-label text-stone-500 mb-3">
             Documents
           </div>
           <ul className="space-y-1.5">
@@ -407,10 +409,10 @@ export default function UploadForm({
               <li key={f.filename} className="flex items-center justify-between text-sm">
                 <span className="text-stone-700 truncate mr-3">{f.filename}</span>
                 <span
-                  className={`flex-none text-xs font-medium rounded-full px-2.5 py-1 ${
+                  className={`micro-label flex-none px-2 py-1 ${
                     f.status === "ocr"
-                      ? "bg-amber-100 text-amber-900"
-                      : "bg-teal-50 text-teal-800"
+                      ? "border border-stone-300 text-stone-500"
+                      : "bg-ink text-white"
                   }`}
                 >
                   {f.status === "ocr" ? "Read via OCR" : "Extracted"}
@@ -421,7 +423,7 @@ export default function UploadForm({
         </div>
       )}
       {truncatedDocs.length > 0 && (
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-5">
+        <div className="mt-4 border border-amber-200 bg-amber-50 p-5">
           <div className="text-sm font-semibold text-amber-900 mb-2">
             Some documents were too long to read fully
           </div>
@@ -436,7 +438,7 @@ export default function UploadForm({
         </div>
       )}
       {warnings.length > 0 && !busy && (
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-5">
+        <div className="mt-4 border border-amber-200 bg-amber-50 p-5">
           <div className="text-sm font-semibold text-amber-900 mb-2">
             Some files couldn&apos;t be read
           </div>
@@ -452,8 +454,8 @@ export default function UploadForm({
 
       {/* Missing documents */}
       {missing.length > 0 && (
-        <div className="mt-4 rounded-xl border border-stone-200 bg-white p-5">
-          <div className="text-sm font-semibold text-stone-800 mb-1">
+        <div className="mt-4 report-paper p-5">
+          <div className="text-sm font-bold text-ink mb-1">
             Not in your package — ask for it
           </div>
           <p className="text-xs text-stone-500 mb-3">
@@ -473,39 +475,42 @@ export default function UploadForm({
 
       {/* Progress */}
       {busy && (
-        <div className="mt-6 rounded-xl border border-stone-200 bg-white p-6">
-          {STAGES.map((s) => {
-            const active = stage === s.id;
-            const doneStage =
-              (stage === "analyzing" && s.id === "extracting");
-            return (
-              <div key={s.id} className="flex gap-3 mb-4 last:mb-0">
-                <div
-                  className={`mt-1 w-5 h-5 rounded-full flex-none ${
-                    doneStage
-                      ? "bg-teal-800"
-                      : active
-                        ? "border-2 border-teal-800 border-t-transparent animate-spin"
-                        : "border-2 border-stone-200"
-                  }`}
-                />
-                <div>
+        <div className="mt-6 border border-stone-300 bg-white p-6" role="status">
+          <div>
+            {STAGES.map((s) => {
+              const active = stage === s.id;
+              const doneStage =
+                (stage === "analyzing" && s.id === "extracting");
+              return (
+                <div key={s.id} className="flex gap-3 mb-4 last:mb-0">
                   <div
-                    className={`font-medium ${active || doneStage ? "text-stone-900" : "text-stone-400"}`}
-                  >
-                    {s.label}
+                    className={`mt-1 w-5 h-5 rounded-full flex-none ${
+                      doneStage
+                        ? "bg-signal"
+                        : active
+                          ? "border-2 border-signal border-t-transparent animate-spin"
+                          : "border-2 border-stone-300"
+                    }`}
+                  />
+                  <div className="flex-1">
+                    <div
+                      className={`font-semibold ${active || doneStage ? "text-ink" : "text-stone-400"}`}
+                    >
+                      {s.label}
+                    </div>
+                    {active && <div className="text-sm text-stone-500 mt-0.5">{s.hint}</div>}
                   </div>
-                  {active && <div className="text-sm text-stone-500">{s.hint}</div>}
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+            <div className="loadbar mt-5" />
+          </div>
         </div>
       )}
 
       {/* Errors */}
       {stage === "error" && error && (
-        <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-5">
+        <div className="mt-6 border border-red-200 bg-red-50 p-5">
           {error.code === "no_api_key" ? (
             <>
               <h3 className="font-semibold text-red-900 mb-1">
@@ -530,7 +535,7 @@ export default function UploadForm({
               <p className="text-sm text-red-800 mb-3">{error.error}</p>
               <a
                 href={error.checkoutUrl}
-                className="inline-block bg-teal-800 hover:bg-teal-900 text-white px-5 py-2.5 rounded-lg font-medium text-sm"
+                className="inline-block bg-ink text-white hover:bg-signal px-5 py-2.5 font-semibold text-sm transition-colors"
               >
                 Buy a report credit
               </a>
@@ -577,7 +582,7 @@ export default function UploadForm({
           checked={consent}
           onChange={(e) => setConsent(e.target.checked)}
           disabled={busy}
-          className="mt-1 w-4 h-4 flex-none accent-teal-800"
+          className="mt-1 w-4 h-4 flex-none accent-signal"
         />
         <span className="text-sm text-stone-600">
           I confirm I have the right to upload these documents and I
@@ -600,7 +605,7 @@ export default function UploadForm({
       <button
         onClick={run}
         disabled={busy || files.length === 0 || !consent}
-        className="mt-4 w-full bg-teal-800 hover:bg-teal-900 disabled:bg-stone-300 disabled:cursor-not-allowed text-white px-6 py-3.5 rounded-lg font-semibold"
+        className="mt-5 w-full bg-ink text-white hover:bg-signal disabled:bg-stone-300 disabled:text-stone-500 disabled:cursor-not-allowed px-6 py-4 font-semibold text-base transition-colors"
       >
         {stage === "extracting"
           ? "Reading PDFs…"

@@ -14,7 +14,7 @@ export default async function AppLayout({
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
-      <nav className="flex gap-1 mb-8 border-b border-stone-200">
+      <nav className="flex gap-1 mb-8 border-b border-ink/20">
         {[
           { href: "/app", label: "Reports" },
           { href: "/app/buildings", label: "Buildings" },
@@ -23,7 +23,7 @@ export default async function AppLayout({
           <Link
             key={l.href}
             href={l.href}
-            className="px-4 py-2.5 text-sm font-medium text-stone-600 hover:text-stone-900 border-b-2 border-transparent hover:border-stone-300 -mb-px"
+            className="micro-label px-4 py-3 text-stone-500 hover:text-ink border-b-2 border-transparent hover:border-signal -mb-px transition-colors"
           >
             {l.label}
           </Link>
