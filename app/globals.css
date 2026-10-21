@@ -1,8 +1,28 @@
 @import "tailwindcss";
 
+/*
+ * ClearCondo art direction — "verified dossier, set in type."
+ * Ink-black fields, one signal-orange, warm paper for documents.
+ * Type: Anton (display, condensed uppercase), Instrument Serif (italic
+ * accents + evidence quotes), Geist (body), Geist Mono (micro-labels).
+ */
+
 :root {
-  --background: #fafaf9;
-  --foreground: #1c1917;
+  --background: #f6f1e7;
+  --foreground: #16150f;
+  --ink: #0a0a0e;
+  --paper: #f6f1e7;
+  --cream: #fffdf7;
+  --signal: #ff4d00;
+}
+
+@theme {
+  --color-ink: #0a0a0e;
+  --color-ink2: #15151c;
+  --color-paper: #f6f1e7;
+  --color-cream: #fffdf7;
+  --color-signal: #ff4d00;
+  --color-signal-dark: #d63e00;
 }
 
 @theme inline {
@@ -10,6 +30,12 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-anton);
+  --font-serif: var(--font-instrument);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -18,9 +44,120 @@ body {
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Subtle paper texture for the report view */
+::selection {
+  background: var(--signal);
+  color: #fff;
+}
+
+/* Monospace micro-label — the reels' corner-label language, used everywhere */
+.micro-label {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* The report as a physical dossier: cream paper, ink edge, offset shadow */
 .report-paper {
-  background: #ffffff;
-  border: 1px solid #e7e5e4;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  background: var(--cream);
+  border: 1px solid rgba(10, 10, 14, 0.85);
+  box-shadow: 5px 5px 0 0 rgba(10, 10, 14, 0.1);
+}
+
+/* Particle dot grids (echoes the showreel preloader) */
+.dotgrid-light {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+}
+.dotgrid-dark {
+  background-image: radial-gradient(rgba(10, 10, 14, 0.1) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+}
+
+/* Center radial glow for dark heroes */
+.hero-glow {
+  background:
+    radial-gradient(ellipse 55% 45% at 50% 40%, rgba(255, 77, 0, 0.55), rgba(255, 77, 0, 0.12) 48%, transparent 72%);
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+.glow-pulse {
+  animation: glow-pulse 7s ease-in-out infinite;
+}
+
+/* Scroll reveal — .reveal starts hidden, Reveal.tsx adds .in on intersect */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Hero entrance */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: none; }
+}
+.rise-in {
+  animation: rise-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Indeterminate thin loading bar (loader-screen echo) */
+.loadbar {
+  position: relative;
+  overflow: hidden;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.15);
+}
+.loadbar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: var(--signal);
+  animation: loadslide 1.3s ease-in-out infinite;
+}
+.loadbar-dark {
+  background: rgba(10, 10, 14, 0.12);
+}
+@keyframes loadslide {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}
+.loadbar::after {
+  left: -40%;
+}
+
+/* Marquee strip */
+@keyframes marquee-x {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee-x 36s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .rise-in,
+  .glow-pulse,
+  .marquee-track,
+  .loadbar::after {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
 }

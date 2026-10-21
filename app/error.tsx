@@ -31,7 +31,7 @@ export default function Error({
           ⚠️
         </span>
       </div>
-      <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
+      <h1 className="font-display uppercase text-3xl tracking-tight text-ink">
         Something went wrong
       </h1>
       <p className="mt-3 text-stone-600">
@@ -42,14 +42,14 @@ export default function Error({
         {tryAgain && (
           <button
             onClick={tryAgain}
-            className="rounded-lg bg-teal-800 px-5 py-2.5 font-medium text-white hover:bg-teal-900"
+            className="rounded-full bg-signal px-6 py-2.5 font-bold text-ink hover:bg-signal-dark"
           >
             Try again
           </button>
         )}
         <Link
           href="/"
-          className="rounded-lg border border-stone-300 px-5 py-2.5 font-medium text-stone-700 hover:bg-stone-50"
+          className="rounded-full border border-ink/30 px-6 py-2.5 font-semibold text-ink hover:border-ink"
         >
           Back to home
         </Link>

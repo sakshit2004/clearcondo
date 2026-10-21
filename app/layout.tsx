@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Anton, Instrument_Serif } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import Header from "@/components/Header";
@@ -12,6 +12,19 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const anton = Anton({
+  weight: "400",
+  variable: "--font-anton",
+  subsets: ["latin"],
+});
+
+const instrumentSerif = Instrument_Serif({
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-instrument",
   subsets: ["latin"],
 });
 
@@ -30,7 +43,7 @@ export default function RootLayout({
 }) {
   const body = (
     <body
-      className={`${geistSans.variable} ${geistMono.variable} min-h-screen flex flex-col antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${anton.variable} ${instrumentSerif.variable} min-h-screen flex flex-col antialiased`}
     >
       <Header />
       <main className="flex-1">{children}</main>

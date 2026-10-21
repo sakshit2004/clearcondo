@@ -4,6 +4,7 @@ import { join } from "path";
 import { VerifiedAnalysisSchema } from "@/lib/report-schema";
 import { cad } from "@/lib/format";
 import FlagCard from "@/components/FlagCard";
+import Reveal from "@/components/Reveal";
 
 function getSamplePreview() {
   const json = JSON.parse(
@@ -18,76 +19,134 @@ function getSamplePreview() {
   };
 }
 
+const TICKER_ITEMS = [
+  "Special assessments",
+  "Reserve funds",
+  "Litigation",
+  "Insurance deductibles",
+  "Bylaws",
+  "Board minutes",
+  "Rental rules",
+  "Fee increases",
+];
+
 export default function LandingPage() {
   const preview = getSamplePreview();
 
   return (
     <div>
-      {/* Hero */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 pt-16 sm:pt-24 pb-12">
-        <div className="max-w-3xl">
-          <p className="text-sm font-semibold uppercase tracking-widest text-teal-800 mb-4">
-            For Canadian condo buyers
-          </p>
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-stone-900 leading-tight mb-6">
-            Know what you&apos;re buying before you buy it.
-          </h1>
-          <p className="text-lg text-stone-600 leading-relaxed mb-8">
+      {/* Hero — ink field, radial glow, oversized type */}
+      <section className="relative bg-ink text-white overflow-hidden">
+        <div className="absolute inset-0 dotgrid-light opacity-60" aria-hidden />
+        <div className="absolute inset-0 hero-glow glow-pulse" aria-hidden />
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 pt-10 pb-16 sm:pt-14 sm:pb-24">
+          <div className="flex justify-between micro-label text-white/45 mb-12 sm:mb-16 rise-in">
+            <span>ClearCondo — Verified red-flag reports</span>
+            <span className="hidden sm:inline">Calgary · Alberta</span>
+          </div>
+
+          <div className="rise-in" style={{ animationDelay: "80ms" }}>
+            <h1 className="font-display uppercase leading-[0.92] tracking-tight text-[17vw] sm:text-8xl lg:text-[7.5rem]">
+              Know what
+              <br />
+              you&apos;re buying
+            </h1>
+            <p className="font-serif italic text-signal text-4xl sm:text-6xl mt-3 sm:mt-4">
+              before you buy it.
+            </p>
+          </div>
+
+          <p
+            className="rise-in mt-8 max-w-2xl text-base sm:text-lg text-white/70 leading-relaxed"
+            style={{ animationDelay: "160ms" }}
+          >
             Sellers hand you a stack of condo documents — reserve fund studies,
             bylaws, meeting minutes — and expect you to spot the $8,500 special
-            assessment buried on page 47. Professional document reviews
-            typically cost $400–800 and take days. ClearCondo gives you a
-            verified red-flag report in a few minutes.
+            assessment buried on page 47. Professional reviews cost $400–800
+            and take days. ClearCondo gives you a verified red-flag report in
+            minutes.
           </p>
-          <div className="flex flex-wrap gap-3">
+
+          <div
+            className="rise-in mt-9 flex flex-wrap items-center gap-3"
+            style={{ animationDelay: "240ms" }}
+          >
             <Link
               href="/app/new"
-              className="bg-teal-800 hover:bg-teal-900 text-white px-6 py-3 rounded-lg font-semibold"
+              className="bg-signal hover:bg-signal-dark text-ink font-bold px-7 py-3.5 rounded-full text-sm sm:text-base transition-colors"
             >
               Analyze your documents
             </Link>
             <Link
               href="/demo"
-              className="border border-stone-300 hover:border-stone-400 bg-white text-stone-800 px-6 py-3 rounded-lg font-semibold"
+              className="border border-white/30 hover:border-white/70 text-white px-7 py-3.5 rounded-full font-semibold text-sm sm:text-base transition-colors"
             >
               See a sample report
             </Link>
           </div>
-          <p className="text-sm text-stone-500 mt-4">
-            Beta: reports are free while we&apos;re in testing.
-          </p>
+
+          <div
+            className="rise-in mt-12 pt-6 border-t border-white/12 flex flex-wrap gap-x-10 gap-y-2 micro-label text-white/45"
+            style={{ animationDelay: "320ms" }}
+          >
+            <span>Every claim traced to its page</span>
+            <span>Report in minutes, not days</span>
+            <span>Beta — reports are free</span>
+          </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="border-y border-stone-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-14">
-          <h2 className="text-2xl font-bold text-stone-900 mb-8">How it works</h2>
-          <div className="grid sm:grid-cols-3 gap-6">
+      {/* Ticker strip */}
+      <div className="bg-paper border-b border-ink/70 overflow-hidden py-3" aria-hidden>
+        <div className="marquee-track flex whitespace-nowrap w-max">
+          {[0, 1].map((copy) => (
+            <span key={copy} className="micro-label !text-[12px] text-ink/70">
+              {TICKER_ITEMS.map((item) => (
+                <span key={`${copy}-${item}`} className="mx-5">
+                  {item} <span className="text-signal ml-10">✳</span>
+                </span>
+              ))}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* How it works — signal field */}
+      <section className="bg-signal text-ink">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
+          <Reveal>
+            <div className="flex items-baseline justify-between mb-10">
+              <h2 className="font-display uppercase text-4xl sm:text-6xl tracking-tight">
+                How it works
+              </h2>
+              <span className="micro-label hidden sm:inline">The flow — 03 steps</span>
+            </div>
+          </Reveal>
+          <div className="grid sm:grid-cols-3 gap-px bg-ink/70 border border-ink/70">
             {[
               {
-                n: "1",
+                n: "01",
                 title: "Upload the document stack",
                 body: "Reserve fund study, bylaws, board and AGM minutes, information statements — whatever the seller gave you, as PDFs.",
               },
               {
-                n: "2",
+                n: "02",
                 title: "We read every page",
                 body: "ClearCondo extracts the text and analyzes it for the things that cost buyers money: assessments, reserves, litigation, insurance, restrictions, and what's coming next.",
               },
               {
-                n: "3",
+                n: "03",
                 title: "Get the red-flag report",
                 body: "Each flag comes with the exact quote and document it came from, a dollar exposure where one exists, and questions to take to your realtor or lawyer.",
               },
-            ].map((s) => (
-              <div key={s.n} className="rounded-xl border border-stone-200 p-6">
-                <div className="w-9 h-9 rounded-full bg-teal-800 text-white font-bold flex items-center justify-center mb-4">
-                  {s.n}
+            ].map((s, i) => (
+              <Reveal key={s.n} delay={i * 110} className="bg-signal">
+                <div className="p-7 sm:p-8 h-full">
+                  <div className="font-display text-5xl mb-5">{s.n}</div>
+                  <h3 className="font-bold text-lg mb-2.5">{s.title}</h3>
+                  <p className="text-ink/75 text-sm leading-relaxed">{s.body}</p>
                 </div>
-                <h3 className="font-semibold text-stone-900 mb-2">{s.title}</h3>
-                <p className="text-stone-600 text-sm leading-relaxed">{s.body}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -95,82 +154,92 @@ export default function LandingPage() {
 
       {/* Sample preview */}
       {preview && (
-        <section className="mx-auto max-w-6xl px-4 sm:px-6 py-14">
-          <div className="flex items-baseline justify-between mb-2">
-            <h2 className="text-2xl font-bold text-stone-900">
-              From a sample report
+        <section className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
+          <Reveal>
+            <div className="flex items-baseline justify-between mb-2">
+              <span className="micro-label text-signal-dark">From a sample report</span>
+              <Link
+                href="/demo"
+                className="micro-label text-ink hover:text-signal-dark transition-colors"
+              >
+                Full report →
+              </Link>
+            </div>
+            <h2 className="font-display uppercase text-4xl sm:text-5xl tracking-tight text-ink mb-5">
+              Proof, not promises
             </h2>
-            <Link
-              href="/demo"
-              className="text-sm font-semibold text-teal-800 hover:text-teal-900"
-            >
-              Full report →
-            </Link>
-          </div>
-          <p className="text-stone-600 mb-6 max-w-3xl">{preview.summary}</p>
-          <div className="grid lg:grid-cols-2 gap-5 mb-6">
+            <p className="text-stone-600 mb-8 max-w-3xl leading-relaxed">{preview.summary}</p>
+          </Reveal>
+          <div className="grid lg:grid-cols-2 gap-6 mb-8">
             {preview.flags.map((f, i) => (
-              <FlagCard key={i} flag={f} />
+              <Reveal key={i} delay={i * 110}>
+                <FlagCard flag={f} />
+              </Reveal>
             ))}
           </div>
           {preview.total != null && (
-            <p className="text-stone-700">
-              Estimated buyer exposure in this sample:{" "}
-              <span className="font-bold text-stone-900">{cad(preview.total)}</span>
-            </p>
+            <Reveal>
+              <p className="text-stone-700">
+                Estimated buyer exposure in this sample:{" "}
+                <span className="font-display text-2xl text-ink tracking-wide">
+                  {cad(preview.total)}
+                </span>
+              </p>
+            </Reveal>
           )}
         </section>
       )}
 
-      {/* Who it's for */}
-      <section className="border-t border-stone-200">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-14">
-          <h2 className="text-2xl font-bold text-stone-900 mb-8">Who it&apos;s for</h2>
-          <div className="grid sm:grid-cols-3 gap-6">
-            <div className="rounded-xl border border-stone-200 bg-white p-6">
-              <div className="text-xs font-semibold uppercase tracking-widest text-teal-800 mb-3">
-                Today
-              </div>
-              <h3 className="font-semibold text-stone-900 mb-2">Condo buyers</h3>
-              <p className="text-stone-600 text-sm leading-relaxed">
-                Upload the resale package before you remove conditions. Know
-                the assessments, the reserve health, and the litigation risk —
-                with every claim traced to the page it came from.
-              </p>
-            </div>
-            <div className="rounded-xl border border-stone-200 bg-white p-6">
-              <div className="text-xs font-semibold uppercase tracking-widest text-stone-500 mb-3">
-                Next
-              </div>
-              <h3 className="font-semibold text-stone-900 mb-2">
-                Realtors &amp; brokerages
-              </h3>
-              <p className="text-stone-600 text-sm leading-relaxed">
-                White-labeled reports for every listing — show buyers you did
-                the homework, and catch deal-killers before they kill the deal.
-              </p>
-            </div>
-            <div className="rounded-xl border border-stone-200 bg-white p-6">
-              <div className="text-xs font-semibold uppercase tracking-widest text-stone-500 mb-3">
-                Next
-              </div>
-              <h3 className="font-semibold text-stone-900 mb-2">Condo managers</h3>
-              <p className="text-stone-600 text-sm leading-relaxed">
-                Portfolio-wide monitoring: every building&apos;s documents,
-                remembered over time, with change alerts when new minutes land.
-              </p>
-            </div>
+      {/* Who it's for — ink field */}
+      <section className="bg-ink text-white relative overflow-hidden">
+        <div className="absolute inset-0 dotgrid-light opacity-40" aria-hidden />
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
+          <Reveal>
+            <h2 className="font-display uppercase text-4xl sm:text-6xl tracking-tight mb-12">
+              Who it&apos;s for
+            </h2>
+          </Reveal>
+          <div className="grid sm:grid-cols-3 gap-10">
+            {[
+              {
+                tag: "Today",
+                title: "Condo buyers",
+                body: "Upload the resale package before you remove conditions. Know the assessments, the reserve health, and the litigation risk — with every claim traced to the page it came from.",
+              },
+              {
+                tag: "Next",
+                title: "Realtors & brokerages",
+                body: "White-labeled reports for every listing — show buyers you did the homework, and catch deal-killers before they kill the deal.",
+              },
+              {
+                tag: "Next",
+                title: "Condo managers",
+                body: "Portfolio-wide monitoring: every building's documents, remembered over time, with change alerts when new minutes land.",
+              },
+            ].map((c, i) => (
+              <Reveal key={c.title} delay={i * 110}>
+                <div className="border-t-2 border-signal pt-5">
+                  <div className="micro-label text-signal mb-3">{c.tag}</div>
+                  <h3 className="font-bold text-xl mb-2.5">{c.title}</h3>
+                  <p className="text-white/60 text-sm leading-relaxed">{c.body}</p>
+                </div>
+              </Reveal>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Building memory */}
-      <section className="border-t border-stone-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-14">
+      <section className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
+        <Reveal>
           <div className="max-w-3xl">
-            <h2 className="text-2xl font-bold text-stone-900 mb-4">
-              Buildings have memories. Now your reports do too.
+            <span className="micro-label text-signal-dark">Building memory</span>
+            <h2 className="font-display uppercase text-4xl sm:text-5xl tracking-tight text-ink mt-3 mb-3">
+              Buildings have memories.
             </h2>
+            <p className="font-serif italic text-3xl text-stone-700 mb-6">
+              Now your reports do too.
+            </p>
             <p className="text-stone-600 leading-relaxed mb-4">
               Every analysis is tied to its building. Upload a fresh set of
               minutes six months later and ClearCondo remembers what it flagged
@@ -182,44 +251,54 @@ export default function LandingPage() {
               time, and it reads the documents most buyers never finish.
             </p>
           </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* Privacy */}
-      <section className="border-t border-stone-200">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-14">
-          <div className="max-w-3xl">
-            <h2 className="text-2xl font-bold text-stone-900 mb-4">
-              Your documents, your control.
-            </h2>
-            <p className="text-stone-600 leading-relaxed mb-4">
-              Your PDFs are read in memory and never stored as files. We keep
-              the extracted text and document details for 30 days, then delete
-              them automatically. Your report stays until you delete it — and
-              “Delete this report” on any report page removes it, its
-              documents, and the extracted text, permanently.
-            </p>
-            <Link
-              href="/privacy"
-              className="text-sm font-semibold text-teal-800 hover:text-teal-900"
-            >
-              Read the privacy note →
-            </Link>
-          </div>
+      <section className="border-t border-ink/15">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
+          <Reveal>
+            <div className="max-w-3xl">
+              <span className="micro-label text-signal-dark">Privacy</span>
+              <h2 className="font-display uppercase text-4xl sm:text-5xl tracking-tight text-ink mt-3 mb-5">
+                Your documents, your control.
+              </h2>
+              <p className="text-stone-600 leading-relaxed mb-5">
+                Your PDFs are read in memory and never stored as files. We keep
+                the extracted text and document details for 30 days, then delete
+                them automatically. Your report stays until you delete it — and
+                “Delete this report” on any report page removes it, its
+                documents, and the extracted text, permanently.
+              </p>
+              <Link
+                href="/privacy"
+                className="micro-label text-ink hover:text-signal-dark transition-colors"
+              >
+                Read the privacy note →
+              </Link>
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 py-16 text-center">
-        <h2 className="text-3xl font-bold text-stone-900 mb-4">
-          Got the document stack? Get the truth in it.
-        </h2>
-        <Link
-          href="/app/new"
-          className="inline-block bg-teal-800 hover:bg-teal-900 text-white px-8 py-3.5 rounded-lg font-semibold text-lg"
-        >
-          Analyze your documents
-        </Link>
+      {/* CTA — signal field */}
+      <section className="bg-signal text-ink">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20 text-center">
+          <Reveal>
+            <h2 className="font-display uppercase leading-[0.95] text-5xl sm:text-7xl tracking-tight">
+              Got the document stack?
+            </h2>
+            <p className="font-serif italic text-3xl sm:text-4xl mt-3 mb-9">
+              Get the truth in it.
+            </p>
+            <Link
+              href="/app/new"
+              className="inline-block bg-ink text-white hover:bg-ink2 px-9 py-4 rounded-full font-bold text-base sm:text-lg transition-colors"
+            >
+              Analyze your documents
+            </Link>
+          </Reveal>
+        </div>
       </section>
     </div>
   );
