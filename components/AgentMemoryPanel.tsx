@@ -29,9 +29,11 @@ export default async function AgentMemoryPanel({
 
   return (
     <section className="mb-10">
-      <div className="flex items-center gap-3 mb-1">
-        <h2 className="text-xl font-bold text-stone-900">Agent memory</h2>
-        <span className="text-xs font-medium text-teal-900 bg-teal-100 rounded-full px-3 py-1">
+      <div className="flex flex-wrap items-center gap-3 mb-1.5">
+        <h2 className="font-display uppercase text-2xl sm:text-3xl tracking-tight text-ink">
+          Agent memory
+        </h2>
+        <span className="micro-label font-bold bg-ink text-signal rounded-[4px] px-2 py-1">
           {TIER_LABELS[recall.tier] ?? recall.tier}
         </span>
       </div>
@@ -44,12 +46,12 @@ export default async function AgentMemoryPanel({
         {recall.hits.map((hit, i) => (
           <div
             key={i}
-            className="report-paper rounded-xl px-5 py-4"
+            className="report-paper rounded-lg px-5 py-4"
           >
             <p className="text-sm text-stone-800 leading-relaxed">
               {hit.text}
             </p>
-            <p className="text-xs text-stone-400 mt-2">
+            <p className="micro-label text-stone-400 mt-2.5">
               relevance {hit.score.toFixed(2)}
             </p>
           </div>

@@ -3,9 +3,9 @@
 import type { Delta, DeltaEvidence } from "@/lib/deltas";
 
 const KIND_STYLES: Record<Delta["kind"], string> = {
-  new: "bg-red-100 text-red-900",
-  changed: "bg-amber-100 text-amber-900",
-  resolved: "bg-teal-50 text-teal-800",
+  new: "bg-[#d92d20] text-white",
+  changed: "bg-[#ffb020] text-ink",
+  resolved: "bg-[#067647] text-white",
 };
 
 const KIND_LABELS: Record<Delta["kind"], string> = {
@@ -16,9 +16,9 @@ const KIND_LABELS: Record<Delta["kind"], string> = {
 
 function DeltaEvidenceQuote({ e, label }: { e: DeltaEvidence; label: string }) {
   return (
-    <blockquote className="border-l-2 border-teal-700/40 pl-3 py-1 mt-2">
-      <p className="text-sm text-stone-700 italic">“{e.quote}”</p>
-      <cite className="text-xs text-stone-500 not-italic block mt-1">
+    <blockquote className="border-l-[3px] border-signal pl-4 py-0.5 mt-2.5">
+      <p className="font-serif italic text-[16px] leading-relaxed text-stone-800">“{e.quote}”</p>
+      <cite className="micro-label text-stone-500 not-italic block mt-1.5">
         <span className="font-medium">{label}:</span> {e.document_name}
         {e.page != null ? `, p.${e.page}` : ""}
         {e.ocr ? " (verified against OCR transcription)" : " ✓ verified"}
@@ -30,24 +30,25 @@ function DeltaEvidenceQuote({ e, label }: { e: DeltaEvidence; label: string }) {
 export default function DeltasSection({ deltas }: { deltas: Delta[] }) {
   if (deltas.length === 0) return null;
   return (
-    <section className="report-paper rounded-xl p-6 sm:p-8">
-      <h2 className="text-xl font-bold text-stone-900 mb-1">
+    <section className="report-paper rounded-lg p-6 sm:p-8">
+      <span className="micro-label text-signal-dark">Building memory</span>
+      <h2 className="font-display uppercase text-2xl sm:text-3xl tracking-tight text-ink mt-2 mb-1.5">
         What changed since the last review
       </h2>
-      <p className="text-sm text-stone-500 mb-5">
+      <p className="text-sm text-stone-500 mb-6">
         Computed from this building&apos;s previous report — each change links
         to the verified evidence on both sides.
       </p>
       <div className="space-y-5">
         {deltas.map((d, i) => (
-          <div key={i} className="border-b border-stone-100 pb-5 last:border-0 last:pb-0">
-            <div className="flex flex-wrap items-center gap-2 mb-1.5">
+          <div key={i} className="border-b border-ink/10 pb-5 last:border-0 last:pb-0">
+            <div className="flex flex-wrap items-center gap-2.5 mb-1.5">
               <span
-                className={`text-xs font-semibold rounded-full px-2.5 py-0.5 ${KIND_STYLES[d.kind]}`}
+                className={`micro-label font-bold rounded-[4px] px-2 py-1 ${KIND_STYLES[d.kind]}`}
               >
                 {KIND_LABELS[d.kind]}
               </span>
-              <span className="font-semibold text-stone-900">{d.label}</span>
+              <span className="font-bold text-ink">{d.label}</span>
             </div>
             <p className="text-stone-700 text-[15px] leading-relaxed">{d.detail}</p>
             {d.prev && <DeltaEvidenceQuote e={d.prev} label="Earlier review" />}
