@@ -57,9 +57,10 @@ export default async function BuildingHistoryPage({
 
   return (
     <div className="max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-stone-900">{building.name}</h1>
-        <p className="text-sm text-stone-500 mt-1">
+      <div className="mb-9">
+        <span className="micro-label text-signal-dark">Building memory</span>
+        <h1 className="font-display uppercase text-4xl sm:text-5xl tracking-tight text-ink mt-1.5">{building.name}</h1>
+        <p className="font-mono text-[13px] text-stone-500 mt-2">
           {[building.corp_number ? `Corp No. ${building.corp_number}` : null, building.address, building.units ? `${building.units} units` : null]
             .filter(Boolean)
             .join(" · ")}
@@ -73,22 +74,22 @@ export default async function BuildingHistoryPage({
 
       {/* Accumulated memory */}
       <section className="mb-10">
-        <h2 className="text-xl font-bold text-stone-900 mb-4">Building memory</h2>
+        <h2 className="font-display uppercase text-2xl sm:text-3xl tracking-tight text-ink mb-4">Building memory</h2>
         {accumulated.length === 0 ? (
           <p className="text-stone-600 text-sm">No flags recorded yet.</p>
         ) : (
           <div className="space-y-3">
             {accumulated.map((a, i) => (
-              <div key={i} className="report-paper rounded-xl px-5 py-4 flex flex-wrap items-center gap-3">
+              <div key={i} className="report-paper rounded-lg px-5 py-4 flex flex-wrap items-center gap-3">
                 <SeverityBadge severity={a.severity as Severity} />
                 <div className="flex-1 min-w-48">
-                  <div className="font-medium text-stone-900">{a.title}</div>
-                  <div className="text-xs text-stone-500">
+                  <div className="font-semibold text-ink">{a.title}</div>
+                  <div className="micro-label !text-[10px] text-stone-500 mt-1">
                     {FLAG_TYPE_LABELS[a.flag_type as keyof typeof FLAG_TYPE_LABELS] || a.flag_type}
                     {" · "}first seen {formatDate(a.firstSeen)}
                   </div>
                 </div>
-                <span className="text-xs font-medium text-stone-500 bg-stone-100 rounded-full px-3 py-1">
+                <span className="micro-label font-bold text-stone-600 bg-stone-200/70 rounded-[4px] px-2 py-1">
                   seen in {a.reports.size} report{a.reports.size === 1 ? "" : "s"}
                 </span>
               </div>
@@ -102,20 +103,20 @@ export default async function BuildingHistoryPage({
 
       {/* Report timeline */}
       <section>
-        <h2 className="text-xl font-bold text-stone-900 mb-4">Reports</h2>
+        <h2 className="font-display uppercase text-2xl sm:text-3xl tracking-tight text-ink mb-4">Reports</h2>
         <div className="space-y-3">
           {reports.map((r) => (
             <Link
               key={String(r.id)}
               href={`/app/reports/${shortId(r.id)}`}
-              className="report-paper rounded-xl px-5 py-4 flex items-center gap-4 hover:shadow-md transition-shadow"
+              className="report-paper rounded-lg px-5 py-4 flex items-center gap-4 hover:-translate-y-0.5 hover:shadow-[7px_7px_0_0_rgba(10,10,14,0.16)] transition-all"
             >
               <div className="flex-1">
-                <div className="text-sm text-stone-500">{formatDate(String(r.created_at))}</div>
-                <div className="text-stone-700 text-sm line-clamp-2 mt-1">{r.summary}</div>
+                <div className="micro-label !text-[10px] text-stone-500">{formatDate(String(r.created_at))}</div>
+                <div className="text-stone-700 text-sm line-clamp-2 mt-1.5">{r.summary}</div>
               </div>
               {r.money_exposure_total_cad != null && (
-                <div className="font-bold text-stone-900">{cad(r.money_exposure_total_cad)}</div>
+                <div className="font-display text-2xl text-ink tracking-wide">{cad(r.money_exposure_total_cad)}</div>
               )}
             </Link>
           ))}
@@ -125,7 +126,7 @@ export default async function BuildingHistoryPage({
       <div className="mt-8">
         <Link
           href="/app/new"
-          className="inline-block bg-teal-800 hover:bg-teal-900 text-white px-6 py-2.5 rounded-lg font-medium text-sm"
+          className="inline-block bg-signal hover:bg-signal-dark text-ink px-6 py-3 rounded-full font-bold text-sm transition-colors"
         >
           Upload fresh documents for this building
         </Link>

@@ -22,7 +22,7 @@ test("/demo renders the sample report with zero keys", async ({ page }) => {
   expect(resp?.status()).toBe(200);
 
   // Sample-data notice
-  await expect(page.getByText("Sample data.")).toBeVisible();
+  await expect(page.getByText("Sample data")).toBeVisible();
 
   // Building header (2026 report)
   await expect(page.getByRole("heading", { name: "North Hill Terrace" })).toBeVisible();

@@ -94,7 +94,7 @@ export default async function ReportDetailPage({
   return (
     <div className="max-w-4xl">
       <ReportView report={vm} />
-      <div className="mt-10 pt-6 border-t border-stone-200">
+      <div className="mt-10 pt-6 border-t border-ink/15">
         <DeleteReportButton reportId={id} />
       </div>
     </div>
