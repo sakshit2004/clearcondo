@@ -4,7 +4,7 @@ import Link from "next/link";
 export default function SetupNotice() {
   return (
     <div className="mx-auto max-w-xl px-4 py-16">
-      <div className="rounded-xl border border-amber-200 bg-amber-50 p-6">
+      <div className=" border border-amber-200 bg-amber-50 p-6">
         <h1 className="text-lg font-bold text-amber-900 mb-2">
           Authentication isn&apos;t configured
         </h1>

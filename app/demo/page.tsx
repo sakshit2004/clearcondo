@@ -34,11 +34,15 @@ export default function DemoPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 sm:px-6 py-10">
-      <div className="rounded-xl border border-teal-800/30 bg-teal-50 px-5 py-4 text-sm text-teal-900 mb-8">
-        <span className="font-semibold">Sample data.</span> Two fictional
-        reviews of the same demo building — September 2024 and October 2026 —
-        showing how building memory tracks change over time. Upload your own
-        documents to analyze a real building.
+      <div className="border border-stone-300 border-l-2 border-l-signal bg-white px-5 py-4 text-sm mb-8 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <span className="micro-label bg-signal text-white px-2 py-1">
+          Sample data
+        </span>
+        <span className="text-stone-600">
+          Two fictional reviews of the same demo building — September 2024 and
+          October 2026 — showing how building memory tracks change over time.
+          Upload your own documents to analyze a real building.
+        </span>
       </div>
       <ReportView
         report={{
@@ -52,7 +56,7 @@ export default function DemoPage() {
       <div className="mt-10 text-center">
         <Link
           href="/app/new"
-          className="inline-block bg-teal-800 hover:bg-teal-900 text-white px-8 py-3.5 rounded-lg font-semibold text-lg"
+          className="inline-block bg-ink text-white hover:bg-signal px-8 py-4 font-semibold text-lg transition-colors"
         >
           Analyze your own documents
         </Link>

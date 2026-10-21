@@ -29,22 +29,23 @@ export default async function BuildingsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-stone-900 mb-2">Buildings</h1>
-      <p className="text-stone-600 mb-6 max-w-2xl">
+      <span className="micro-label text-stone-400">Building memory</span>
+      <h1 className="font-bold text-4xl tracking-[-0.02em] text-ink mt-1.5 mb-3">Buildings</h1>
+      <p className="text-stone-600 mb-7 max-w-2xl leading-relaxed">
         Every building you analyze gets a memory: all reports and flags,
         accumulated over time. Re-upload fresh documents later and watch the
         picture change.
       </p>
 
       {buildings.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-stone-300 bg-white p-10 text-center">
+        <div className="border-2 border-dashed border-stone-300 bg-white p-10 text-center">
           <p className="text-stone-600 text-sm mb-6">
             No buildings yet — run your first analysis to start a
             building&apos;s memory.
           </p>
           <Link
             href="/app/new"
-            className="inline-block bg-teal-800 hover:bg-teal-900 text-white px-6 py-2.5 rounded-lg font-medium text-sm"
+            className="inline-block bg-ink text-white hover:bg-signal px-6 py-3 font-semibold text-sm transition-colors"
           >
             Analyze documents
           </Link>
@@ -55,10 +56,10 @@ export default async function BuildingsPage() {
             <Link
               key={String(b.id)}
               href={`/app/buildings/${shortId(b.id)}`}
-              className="report-paper rounded-xl p-5 hover:shadow-md transition-shadow"
+              className="report-paper p-5 hover:border-ink transition-colors"
             >
-              <div className="font-semibold text-stone-900 mb-1">{b.name}</div>
-              <div className="text-xs text-stone-500 mb-3">
+              <div className="font-bold text-ink mb-1">{b.name}</div>
+              <div className="micro-label !text-[10px] text-stone-500 mb-3">
                 {b.address || "Address unknown"}
                 {b.units ? ` · ${b.units} units` : ""}
               </div>
