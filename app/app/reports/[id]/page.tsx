@@ -6,6 +6,7 @@ import { toPublicAnalysis } from "@/lib/redact";
 import SetupNotice from "@/components/SetupNotice";
 import DeleteReportButton from "@/components/DeleteReportButton";
 import ReportView, { type ReportVM } from "@/components/ReportView";
+import { pointFromFacts, type TimelinePoint } from "@/lib/timeline";
 import type { VerifiedAnalysis, VerifiedStructuredFacts } from "@/lib/report-schema";
 
 
@@ -81,6 +82,28 @@ export default async function ReportDetailPage({
     .filter(Boolean)
     .join(" · ");
 
+  // Risk timeline — previous review vs this one, when a previous exists.
+  // (The previous report's exposure total isn't loaded here, so that point
+  // carries reserve/deductible only; the component omits what's missing.)
+  const timeline: TimelinePoint[] | undefined = prev
+    ? [
+        pointFromFacts({
+          facts: prev.snapshot,
+          docDate: prev.docDate,
+          exposureCad: null,
+          fallbackLabel: "Previous review",
+          fallbackSortKey: "0",
+        }),
+        pointFromFacts({
+          facts: snapshot,
+          docDate: snapshot.doc_date,
+          exposureCad: report.money_exposure_total_cad,
+          fallbackLabel: "This review",
+          fallbackSortKey: "1",
+        }),
+      ]
+    : undefined;
+
   const vm: ReportVM = {
     buildingName: report.building_name || facts.name || "Unnamed building",
     buildingMeta: meta || undefined,
@@ -88,13 +111,14 @@ export default async function ReportDetailPage({
     // Strip original evidence quotes: the browser only ever sees redacted text.
     analysis: toPublicAnalysis(analysis),
     deltas,
+    timeline,
     missing: report.missing_documents ?? [],
   };
 
   return (
     <div className="max-w-4xl">
       <ReportView report={vm} />
-      <div className="mt-10 pt-6 border-t border-stone-200">
+      <div className="mt-10 pt-6 border-t border-ink/15">
         <DeleteReportButton reportId={id} />
       </div>
     </div>

@@ -4,6 +4,7 @@ import { join } from "path";
 import { VerifiedAnalysisSchema } from "@/lib/report-schema";
 import { computeDeltas } from "@/lib/deltas";
 import ReportView from "@/components/ReportView";
+import { pointFromFacts } from "@/lib/timeline";
 
 function loadReport(file: string) {
   const json = JSON.parse(
@@ -24,6 +25,15 @@ export default function DemoPage() {
   const deltas = computeDeltas(older.structured_facts, newer.structured_facts);
 
   const b = newer.building;
+  const timeline = [older, newer].map((r, i) =>
+    pointFromFacts({
+      facts: r.structured_facts,
+      docDate: r.structured_facts.doc_date,
+      exposureCad: r.money_exposure_total_cad,
+      fallbackLabel: i === 0 ? "Earlier review" : "Latest review",
+      fallbackSortKey: String(i),
+    })
+  );
   const meta = [
     b.corp_number ? `Corp No. ${b.corp_number}` : null,
     b.address,
@@ -51,6 +61,7 @@ export default function DemoPage() {
           isSample: true,
           analysis: newer,
           deltas,
+          timeline,
         }}
       />
       <div className="mt-10 text-center">
