@@ -590,6 +590,99 @@ export async function getPriorFlags(
 }
 
 /* ------------------------------------------------------------------ */
+/* Service orders (the no-login service front door)                    */
+/* ------------------------------------------------------------------ */
+
+import type {
+  ServiceOrder,
+  ServiceOrderDoc,
+  ServiceOrderInput,
+  ServiceOrderStatus,
+} from "./service-order";
+
+export interface ServiceOrderRow {
+  id: string;
+  ref_code: string;
+  realtor_name: string;
+  brokerage: string | null;
+  email: string;
+  property_address: string;
+  condition_date: string | null;
+  status: string;
+  documents: (Omit<ServiceOrderDoc, "pages"> & {
+    pages: { page_number: number; text: string }[];
+  })[];
+  created_at: string;
+}
+
+export function serviceOrderFromRow(row: ServiceOrderRow): ServiceOrder {
+  return {
+    refCode: row.ref_code,
+    realtorName: row.realtor_name,
+    brokerage: row.brokerage,
+    email: row.email,
+    propertyAddress: row.property_address,
+    conditionDate: row.condition_date,
+    status: (row.status as ServiceOrderStatus) || "received",
+    createdAt: row.created_at,
+    documents: (row.documents ?? []).map((d) => ({
+      filename: d.filename,
+      docType: d.docType,
+      pageCount: d.pageCount,
+      charCount: d.charCount,
+      status: d.status,
+      pages: (d.pages ?? []).map((p) => ({ page: p.page_number, text: p.text })),
+    })),
+  };
+}
+
+/** Persist a service order; returns the stored order with its ref code. */
+export async function createServiceOrder(
+  db: Surreal,
+  input: ServiceOrderInput & { refCode: string; consent: boolean },
+  documents: ServiceOrderDoc[]
+): Promise<void> {
+  await q(
+    db,
+    `CREATE service_order CONTENT {
+       ref_code: $ref, realtor_name: $name, brokerage: $brokerage,
+       email: $email, property_address: $address,
+       condition_date: $conditionDate, status: "received",
+       consent: $consent, documents: $documents
+     }`,
+    {
+      ref: input.refCode,
+      name: input.realtorName,
+      brokerage: input.brokerage,
+      email: input.email,
+      address: input.propertyAddress,
+      conditionDate: input.conditionDate,
+      consent: input.consent,
+      documents: documents.map((d) => ({
+        filename: d.filename,
+        docType: d.docType,
+        pageCount: d.pageCount,
+        charCount: d.charCount,
+        status: d.status,
+        pages: d.pages.map((p) => ({ page_number: p.page, text: p.text })),
+      })),
+    }
+  );
+}
+
+export async function getServiceOrderByRef(
+  db: Surreal,
+  refCode: string
+): Promise<ServiceOrder | null> {
+  const rows = await q<ServiceOrderRow[]>(
+    db,
+    "SELECT * FROM service_order WHERE ref_code = $ref LIMIT 1",
+    { ref: refCode }
+  );
+  return rows.length > 0 ? serviceOrderFromRow(rows[0]) : null;
+}
+
+/* ------------------------------------------------------------------ */
 /* Credits (Stripe test mode)                                          */
 /* ------------------------------------------------------------------ */
 
