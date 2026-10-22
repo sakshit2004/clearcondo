@@ -53,7 +53,7 @@ export default function LandingPage() {
       {/* Hero — flush-left grotesque, one data table, no decoration */}
       <section className="mx-auto max-w-6xl px-4 sm:px-6 pt-10 sm:pt-14 pb-14">
         <div className="flex flex-wrap gap-x-8 gap-y-1 micro-label text-stone-500 mb-10 rise-in">
-          <span>For Canadian condo buyers</span>
+          <span>For realtors &amp; their buyers</span>
           <span>Verified red-flag reports</span>
           <span>Calgary, Alberta</span>
         </div>
@@ -71,11 +71,13 @@ export default function LandingPage() {
         >
           <div className="md:col-span-7">
             <p className="text-stone-600 leading-relaxed max-w-xl">
-              Sellers hand you a stack of condo documents — reserve fund
-              studies, bylaws, meeting minutes — and expect you to spot the
-              $8,500 special assessment buried on page 47. ClearCondo reads
-              every page and gives you a verified red-flag report in minutes:
-              each flag traced to the exact quote and page it came from.
+              Your client is about to buy into a building nobody has audited
+              for them. The document stack — reserve fund study, bylaws,
+              meeting minutes — holds the $8,500 special assessment buried on
+              page 47. ClearCondo reads every page and gives you a verified
+              red-flag report in minutes: each flag traced to the exact quote
+              and page it came from, ready to walk your client through before
+              conditions come off.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-3">
               <Link
@@ -135,7 +137,7 @@ export default function LandingPage() {
               {
                 n: "1",
                 title: "Upload the document stack",
-                body: "Reserve fund study, bylaws, board and AGM minutes, information statements — whatever the seller gave you, as PDFs.",
+                body: "Reserve fund study, bylaws, board and AGM minutes, information statements — the package the seller's side delivered, as PDFs.",
               },
               {
                 n: "2",
@@ -145,7 +147,7 @@ export default function LandingPage() {
               {
                 n: "3",
                 title: "Get the red-flag report",
-                body: "Each flag comes with the exact quote and document it came from, a dollar exposure where one exists, and questions to take to your realtor or lawyer.",
+                body: "Each flag comes with the exact quote and document it came from, a dollar exposure where one exists, and plain-language questions your client can act on — plus the audit trail behind every claim.",
               },
             ].map((s) => (
               <div key={s.n} className="border-t border-stone-300 pt-4">
@@ -198,13 +200,13 @@ export default function LandingPage() {
             {[
               {
                 tag: "Today",
-                title: "Condo buyers",
-                body: "Upload the resale package before you remove conditions. Know the assessments, the reserve health, and the litigation risk — with every claim traced to the page it came from.",
+                title: "Realtors & brokerages",
+                body: "A verified red-flag report on every condo file, before conditions come off. Show clients diligence they can see — every claim traced to its page — and catch the deal-killers while there's still time to renegotiate or walk.",
               },
               {
-                tag: "Next",
-                title: "Realtors & brokerages",
-                body: "White-labeled reports for every listing — show buyers you did the homework, and catch deal-killers before they kill the deal.",
+                tag: "Also",
+                title: "Condo buyers",
+                body: "Buying without an agent, or want a second set of eyes on the package? Upload the resale documents yourself and get the same verified report, in plain language.",
               },
               {
                 tag: "Next",
