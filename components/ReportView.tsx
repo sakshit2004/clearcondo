@@ -5,6 +5,9 @@ import { cad, formatDate } from "@/lib/format";
 import FlagCard from "./FlagCard";
 import SeverityBadge from "./SeverityBadge";
 import DeltasSection from "./DeltasSection";
+import VerificationAudit from "./VerificationAudit";
+import BuildingTimeline from "./BuildingTimeline";
+import type { TimelinePoint } from "@/lib/timeline";
 
 /** View-model accepted by ReportView: DB rows, sample JSON, or ephemeral results all map into this. */
 export interface ReportVM {
@@ -15,6 +18,7 @@ export interface ReportVM {
   analysis: VerifiedAnalysis;
   deltas?: Delta[];
   missing?: MissingDoc[];
+  timeline?: TimelinePoint[];
 }
 
 const SEVERITY_ORDER = { critical: 0, warning: 1, info: 2 } as const;
@@ -102,6 +106,11 @@ export default function ReportView({ report }: { report: ReportVM }) {
         </div>
       </section>
 
+      {/* Risk over time — the longitudinal record, when earlier reviews exist */}
+      {report.timeline && report.timeline.length >= 2 && (
+        <BuildingTimeline points={report.timeline} />
+      )}
+
       {/* What changed since the last review */}
       {report.deltas && report.deltas.length > 0 && (
         <DeltasSection deltas={report.deltas} />
@@ -119,6 +128,9 @@ export default function ReportView({ report }: { report: ReportVM }) {
           <FlagCard key={i} flag={flag} />
         ))}
       </section>
+
+      {/* Verification audit trail */}
+      <VerificationAudit analysis={analysis} />
 
       {/* Questions */}
       {analysis.questions_for_realtor_lawyer.length > 0 && (
