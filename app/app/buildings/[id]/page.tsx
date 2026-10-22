@@ -7,6 +7,8 @@ import { FLAG_TYPE_LABELS } from "@/lib/report-schema";
 import SetupNotice from "@/components/SetupNotice";
 import SeverityBadge from "@/components/SeverityBadge";
 import AgentMemoryPanel from "@/components/AgentMemoryPanel";
+import BuildingTimeline from "@/components/BuildingTimeline";
+import { pointFromFacts } from "@/lib/timeline";
 import type { Severity } from "@/lib/report-schema";
 
 
@@ -71,6 +73,27 @@ export default async function BuildingHistoryPage({
           in this building&apos;s memory.
         </p>
       </div>
+
+      {/* Risk over time — reserve health / exposure / deductible across reviews */}
+      {reports.length >= 2 && (
+        <div className="mb-10">
+          <BuildingTimeline
+            points={reports.flatMap((r) =>
+              r.facts_snapshot
+                ? [
+                    pointFromFacts({
+                      facts: r.facts_snapshot,
+                      docDate: r.doc_date,
+                      exposureCad: r.money_exposure_total_cad,
+                      fallbackLabel: formatDate(String(r.created_at)),
+                      fallbackSortKey: String(r.created_at),
+                    }),
+                  ]
+                : []
+            )}
+          />
+        </div>
+      )}
 
       {/* Accumulated memory */}
       <section className="mb-10">
