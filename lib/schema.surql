@@ -100,3 +100,22 @@ DEFINE FIELD IF NOT EXISTS owner_id ON TABLE daily_usage TYPE string;
 DEFINE FIELD IF NOT EXISTS day ON TABLE daily_usage TYPE string;
 DEFINE FIELD IF NOT EXISTS count ON TABLE daily_usage TYPE int DEFAULT 0;
 DEFINE INDEX IF NOT EXISTS daily_usage_owner_day ON TABLE daily_usage COLUMNS owner_id, day UNIQUE;
+
+-- Service orders (lib/service-order.ts): the no-login front door. A sender
+-- (usually a realtor) sends a document package; the order holds the contact,
+-- the property, and the extracted page text of every document — raw PDF
+-- bytes are never stored, and the extracted text falls under the same
+-- 30-day retention rule as the document table. Fulfilment runs the stored
+-- pages through the normal pipeline and flips status to delivered.
+DEFINE TABLE IF NOT EXISTS service_order SCHEMAFULL;
+DEFINE FIELD IF NOT EXISTS ref_code ON TABLE service_order TYPE string;
+DEFINE FIELD IF NOT EXISTS realtor_name ON TABLE service_order TYPE string;
+DEFINE FIELD IF NOT EXISTS brokerage ON TABLE service_order TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS email ON TABLE service_order TYPE string;
+DEFINE FIELD IF NOT EXISTS property_address ON TABLE service_order TYPE string;
+DEFINE FIELD IF NOT EXISTS condition_date ON TABLE service_order TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS status ON TABLE service_order TYPE string DEFAULT "received";
+DEFINE FIELD IF NOT EXISTS consent ON TABLE service_order TYPE bool DEFAULT false;
+DEFINE FIELD IF NOT EXISTS documents ON TABLE service_order TYPE array<object> DEFAULT [];
+DEFINE FIELD IF NOT EXISTS created_at ON TABLE service_order TYPE datetime DEFAULT time::now();
+DEFINE INDEX IF NOT EXISTS service_order_ref ON TABLE service_order COLUMNS ref_code UNIQUE;
