@@ -127,3 +127,18 @@ body {
     scroll-behavior: auto;
   }
 }
+
+/* Print: the client-ready report sheet (see /demo/print). The app chrome
+   never appears on paper; the sheet itself is plain ink on white. */
+@media print {
+  header,
+  footer {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+  }
+  @page {
+    margin: 16mm 14mm;
+  }
+}

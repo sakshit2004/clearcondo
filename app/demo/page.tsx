@@ -71,6 +71,14 @@ export default function DemoPage() {
         >
           Analyze your own documents
         </Link>
+        <div className="mt-4">
+          <Link
+            href="/demo/print"
+            className="micro-label text-ink underline underline-offset-4 decoration-stone-300 hover:decoration-signal"
+          >
+            See the client-ready print view — the report as delivered →
+          </Link>
+        </div>
       </div>
     </div>
   );
