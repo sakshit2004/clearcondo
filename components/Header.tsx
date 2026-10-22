@@ -15,6 +15,12 @@ export default function Header() {
         </Link>
         <nav className="flex items-center gap-5 sm:gap-7">
           <Link
+            href="/order"
+            className="micro-label hidden sm:inline text-stone-500 hover:text-ink transition-colors"
+          >
+            Order a report
+          </Link>
+          <Link
             href="/demo"
             className="micro-label hidden sm:inline text-stone-500 hover:text-ink transition-colors"
           >

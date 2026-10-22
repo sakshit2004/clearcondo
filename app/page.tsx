@@ -62,7 +62,7 @@ export default function LandingPage() {
           className="rise-in font-bold tracking-[-0.02em] leading-[1.02] text-[42px] sm:text-6xl lg:text-[68px] text-ink max-w-4xl"
           style={{ animationDelay: "60ms" }}
         >
-          Know what you&apos;re buying before you buy it.
+          Send the package. Get the verdict.
         </h1>
 
         <div
@@ -74,17 +74,18 @@ export default function LandingPage() {
               Your client is about to buy into a building nobody has audited
               for them. The document stack — reserve fund study, bylaws,
               meeting minutes — holds the $8,500 special assessment buried on
-              page 47. ClearCondo reads every page and gives you a verified
-              red-flag report in minutes: each flag traced to the exact quote
-              and page it came from, ready to walk your client through before
-              conditions come off.
+              page 47. Send us the package and a verified red-flag report
+              comes back: each flag traced to the exact quote and page it came
+              from, with your name on it, ready to walk your client through
+              before conditions come off. No account. No new software to
+              learn.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-3">
               <Link
-                href="/app/new"
+                href="/order"
                 className="bg-ink hover:bg-signal text-white font-semibold px-6 py-3 text-[15px] transition-colors"
               >
-                Analyze your documents
+                Send a document package
               </Link>
               <Link
                 href="/demo"
@@ -94,7 +95,7 @@ export default function LandingPage() {
               </Link>
             </div>
             <p className="micro-label text-stone-400 mt-6">
-              Beta — reports are free while we&apos;re in testing
+              Beta — the service is free while we&apos;re in testing
             </p>
           </div>
 
@@ -129,25 +130,25 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 01 — How it works */}
-      <Section index="01" label="How it works">
+      {/* 01 — How the service works */}
+      <Section index="01" label="How the service works">
         <Reveal>
           <div className="grid sm:grid-cols-3 gap-8">
             {[
               {
                 n: "1",
-                title: "Upload the document stack",
-                body: "Reserve fund study, bylaws, board and AGM minutes, information statements — the package the seller's side delivered, as PDFs.",
+                title: "Send the document package",
+                body: "Reserve fund study, bylaws, board and AGM minutes, information statements — forward the PDFs the seller's side delivered, straight from the order page. No account to create.",
               },
               {
                 n: "2",
-                title: "We read every page",
-                body: "ClearCondo extracts the text and analyzes it for the things that cost buyers money: assessments, reserves, litigation, insurance, restrictions, and what's coming next.",
+                title: "We read and verify every page",
+                body: "We analyze the stack for the things that cost buyers money — assessments, reserves, litigation, insurance, restrictions — and machine-check every claim against the exact page it cites.",
               },
               {
                 n: "3",
-                title: "Get the red-flag report",
-                body: "Each flag comes with the exact quote and document it came from, a dollar exposure where one exists, and plain-language questions your client can act on — plus the audit trail behind every claim.",
+                title: "The report comes back to you",
+                body: "Client-ready, with your name on it: each flag with its quote and page, the dollar exposure, and the audit trail behind every claim. Print it or forward it as-is.",
               },
             ].map((s) => (
               <div key={s.n} className="border-t border-stone-300 pt-4">
@@ -201,12 +202,12 @@ export default function LandingPage() {
               {
                 tag: "Today",
                 title: "Realtors & brokerages",
-                body: "A verified red-flag report on every condo file, before conditions come off. Show clients diligence they can see — every claim traced to its page — and catch the deal-killers while there's still time to renegotiate or walk.",
+                body: "Not another tool for the stack — a service. Forward the package, get a verified report back with your name on it. Show clients diligence they can see, and catch the deal-killers while there's still time to renegotiate or walk.",
               },
               {
                 tag: "Also",
                 title: "Condo buyers",
-                body: "Buying without an agent, or want a second set of eyes on the package? Upload the resale documents yourself and get the same verified report, in plain language.",
+                body: "Buying without an agent, or want a second set of eyes on the package? Send it in yourself and get the same verified report, in plain language.",
               },
               {
                 tag: "Next",
@@ -238,8 +239,10 @@ export default function LandingPage() {
               trend looks like.
             </p>
             <p className="text-stone-600 leading-relaxed">
-              One report costs less than fifteen minutes of a lawyer&apos;s
-              time, and it reads the documents most buyers never finish.
+              We keep the building&apos;s file. The next time the same
+              building lands on your desk, its record is already here — and
+              one report costs less than fifteen minutes of a lawyer&apos;s
+              time.
             </p>
           </div>
         </Reveal>
@@ -277,10 +280,10 @@ export default function LandingPage() {
           </h2>
           <div className="md:col-span-4 md:text-right">
             <Link
-              href="/app/new"
+              href="/order"
               className="inline-block bg-ink hover:bg-signal text-white font-semibold px-7 py-3.5 transition-colors"
             >
-              Analyze your documents
+              Send a document package
             </Link>
           </div>
         </div>
