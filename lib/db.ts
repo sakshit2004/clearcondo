@@ -34,7 +34,11 @@ async function connect(): Promise<Surreal | null> {
     await db.connect(url);
     const ns = env("SURREAL_NS") || "clearcondo";
     const database = env("SURREAL_DB") || "prod";
-    await db.use({ namespace: ns, database });
+    // Authenticate BEFORE selecting a namespace. SurrealDB v3 dropped
+    // v2's behavior of auto-creating namespaces/databases on USE, and
+    // an unauthenticated USE against a missing namespace fails with
+    // NotFoundError — which is exactly what a fresh Cloud instance hit
+    // in production (digest 1800948725, GET /app).
     const token = env("SURREAL_TOKEN");
     if (token) {
       await db.authenticate(token);
@@ -45,6 +49,26 @@ async function connect(): Promise<Surreal | null> {
         await db.signin({ username, password });
       }
     }
+    // Self-bootstrap so a fresh instance works with zero manual setup:
+    // define the namespace/database when missing. DEFINE failures are
+    // ignored (already exists); each USE is the real check and surfaces
+    // any genuine error. Identifiers are interpolated, so restrict them
+    // to the safe character set SurrealDB names allow.
+    if (!/^[A-Za-z0-9_]+$/.test(ns) || !/^[A-Za-z0-9_]+$/.test(database)) {
+      throw new Error("Invalid SURREAL_NS / SURREAL_DB value");
+    }
+    try {
+      await db.query(`DEFINE NAMESPACE ${ns};`);
+    } catch {
+      /* already exists */
+    }
+    await db.use({ namespace: ns });
+    try {
+      await db.query(`DEFINE DATABASE ${database};`);
+    } catch {
+      /* already exists */
+    }
+    await db.use({ namespace: ns, database });
     const schemaKey = `${url}|${ns}|${database}`;
     if (schemaEnsuredFor !== schemaKey) {
       const schema = readFileSync(join(process.cwd(), "lib", "schema.surql"), "utf8");

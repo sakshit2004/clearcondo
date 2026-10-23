@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { withDb, getServiceOrderByRef, isDbConfigured } from "@/lib/db";
 import {
   isRefCode,
@@ -21,6 +22,9 @@ export default async function OrderStatusPage({
   const { ref } = await params;
   const refCode = normalizeRefCode(ref);
 
+  // The status read hits the DB at render time; defer to request time
+  // (same Cache Components constraint as the /app layout).
+  await connection();
   const order =
     isRefCode(refCode) && isDbConfigured()
       ? await withDb((db) => getServiceOrderByRef(db, refCode))
