@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { isClerkConfigured } from "@/lib/auth";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { Show, UserButton } from "@clerk/nextjs";
 
 export default function Header() {
   const configured = isClerkConfigured();
@@ -28,7 +28,7 @@ export default function Header() {
           </Link>
           {configured ? (
             <>
-              <SignedOut>
+              <Show when="signed-out">
                 <Link
                   href="/sign-in"
                   className="micro-label text-stone-500 hover:text-ink whitespace-nowrap transition-colors"
@@ -41,8 +41,8 @@ export default function Header() {
                 >
                   Analyze documents
                 </Link>
-              </SignedOut>
-              <SignedIn>
+              </Show>
+              <Show when="signed-in">
                 <Link
                   href="/app"
                   className="micro-label text-stone-500 hover:text-ink whitespace-nowrap transition-colors"
@@ -50,7 +50,7 @@ export default function Header() {
                   Dashboard
                 </Link>
                 <UserButton />
-              </SignedIn>
+              </Show>
             </>
           ) : (
             <span className="micro-label text-stone-500 border border-stone-300 px-3 py-1.5 whitespace-nowrap">
