@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { isClerkConfigured } from "@/lib/auth";
 import { Show, UserButton } from "@clerk/nextjs";
 
@@ -27,7 +28,10 @@ export default function Header() {
             Sample report
           </Link>
           {configured ? (
-            <>
+            /* Auth state is runtime data: under Cache Components the
+               static shell (including /_not-found) can only prerender
+               with the auth controls behind a Suspense boundary. */
+            <Suspense fallback={null}>
               <Show when="signed-out">
                 <Link
                   href="/sign-in"
@@ -51,7 +55,7 @@ export default function Header() {
                 </Link>
                 <UserButton />
               </Show>
-            </>
+            </Suspense>
           ) : (
             <span className="micro-label text-stone-500 border border-stone-300 px-3 py-1.5 whitespace-nowrap">
               Auth not configured
