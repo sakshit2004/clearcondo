@@ -250,7 +250,7 @@ export async function upsertBuilding(
       sets.push("year_built = $yb");
       params.yb = facts.year_built;
     }
-    await q(db, `UPDATE type::thing($id) SET ${sets.join(", ")}`, params);
+    await q(db, `UPDATE type::record($id) SET ${sets.join(", ")}`, params);
     return id;
   }
   const created = await q<{ id: unknown }[]>(
@@ -289,7 +289,7 @@ export async function createDocument(
   const created = await q<{ id: unknown }[]>(
     db,
     `CREATE document CONTENT {
-       building: type::thing($building), report: type::thing($report),
+       building: type::record($building), report: type::record($report),
        filename: $filename, doc_type: $docType,
        page_count: $pageCount, char_count: $chars,
        status: $status, owner_id: $owner,
@@ -328,7 +328,7 @@ export async function persistAnalysis(
   const created = await q<{ id: unknown }[]>(
     db,
     `CREATE report CONTENT {
-       building: type::thing($building), owner_id: $owner,
+       building: type::record($building), owner_id: $owner,
        status: "complete", summary: $summary,
        money_exposure_total_cad: $total, money_exposure_basis: $basis,
        questions: $questions, model: $model, facts: $facts,
@@ -358,7 +358,7 @@ export async function persistAnalysis(
     await q(
       db,
       `CREATE flag CONTENT {
-         report: type::thing($report), building: type::thing($building),
+         report: type::record($report), building: type::record($building),
          owner_id: $owner, flag_type: $flagType, severity: $severity,
          title: $title, explanation: $explanation, evidence: $evidence,
          money_exposure: $money, downgraded: $downgraded
@@ -423,7 +423,7 @@ export async function deleteReportCascade(
     return ((res[0] ?? []) as T[]);
   };
   const reports = await first<{ id: unknown; building: unknown }>(
-    "SELECT id, building FROM report WHERE id = type::thing($id) AND owner_id = $owner LIMIT 1",
+    "SELECT id, building FROM report WHERE id = type::record($id) AND owner_id = $owner LIMIT 1",
     { id: reportId, owner: ownerId }
   );
   if (reports.length === 0) return null;
@@ -431,25 +431,25 @@ export async function deleteReportCascade(
   const scope = { id: reportId, owner: ownerId };
   // Order matters: children first, then the report row.
   await db.query(
-    "DELETE flag WHERE report = type::thing($id) AND owner_id = $owner",
+    "DELETE flag WHERE report = type::record($id) AND owner_id = $owner",
     scope
   );
   await db.query(
-    "DELETE document WHERE report = type::thing($id) AND owner_id = $owner",
+    "DELETE document WHERE report = type::record($id) AND owner_id = $owner",
     scope
   );
   await db.query(
-    "DELETE report WHERE id = type::thing($id) AND owner_id = $owner",
+    "DELETE report WHERE id = type::record($id) AND owner_id = $owner",
     scope
   );
   const remaining = await first<{ id: unknown }>(
-    "SELECT id FROM report WHERE building = type::thing($building) AND owner_id = $owner LIMIT 1",
+    "SELECT id FROM report WHERE building = type::record($building) AND owner_id = $owner LIMIT 1",
     { building: buildingId, owner: ownerId }
   );
   let buildingDeleted = false;
   if (remaining.length === 0) {
     await db.query(
-      "DELETE building WHERE id = type::thing($building) AND owner_id = $owner",
+      "DELETE building WHERE id = type::record($building) AND owner_id = $owner",
       { building: buildingId, owner: ownerId }
     );
     buildingDeleted = true;
@@ -481,13 +481,13 @@ export async function getReport(
   const reports = await q<ReportRow[]>(
     db,
     `SELECT *, building.name AS building_name FROM report
-     WHERE id = type::thing($id) AND owner_id = $owner LIMIT 1`,
+     WHERE id = type::record($id) AND owner_id = $owner LIMIT 1`,
     { id: reportId, owner: ownerId }
   );
   if (reports.length === 0) return null;
   const flags = await q<FlagRow[]>(
     db,
-    `SELECT * FROM flag WHERE report = type::thing($id) ORDER BY created_at`,
+    `SELECT * FROM flag WHERE report = type::record($id) ORDER BY created_at`,
     { id: reportId }
   );
   return { report: reports[0], flags };
@@ -522,18 +522,18 @@ export async function getBuildingHistory(
 ): Promise<{ building: BuildingRow; reports: ReportRow[]; flags: FlagRow[] } | null> {
   const buildings = await q<BuildingRow[]>(
     db,
-    "SELECT * FROM building WHERE id = type::thing($id) AND owner_id = $owner LIMIT 1",
+    "SELECT * FROM building WHERE id = type::record($id) AND owner_id = $owner LIMIT 1",
     { id: buildingId, owner: ownerId }
   );
   if (buildings.length === 0) return null;
   const reports = await q<ReportRow[]>(
     db,
-    "SELECT * FROM report WHERE building = type::thing($id) ORDER BY created_at DESC",
+    "SELECT * FROM report WHERE building = type::record($id) ORDER BY created_at DESC",
     { id: buildingId }
   );
   const flags = await q<FlagRow[]>(
     db,
-    "SELECT * FROM flag WHERE building = type::thing($id) ORDER BY created_at DESC",
+    "SELECT * FROM flag WHERE building = type::record($id) ORDER BY created_at DESC",
     { id: buildingId }
   );
   return { building: buildings[0], reports, flags };
@@ -554,8 +554,8 @@ export async function getPreviousFactsSnapshot(
   >(
     db,
     `SELECT id, facts_snapshot, doc_date FROM report
-     WHERE building = type::thing($building) AND owner_id = $owner
-     ${excludeReportId ? "AND id != type::thing($exclude)" : ""}
+     WHERE building = type::record($building) AND owner_id = $owner
+     ${excludeReportId ? "AND id != type::record($exclude)" : ""}
      ORDER BY created_at DESC LIMIT 1`,
     excludeReportId
       ? { building: buildingId, owner: ownerId, exclude: excludeReportId }
@@ -577,15 +577,19 @@ export async function matchBuildings(
 ): Promise<{ id: string; name: string; corp_number: string | null; address: string | null; report_count: number }[]> {
   const h = hint.trim();
   if (h.length < 2) return [];
+  // SurrealDB v3 has no ILIKE: case-insensitive substring match is
+  // lowercase(field) CONTAINS needle, with the needle lowered in JS.
   return q(
     db,
     `SELECT id, name, corp_number, address,
        count(SELECT id FROM report WHERE building = $parent.id) AS report_count
      FROM building
      WHERE owner_id = $owner
-       AND (name ILIKE $like OR corp_number ILIKE $like OR address ILIKE $like)
+       AND (string::lowercase(name) CONTAINS $needle
+         OR string::lowercase(corp_number ?? "") CONTAINS $needle
+         OR string::lowercase(address ?? "") CONTAINS $needle)
      ORDER BY updated_at DESC LIMIT 5`,
-    { owner: ownerId, like: `%${h}%` }
+    { owner: ownerId, needle: h.toLowerCase() }
   );
 }
 
@@ -599,7 +603,7 @@ export async function getPriorFlags(
   const rows = await q<FlagRow[]>(
     db,
     `SELECT flag_type, severity, title, explanation, created_at FROM flag
-     WHERE building = type::thing($id) AND owner_id = $owner
+     WHERE building = type::record($id) AND owner_id = $owner
      ORDER BY created_at DESC LIMIT $limit`,
     { id: buildingId, owner: ownerId, limit }
   );

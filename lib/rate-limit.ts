@@ -68,12 +68,12 @@ export async function checkDailyAnalysisLimit(
   const limit = maxAnalysesPerDay();
   const key = `${ownerId}:${day}`;
   const res = (await db.query(
-    `SELECT VALUE count FROM ONLY type::thing("daily_usage", $key)`,
+    `SELECT VALUE count FROM ONLY type::record("daily_usage", $key)`,
     { key }
   )) as unknown[];
   const used = Number(res[0] ?? 0) + 1;
   await db.query(
-    `UPSERT type::thing("daily_usage", $key) SET owner_id = $owner, day = $day, count = $used`,
+    `UPSERT type::record("daily_usage", $key) SET owner_id = $owner, day = $day, count = $used`,
     { key, owner: ownerId, day, used }
   );
   return { allowed: used <= limit, used, limit, day };
