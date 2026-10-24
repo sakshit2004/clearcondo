@@ -14,16 +14,13 @@ export default function Footer() {
             </p>
           </div>
           <div className="flex flex-col gap-2 text-sm sm:items-end">
-            <Link href="/calgary" className="text-muted hover:text-ink transition-colors">
-              Look up a Calgary condo
-            </Link>
             <Link href="/demo" className="text-muted hover:text-ink transition-colors">
               Sample report
             </Link>
             <Link href="/privacy" className="text-muted hover:text-ink transition-colors">
               Privacy
             </Link>
-            <span className="text-subtle">Calgary, Alberta</span>
+            <span className="text-subtle">Know before you buy</span>
           </div>
         </div>
       </div>
