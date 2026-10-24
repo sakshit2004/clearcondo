@@ -29,6 +29,11 @@
 -- every report and every flag ever raised, with first-seen dates — the
 -- building's memory grows with each analysis.
 
+-- NOTE (SurrealDB v3): the FLEXIBLE object/array fields below are defined
+-- WITHOUT "IF NOT EXISTS" on purpose. v3 SCHEMAFULL rejects nested keys on a
+-- plain object field ("Found field 'facts.address', but no such field
+-- exists"), and databases created before the FLEXIBLE fix keep the old
+-- definition unless DEFINE is allowed to overwrite it on connect.
 DEFINE TABLE IF NOT EXISTS building SCHEMAFULL;
 DEFINE FIELD IF NOT EXISTS name ON TABLE building TYPE string;
 DEFINE FIELD IF NOT EXISTS corp_number ON TABLE building TYPE option<string>;
@@ -54,7 +59,7 @@ DEFINE FIELD IF NOT EXISTS status ON TABLE document TYPE string DEFAULT "extract
 -- Extracted page text, [{ page_number, text }]. Raw PDF bytes are never stored;
 -- this is the most sensitive bulk data we keep, and the retention cron deletes
 -- the whole document row (metadata + text) after RETENTION_DAYS.
-DEFINE FIELD IF NOT EXISTS pages ON TABLE document TYPE array<object> DEFAULT [];
+DEFINE FIELD pages ON TABLE document TYPE array<object> FLEXIBLE DEFAULT [];
 DEFINE FIELD IF NOT EXISTS owner_id ON TABLE document TYPE string;
 DEFINE FIELD IF NOT EXISTS created_at ON TABLE document TYPE datetime DEFAULT time::now();
 
@@ -67,12 +72,12 @@ DEFINE FIELD IF NOT EXISTS money_exposure_total_cad ON TABLE report TYPE option<
 DEFINE FIELD IF NOT EXISTS money_exposure_basis ON TABLE report TYPE string;
 DEFINE FIELD IF NOT EXISTS questions ON TABLE report TYPE array<string>;
 DEFINE FIELD IF NOT EXISTS model ON TABLE report TYPE string;
-DEFINE FIELD IF NOT EXISTS facts ON TABLE report TYPE object;
+DEFINE FIELD facts ON TABLE report TYPE object FLEXIBLE;
 DEFINE FIELD IF NOT EXISTS verified_claims ON TABLE report TYPE int DEFAULT 0;
 DEFINE FIELD IF NOT EXISTS total_claims ON TABLE report TYPE int DEFAULT 0;
-DEFINE FIELD IF NOT EXISTS facts_snapshot ON TABLE report TYPE option<object> DEFAULT NONE;
+DEFINE FIELD facts_snapshot ON TABLE report TYPE option<object> FLEXIBLE DEFAULT NONE;
 DEFINE FIELD IF NOT EXISTS doc_date ON TABLE report TYPE option<string> DEFAULT NONE;
-DEFINE FIELD IF NOT EXISTS missing_documents ON TABLE report TYPE option<array<object>> DEFAULT NONE;
+DEFINE FIELD missing_documents ON TABLE report TYPE option<array<object>> FLEXIBLE DEFAULT NONE;
 DEFINE FIELD IF NOT EXISTS created_at ON TABLE report TYPE datetime DEFAULT time::now();
 
 DEFINE TABLE IF NOT EXISTS flag SCHEMAFULL;
@@ -83,8 +88,8 @@ DEFINE FIELD IF NOT EXISTS flag_type ON TABLE flag TYPE string;
 DEFINE FIELD IF NOT EXISTS severity ON TABLE flag TYPE string;
 DEFINE FIELD IF NOT EXISTS title ON TABLE flag TYPE string;
 DEFINE FIELD IF NOT EXISTS explanation ON TABLE flag TYPE string;
-DEFINE FIELD IF NOT EXISTS evidence ON TABLE flag TYPE array<object>;
-DEFINE FIELD IF NOT EXISTS money_exposure ON TABLE flag TYPE option<object>;
+DEFINE FIELD evidence ON TABLE flag TYPE array<object> FLEXIBLE;
+DEFINE FIELD money_exposure ON TABLE flag TYPE option<object> FLEXIBLE;
 DEFINE FIELD IF NOT EXISTS downgraded ON TABLE flag TYPE bool DEFAULT false;
 DEFINE FIELD IF NOT EXISTS created_at ON TABLE flag TYPE datetime DEFAULT time::now();
 
@@ -116,6 +121,6 @@ DEFINE FIELD IF NOT EXISTS property_address ON TABLE service_order TYPE string;
 DEFINE FIELD IF NOT EXISTS condition_date ON TABLE service_order TYPE option<string>;
 DEFINE FIELD IF NOT EXISTS status ON TABLE service_order TYPE string DEFAULT "received";
 DEFINE FIELD IF NOT EXISTS consent ON TABLE service_order TYPE bool DEFAULT false;
-DEFINE FIELD IF NOT EXISTS documents ON TABLE service_order TYPE array<object> DEFAULT [];
+DEFINE FIELD documents ON TABLE service_order TYPE array<object> FLEXIBLE DEFAULT [];
 DEFINE FIELD IF NOT EXISTS created_at ON TABLE service_order TYPE datetime DEFAULT time::now();
 DEFINE INDEX IF NOT EXISTS service_order_ref ON TABLE service_order COLUMNS ref_code UNIQUE;
