@@ -145,3 +145,16 @@ describe("fetchMajorPermits", () => {
     await assert.rejects(fetchMajorPermits(["1111 6 AV SW"], now, { fetchImpl }), CityDataError);
   });
 });
+
+describe("permitToFact", () => {
+  it("is a public-record fact keyed by permit number", async () => {
+    const { permitToFact } = await import("../calgary/facts.ts");
+    const p = toMajorPermit(permitRow(), ADDR, SINCE)!;
+    const f = permitToFact(p, "0812345");
+    assert.equal(f.source_type, "public_record");
+    assert.equal(f.fact_key, "permit:BP2024-01234");
+    assert.equal(f.source_url, p.source_url);
+    assert.match(f.text, /City of Calgary building permit BP2024-01234 issued 2024-05-10 at 1111 6 AV SW \(condominium plan 0812345\)/);
+    assert.match(f.text, /\$450,000 CAD/);
+  });
+});

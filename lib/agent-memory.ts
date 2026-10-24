@@ -21,6 +21,7 @@ import type {
   VerifiedStructuredFacts,
 } from "./report-schema";
 import { redactText } from "./redact.ts";
+import type { PublicRecordFact } from "./calgary/facts.ts";
 
 /* ------------------------------------------------------------------ */
 /* Configuration                                                       */
@@ -229,6 +230,41 @@ export async function rememberBuildingFacts(
         err instanceof Error ? err.message : String(err)
       );
     }
+    return { ok: false, skipped: "error" };
+  }
+}
+
+/**
+ * Remember verified public-record facts (City of Calgary permits) for a
+ * building. A separate source type from document evidence: the text says
+ * where it came from, and the `source=public-record` label lets recall
+ * tell the two apart. Best-effort; never throws.
+ */
+export async function rememberPublicRecordFacts(
+  opts: {
+    ownerId: string;
+    buildingRecordId: string;
+    facts: PublicRecordFact[];
+  },
+  fetchImpl?: typeof fetch
+): Promise<RememberResult> {
+  const client = createClient(fetchImpl);
+  if (!client) return { ok: false, skipped: "unconfigured" };
+  if (opts.facts.length === 0) return { ok: false, skipped: "empty" };
+  const text = [
+    "Verified public record from City of Calgary open data (not from the condominium's own documents).",
+    ...opts.facts.map((f) => f.text),
+  ].join(" ");
+  try {
+    await client.remember(text, {
+      infer: "full",
+      labels: [
+        ...buildingLabels(opts.ownerId, opts.buildingRecordId),
+        `source=${sanitizeLabelSegment(opts.facts[0].source_type)}`,
+      ],
+    });
+    return { ok: true };
+  } catch {
     return { ok: false, skipped: "error" };
   }
 }

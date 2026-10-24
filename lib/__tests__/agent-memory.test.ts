@@ -6,6 +6,7 @@ import {
   isAgentMemoryConfigured,
   recallBuildingMemory,
   rememberBuildingFacts,
+  rememberPublicRecordFacts,
   sanitizeLabelSegment,
 } from "../agent-memory.ts";
 import type {
@@ -269,5 +270,41 @@ describe("recallBuildingMemory", () => {
     assert.equal(res.hits.length, 1); // empty text filtered out
     assert.ok(res.hits[0].text.includes("745,000"));
     assert.ok(capturedUrl.includes("/api/v1/ctx-123/query"));
+  });
+});
+
+describe("rememberPublicRecordFacts", () => {
+  const fact = {
+    source_type: "public_record" as const,
+    dataset: "c2es-76ed",
+    source_name: "City of Calgary Open Data — Building Permits",
+    source_url: "https://data.calgary.ca/resource/c2es-76ed.json?permitnum=BP2024-01234",
+    fact_key: "permit:BP2024-01234",
+    categories: ["roof"],
+    observed_on: "2024-05-10",
+    declared_value_cad: 450000,
+    text: "City of Calgary building permit BP2024-01234 issued 2024-05-10: Re-roof.",
+  };
+
+  it("is skipped when Agent Memory is unconfigured", async () => {
+    const r = await rememberPublicRecordFacts({ ownerId: "u", buildingRecordId: "building:x", facts: [fact] });
+    assert.deepEqual(r, { ok: false, skipped: "unconfigured" });
+  });
+
+  it("labels the write as a public-record source and never throws", async () => {
+    setAgentMemoryEnv();
+    let body = "";
+    const ok = (async (_url: RequestInfo | URL, init?: RequestInit) => {
+      body = String(init?.body ?? "");
+      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
+    }) as typeof fetch;
+    const r = await rememberPublicRecordFacts({ ownerId: "u", buildingRecordId: "building:x", facts: [fact] }, ok);
+    assert.equal(r.ok, true);
+    assert.match(body, /source=public-record/);
+    assert.match(body, /not from the condominium's own documents/);
+
+    const down = (async () => { throw new Error("offline"); }) as unknown as typeof fetch;
+    const r2 = await rememberPublicRecordFacts({ ownerId: "u", buildingRecordId: "building:x", facts: [fact] }, down);
+    assert.equal(r2.ok, false);
   });
 });
