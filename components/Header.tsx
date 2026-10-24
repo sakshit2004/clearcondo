@@ -16,14 +16,8 @@ export default function Header() {
           <Logo size={28} animate />
         </Link>
         <nav className="flex items-center gap-5 sm:gap-7">
-          <Link href="/#how" className={navLink}>
-            How it works
-          </Link>
           <Link href="/demo" className={navLink}>
             Sample report
-          </Link>
-          <Link href="/order" className={navLink}>
-            Order a report
           </Link>
           {configured ? (
             /* Auth state is runtime data: under Cache Components the

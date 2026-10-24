@@ -16,6 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  // Absolute base for the social preview images (opengraph-image.png).
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://clearcondo.vercel.app"),
   title: "ClearCondo — Know what you're buying before you buy it",
   description:
     "ClearCondo reads a condo's document stack — reserve fund study, bylaws, minutes, information statements — and flags the expensive surprises before you buy.",
@@ -41,7 +43,15 @@ export default function RootLayout({
   if (!clerkKey) return <html lang="en">{body}</html>;
   return (
     <html lang="en">
-      <ClerkProvider>{body}</ClerkProvider>
+      <ClerkProvider
+        appearance={{
+          // Our own animated monogram sits above the widget, so hide Clerk's.
+          options: { logoPlacement: "none" },
+          variables: { colorPrimary: "#1d4ed8", borderRadius: "10px" },
+        }}
+      >
+        {body}
+      </ClerkProvider>
     </html>
   );
 }
