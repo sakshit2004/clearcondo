@@ -128,6 +128,17 @@ async function q<T>(
 
 const rid = (id: unknown): string => String(id);
 
+/**
+ * SurrealDB v3 distinguishes NONE from NULL: `option<T>` fields accept
+ * NONE but reject the NULL that a JS `null` encodes to ("Couldn't coerce
+ * value for field … Expected `none | int` but found `NULL`"). The SDK
+ * encodes JS `undefined` as NONE, so nullable values bound for option<>
+ * fields must be mapped null → undefined before they are sent. (This
+ * was the live persistence failure: every analysis whose building had
+ * e.g. no year_built died in upsertBuilding and rendered unsaved.)
+ */
+const opt = <T>(v: T | null | undefined): T | undefined => v ?? undefined;
+
 /* ------------------------------------------------------------------ */
 /* Row types                                                           */
 /* ------------------------------------------------------------------ */
@@ -264,10 +275,10 @@ export async function upsertBuilding(
      } RETURN id`,
     {
       name: facts.name || nameHint || "Unnamed building",
-      corp: facts.corp_number,
-      addr: facts.address,
-      units: facts.units,
-      yb: facts.year_built,
+      corp: opt(facts.corp_number),
+      addr: opt(facts.address),
+      units: opt(facts.units),
+      yb: opt(facts.year_built),
       owner: ownerId,
       key,
     }
@@ -343,7 +354,7 @@ export async function persistAnalysis(
       building: buildingId,
       owner: ownerId,
       summary: analysis.summary,
-      total: analysis.money_exposure_total_cad,
+      total: opt(analysis.money_exposure_total_cad),
       basis: analysis.money_exposure_basis,
       questions: analysis.questions_for_realtor_lawyer,
       model,
@@ -351,7 +362,7 @@ export async function persistAnalysis(
       vClaims: analysis.verification.verified_claims,
       tClaims: analysis.verification.total_claims,
       snapshot: analysis.structured_facts,
-      docDate: analysis.structured_facts.doc_date,
+      docDate: opt(analysis.structured_facts.doc_date),
       missing,
     }
   );
@@ -375,7 +386,7 @@ export async function persistAnalysis(
         title: flag.title,
         explanation: flag.explanation,
         evidence: flag.evidence,
-        money: flag.money_exposure,
+        money: opt(flag.money_exposure),
         downgraded: flag.downgraded,
       }
     );
@@ -819,10 +830,10 @@ export async function createServiceOrder(
     {
       ref: input.refCode,
       name: input.realtorName,
-      brokerage: input.brokerage,
+      brokerage: opt(input.brokerage),
       email: input.email,
       address: input.propertyAddress,
-      conditionDate: input.conditionDate,
+      conditionDate: opt(input.conditionDate),
       consent: input.consent,
       documents: documents.map((d) => ({
         filename: d.filename,
