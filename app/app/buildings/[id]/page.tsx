@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { getUserId, isClerkConfigured } from "@/lib/auth";
 import { withDb, getBuildingHistory, isDbConfigured, listPublicRecordFacts } from "@/lib/db";
@@ -51,9 +52,17 @@ export default async function BuildingHistoryPage({
 
   const { id } = await params;
   const fullId = `building:${decodeURIComponent(id)}`;
-  const data = await withDb((db) => getBuildingHistory(db, userId, fullId));
-  if (!data) return notFound();
-  const publicFacts = (await withDb((db) => listPublicRecordFacts(db, userId, fullId)).catch(() => null)) ?? [];
+  // One connection for both reads — each withDb() pays a fresh SurrealDB
+  // connect + sign-in, and stacking them made this page take seconds.
+  const loaded = await withDb(async (db) => {
+    const data = await getBuildingHistory(db, userId, fullId);
+    if (!data) return null;
+    const facts = await listPublicRecordFacts(db, userId, fullId).catch(() => []);
+    return { data, facts };
+  });
+  if (!loaded) return notFound();
+  const data = loaded.data;
+  const publicFacts = loaded.facts;
 
   const { building, reports, flags } = data;
   const accumulated = accumulateFlags(flags);
@@ -146,8 +155,13 @@ export default async function BuildingHistoryPage({
         </section>
       )}
 
-      {/* Agent Memory recall — reconciled beliefs, when configured */}
-      <AgentMemoryPanel ownerId={userId} buildingRecordId={fullId} />
+      {/* Agent Memory recall — reconciled beliefs, when configured.
+          Behind Suspense: the recall is an external service call (up to
+          a 15s timeout in lib/agent-memory.ts) and must never block the
+          page shell — it streams in when it answers. */}
+      <Suspense fallback={null}>
+        <AgentMemoryPanel ownerId={userId} buildingRecordId={fullId} />
+      </Suspense>
 
       {/* Report timeline */}
       <section>

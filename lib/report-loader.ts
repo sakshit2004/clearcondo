@@ -13,10 +13,24 @@ import type { VerifiedAnalysis, VerifiedStructuredFacts } from "@/lib/report-sch
 export async function loadReportVM(userId: string, id: string): Promise<ReportVM | null> {
   const fullId = `report:${decodeURIComponent(id)}`;
 
-  const data = await withDb((db) => getReport(db, userId, fullId));
-  if (!data) return null;
+  // One connection for both reads: every withDb() call pays a fresh
+  // SurrealDB connect + sign-in, and page loads were stacking several
+  // sequentially (measured as multi-second report opens).
+  const loaded = await withDb(async (db) => {
+    const data = await getReport(db, userId, fullId);
+    if (!data) return null;
+    const prev = await getPreviousFactsSnapshot(
+      db,
+      userId,
+      String(data.report.building),
+      fullId
+    );
+    return { data, prev };
+  });
+  if (!loaded) return null;
 
-  const { report, flags } = data;
+  const { report, flags } = loaded.data;
+  const prev = loaded.prev;
 
   const emptySnapshot: VerifiedStructuredFacts = {
     doc_date: report.doc_date,
@@ -36,9 +50,6 @@ export async function loadReportVM(userId: string, id: string): Promise<ReportVM
   };
 
   // "What changed since the last review" — diff against the previous snapshot.
-  const prev = await withDb((db) =>
-    getPreviousFactsSnapshot(db, userId, String(report.building), fullId)
-  );
   const deltas: Delta[] = prev ? computeDeltas(prev.snapshot, snapshot) : [];
 
   const analysis: VerifiedAnalysis = {
