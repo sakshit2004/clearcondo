@@ -29,7 +29,8 @@ function rng(seed: number) {
   };
 }
 
-export default function HeroScene() {
+/** `flagCard`: play the buyer story (a window gets flagged, a red-flag card appears). Off on the generic landing. */
+export default function HeroScene({ flagCard = true }: { flagCard?: boolean }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -294,7 +295,7 @@ export default function HeroScene() {
       if (flag) {
         const fx = flag.x + ox;
         const fy = flag.y + oy;
-        const flagged = t > FLAG_AT;
+        const flagged = flagCard && t > FLAG_AT;
         if (!flagged) {
           drawWin(flag, false);
         } else {
@@ -440,12 +441,13 @@ export default function HeroScene() {
       io.disconnect();
       window.removeEventListener("pointermove", onMove);
     };
-  }, []);
+  }, [flagCard]);
 
   return (
     <div ref={wrapRef} className="absolute inset-0 overflow-hidden" aria-hidden={false}>
       <canvas ref={canvasRef} className="absolute inset-0" aria-hidden />
       {/* The floating flag card (sample data). */}
+      {flagCard && (
       <div
         ref={cardRef}
         className={`hero-card absolute left-[max(2rem,calc((100%-72rem)/2+1.5rem))] top-[120px] w-[340px] rounded-2xl border border-white/15 bg-[#0d121c]/70 backdrop-blur-md text-white shadow-[0_20px_60px_rgba(0,0,0,0.45)] ${
@@ -477,6 +479,7 @@ export default function HeroScene() {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }

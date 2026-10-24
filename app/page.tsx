@@ -74,7 +74,7 @@ export default function LandingPage() {
     <div>
       {/* Hero: full-bleed night scene, headline over it */}
       <section className="landing-hero relative isolate min-h-[max(640px,100svh)] bg-[#070a12] text-white overflow-hidden flex flex-col">
-        <HeroScene />
+        <HeroScene flagCard={false} />
         <div className="relative z-10 mt-auto mx-auto w-full max-w-6xl px-4 sm:px-6 pb-14 sm:pb-20 pt-40">
           <p className="rise-in text-[15px] text-white/65">For condo buyers and owners</p>
           <h1
