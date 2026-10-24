@@ -10,9 +10,9 @@ import MemoryRecord, { recordRows } from "@/components/MemoryRecord";
 import Reveal from "@/components/Reveal";
 
 const STEPS = [
-  ["Look up the building", "Free for any Calgary condo, no sign-in: what it's worth, its major work, the tax that comes with it."],
-  ["Add the documents", "The PDFs from your seller or property manager: minutes, reserve study, bylaws."],
+  ["Add the documents", "Buying? Upload the PDFs from your seller or property manager: minutes, reserve study, bylaws."],
   ["Get the real price", "Every red flag priced per unit and traced to its page, online or as a PDF for your lawyer, before conditions come off."],
+  ["Keep it lower", "Own it? Check your property tax, free for any Calgary condo. Insurance, energy and your mortgage are next."],
 ];
 
 /** Three ways in: see a report, check your own documents, check the tax side. */
@@ -30,10 +30,10 @@ const PRICE_PARTS: { title: string; body: string; href: string; cta: string; pre
     cta: "Analyze your documents",
   },
   {
-    title: "Check the tax side after you buy",
-    body: "What the City says the building is worth against similar buildings, the property tax on a typical unit, and whether owners have appealed. Starting in Calgary.",
-    href: "/calgary",
-    cta: "Check a Calgary condo",
+    title: "Save on owning it",
+    body: "Starting with property tax: what the City says your building is worth, the tax on a typical unit, and whether owners have appealed. Insurance, energy and refinancing are next.",
+    href: "/own",
+    cta: "See how owners save",
     preview: true,
   },
 ];
@@ -120,9 +120,8 @@ export default function LandingPage() {
                 After you buy
               </dt>
               <dd>
-                We check what the City says your building is worth, the tax that
-                comes with it, and whether owners have appealed. Starting in
-                Calgary.
+                We cut what it costs to own, starting with your property tax.
+                Insurance, energy and your mortgage are next.
               </dd>
             </div>
           </dl>
@@ -131,16 +130,19 @@ export default function LandingPage() {
               href="/app"
               className="btn-lift inline-flex items-center gap-2.5 rounded-full bg-white text-ink font-semibold pl-6 pr-2 min-h-12"
             >
-              Take me to dashboard
+              I&apos;m buying a condo
               <span className="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center">
                 <Arrow />
               </span>
             </Link>
             <Link
-              href="/calgary"
-              className="inline-flex items-center rounded-full border border-white/30 hover:border-white text-white font-semibold px-6 min-h-12 transition-colors"
+              href="/own"
+              className="inline-flex items-center gap-2.5 rounded-full border border-white/30 hover:border-white text-white font-semibold pl-6 pr-2 min-h-12 transition-colors"
             >
-              Look up a Calgary condo
+              I own a condo
+              <span className="w-9 h-9 rounded-full border border-white/30 inline-flex items-center justify-center">
+                <Arrow />
+              </span>
             </Link>
           </div>
           <p className="rise-in mt-5 text-sm text-white/50" style={{ animationDelay: "380ms" }}>
@@ -231,11 +233,11 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-24">
           <SectionHead
             title="Buying is the first bill. Owning is the rest."
-            body="ClearCondo starts with the purchase: what a condo will really cost you before you own it. What comes after has started too: every Calgary building page already shows its property tax and assessment appeal history. Next, the same check for your own assessment: if the City overvalues your home, we flag it and help you build the appeal. One record of what your property actually costs you."
+            body="ClearCondo starts with the purchase: what a condo will really cost you before you own it. Then it keeps the cost of owning down, starting with property tax: every Calgary building page already shows its assessment, the tax that comes with it and its appeal history. Insurance, energy and your mortgage are next. One record of what your condo actually costs you."
           />
           <Reveal>
-            <Link href="/calgary" className={primaryBtn}>
-              See a building&apos;s tax &amp; appeals <Arrow />
+            <Link href="/own" className={primaryBtn}>
+              See how owners save <Arrow />
             </Link>
           </Reveal>
         </div>
@@ -257,16 +259,16 @@ export default function LandingPage() {
           </div>
           <div className="flex flex-wrap gap-3">
             <Link
-              href="/calgary"
+              href="/own"
               className="inline-flex items-center rounded-[10px] border border-white/30 hover:border-white text-white font-semibold px-6 min-h-12 transition-colors"
             >
-              Look up a Calgary condo
+              I own a condo
             </Link>
             <Link
               href="/app"
               className="btn-lift inline-flex items-center gap-2.5 rounded-[10px] bg-white text-ink font-semibold px-6 min-h-12"
             >
-              Take me to dashboard <Arrow />
+              I&apos;m buying a condo <Arrow />
             </Link>
           </div>
         </div>

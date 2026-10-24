@@ -96,19 +96,29 @@ test("landing speaks to buyers and links the dashboard", async ({
   await expect(page.getByText("After you buy", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Three ways to stop overpaying." })).toBeVisible();
   await expect(page.getByRole("link", { name: /Analyze your documents/ })).toHaveAttribute("href", "/app");
+  await expect(page.getByRole("link", { name: /I'm buying a condo/ }).first()).toHaveAttribute("href", "/app");
+  await expect(page.getByRole("link", { name: /I own a condo/ }).first()).toHaveAttribute("href", "/own");
   await expect(page.getByText(/realtors/i)).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: /traced to the page/ })
   ).toBeVisible();
-  const cta = page
-    .getByRole("link", { name: "Take me to dashboard" })
-    .first();
+  // The buyer's door goes to the dashboard (document analysis).
+  const cta = page.getByRole("link", { name: /I'm buying a condo/ }).first();
   await expect(cta).toHaveAttribute("href", "/app");
 });
 
 test("Calgary lookup renders with no sign-in", async ({ page }) => {
   const res = await page.goto(`${BASE}/calgary`);
   expect(res?.status()).toBe(200);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("What will this condo really cost you?");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Check your condo's property tax.");
   await expect(page.getByRole("combobox", { name: /Street address or condo plan number/ })).toBeVisible();
+});
+
+test("owner page: live property tax check, the rest marked coming soon", async ({ page }) => {
+  const res = await page.goto(`${BASE}/own`);
+  expect(res?.status()).toBe(200);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Own a condo?");
+  await expect(page.getByRole("combobox", { name: /Street address or condo plan number/ })).toBeVisible();
+  await expect(page.getByText("Coming soon")).toHaveCount(3);
+  await expect(page.getByRole("link", { name: "Check a condo before you buy" })).toHaveAttribute("href", "/app");
 });
