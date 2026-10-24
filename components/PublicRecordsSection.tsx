@@ -99,8 +99,8 @@ function MentionNote({ item, minutesLabel }: { item: PermitWithMention; minutesL
  * "means".
  */
 export interface LookupMode {
-  /** Where "add your documents" goes (upload flow, building pre-filled). */
-  addDocsHref: string;
+  /** Where "add your documents" goes (upload flow, building pre-filled). Omitted for owners. */
+  addDocsHref?: string;
 }
 
 export default function PublicRecordsSection({
@@ -361,7 +361,7 @@ export default function PublicRecordsSection({
           )}
         </>
       )}
-      {lookup && (
+      {lookup?.addDocsHref && (
         <div className="mt-8 rounded-[14px] bg-ink text-white p-6">
           <h3 className="text-lg font-bold">Have this building&apos;s documents?</h3>
           <p className="text-sm text-[#c3cad4] mt-1.5 mb-4 max-w-2xl">
