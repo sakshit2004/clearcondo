@@ -11,7 +11,7 @@ import { withDb, createServiceOrder, isDbConfigured } from "@/lib/db";
 
 /**
  * The service desk: POST /api/intake accepts a document package with NO
- * account. A realtor forwards the PDFs the seller's side delivered; we
+ * account. A buyer sends the PDFs their seller or property manager gave them; we
  * extract the text (raw PDF bytes are never stored), persist a service
  * order, and return its reference code. The finished, verified report is
  * produced from the stored pages by the normal pipeline and delivered to

@@ -10,9 +10,9 @@ import MemoryRecord, { recordRows } from "@/components/MemoryRecord";
 import Reveal from "@/components/Reveal";
 
 const STEPS = [
-  ["Send the package", "Forward the PDFs from the seller's side. No account."],
+  ["Upload the package", "The PDFs from your seller or property manager: minutes, reserve study, bylaws."],
   ["We check every page", "Each risk is matched to the exact sentence that supports it."],
-  ["Get the report", "Online for your client, or as a PDF with your name on it."],
+  ["Get the report", "Online, or as a PDF to take to your lawyer before conditions come off."],
 ];
 
 /** The sample building's record across its two reviews (sample data). */
@@ -74,7 +74,7 @@ export default function LandingPage() {
       <section className="landing-hero relative isolate min-h-[max(640px,100svh)] bg-[#070a12] text-white overflow-hidden flex flex-col">
         <HeroScene />
         <div className="relative z-10 mt-auto mx-auto w-full max-w-6xl px-4 sm:px-6 pb-14 sm:pb-20 pt-40">
-          <p className="rise-in text-[15px] text-white/65">For Calgary realtors and their buyers</p>
+          <p className="rise-in text-[15px] text-white/65">For Calgary condo buyers</p>
           <h1
             className="rise-in mt-4 max-w-3xl font-semibold tracking-[-0.035em] leading-[1.02] text-[44px] sm:text-[64px] lg:text-[80px]"
             style={{ animationDelay: "80ms", textWrap: "balance" }}
@@ -157,7 +157,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 flex flex-wrap items-end justify-between gap-8">
           <div className="max-w-xl">
             <h2 className="text-3xl sm:text-4xl font-bold tracking-[-0.025em] leading-tight">
-              Know what your client is buying into.
+              Know what you&apos;re buying into.
             </h2>
             <p className="mt-3 text-[#c3cad4]">
               PDFs are read in memory and never stored.{" "}

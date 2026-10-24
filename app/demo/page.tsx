@@ -73,7 +73,7 @@ export default function DemoPage() {
             href="/order"
             className="btn-lift inline-flex items-center rounded-[10px] bg-accent hover:bg-accent-dark text-white font-semibold px-7 min-h-12"
           >
-            Send your own document package
+            Send us your documents
           </Link>
           <Link
             href="/app/new"

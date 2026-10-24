@@ -7,8 +7,7 @@ import ReportPrint from "@/components/ReportPrint";
 import PublicRecords from "@/components/PublicRecords";
 
 /**
- * The PDF version of one of the user's reports. ?for= and ?brokerage=
- * put a client and realtor on the first page; ?download=1 opens the
+ * The PDF version of one of the user's reports. ?download=1 opens the
  * print dialog on arrival (Save as PDF).
  */
 export default async function ReportPrintPage({
@@ -16,7 +15,7 @@ export default async function ReportPrintPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ for?: string; brokerage?: string; download?: string }>;
+  searchParams: Promise<{ download?: string }>;
 }) {
   if (!isClerkConfigured()) return <SetupNotice />;
   const userId = await getUserId();
@@ -34,8 +33,6 @@ export default async function ReportPrintPage({
       buildingName={vm.buildingName}
       buildingMeta={vm.buildingMeta}
       createdAt={vm.createdAt}
-      preparedFor={sp.for?.slice(0, 120) || undefined}
-      brokerage={sp.brokerage?.slice(0, 120) || undefined}
       timeline={vm.timeline}
       deltas={vm.deltas}
       missing={vm.missing}

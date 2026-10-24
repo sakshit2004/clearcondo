@@ -14,19 +14,17 @@ import { sortFlags } from "./ReportView";
 const SEV_INK = { critical: "text-signal-dark", warning: "text-warn-dark", info: "text-info-dark" } as const;
 
 /**
- * The client-ready PDF of a report: what the realtor forwards. One column
+ * The print-ready PDF of a report, to keep or share with a lawyer. One column
  * of running content on Letter, ink on white, every flag numbered with
  * its quote and page, and the audit trail at the back. No separate cover
- * page — the first page carries the building, the realtor and the
- * headline numbers, so it works on its own.
+ * page — the first page carries the building and the headline numbers,
+ * so it works on its own.
  */
 export default function ReportPrint({
   analysis,
   buildingName,
   buildingMeta,
   createdAt,
-  preparedFor,
-  brokerage,
   timeline,
   deltas,
   missing,
@@ -40,8 +38,6 @@ export default function ReportPrint({
   buildingName: string;
   buildingMeta?: string;
   createdAt?: string;
-  preparedFor?: string;
-  brokerage?: string;
   timeline?: TimelinePoint[];
   deltas?: Delta[];
   missing?: MissingDoc[];
@@ -93,12 +89,6 @@ export default function ReportPrint({
         </div>
 
         <div className="mt-9">
-          {preparedFor && (
-            <div className="micro-label text-muted">
-              Prepared for {preparedFor}
-              {brokerage ? ` · ${brokerage}` : ""}
-            </div>
-          )}
           <h1 className="mt-2.5 mb-1 text-[38px] font-bold tracking-[-0.025em] leading-[1.1]" style={{ textWrap: "balance" }}>
             {buildingName}
           </h1>

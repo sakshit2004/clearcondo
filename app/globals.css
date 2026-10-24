@@ -71,6 +71,12 @@ body {
   outline-offset: 2px;
 }
 
+/* Inputs inside a field-styled container that shows focus itself
+   (focus-within ring), e.g. the Calgary condo search. */
+.field-input:focus-visible {
+  outline: none;
+}
+
 /* Small uppercase label — eyebrows, metadata, table heads */
 .micro-label {
   font-family: var(--font-geist-sans), "Helvetica Neue", Helvetica, sans-serif;

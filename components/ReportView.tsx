@@ -219,7 +219,7 @@ export default function ReportView({
             <section className="rounded-[14px] bg-ink text-white p-6">
               <h2 className="text-lg font-bold">Take it offline</h2>
               <p className="text-sm text-[#c3cad4] mt-1.5 mb-4">
-                A print-ready PDF with every flag, quote and page reference, ready to send to a client.
+                A print-ready PDF with every flag, quote and page reference, ready to share with your lawyer.
               </p>
               <Link
                 href={pdfHref}
