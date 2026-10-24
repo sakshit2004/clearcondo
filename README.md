@@ -82,6 +82,16 @@ Upload (PDFs, 4 MB total — Vercel request-body cap)
   memory as `public_record_fact` rows (a separate source type from document
   evidence) and into Agent Memory under a `source=public-record` label.
   Optional: `CALGARY_SOCRATA_APP_TOKEN` raises the City's rate limit.
+- **Owner property tax (`/app/own`, signed in):** an owner searches their
+  address with unit and sees the unit's City assessment, change since last
+  year, estimated tax and how it sits against the building's median unit,
+  plus the building's public record. Each checked unit is saved to
+  SurrealDB (`owner_property`, one row per owner + plan + unit, refreshed
+  on every check). "Get my savings estimate" stores the owner's details and
+  the facts open data lacks (size, condition, parking…) in `owner_request`
+  via `POST /api/owner-requests`; the team replies with a number. An
+  approximate saving shows only when the private `OWNER_SAVINGS_CUT` is set.
+  Pricing: 30% of the tax saved plus $10/month, free during beta.
 - **Graceful degradation:** without `ANTHROPIC_API_KEY`, `/api/analyze/run`
   returns a clear "add your key" state; without SurrealDB, reports render
   ephemerally; without Clerk keys, `/app/*` shows a setup notice. `/demo`
