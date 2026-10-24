@@ -13,6 +13,13 @@ import {
 import { toRollUnits } from "../calgary/match.ts";
 
 describe("historical values", () => {
+  it("reads a real historical-roll row", () => {
+    const vals = toUnitYearValues([
+      { roll_year: "2005", roll_number: "61532909", address: "1 10 POINT DR NW", assessed_value: "198,500", assessment_class: "RE" },
+    ]);
+    assert.deepEqual(vals, [{ roll_number: "061532909", year: 2005, value: 198500 }]);
+  });
+
   it("parses comma values, pads roll numbers, dedupes (roll, year)", () => {
     const vals = toUnitYearValues([
       { roll_number: "12345678", roll_year: "2022", assessed_value: "1,234,500" },
@@ -90,6 +97,14 @@ describe("buildTrend", () => {
     assert.ok(Math.abs(t[1].building_change_pct! - 10) < 1e-9);
     assert.ok(Math.abs(t[1].comparables_change_pct! - 20) < 1e-9);
     assert.equal(t[1].comparables_count, 1);
+  });
+
+  it("shows the last 10 years, with the first shown year as the base", () => {
+    const years = Array.from({ length: 22 }, (_, i) => ({ year: 2005 + i, total: 100 + i, median: 100 + i, units: 1 }));
+    const t = buildTrend(years, []);
+    assert.equal(t.length, 10);
+    assert.equal(t[0].year, 2017);
+    assert.equal(t[0].building_change_pct, 0);
   });
 
   it("is empty without building history, and median handles even counts", () => {

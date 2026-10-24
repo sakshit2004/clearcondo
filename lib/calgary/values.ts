@@ -142,7 +142,15 @@ const pct = (from: number, to: number) => (from > 0 ? ((to - from) / from) * 100
  * base year is the building's first year; a comparable counts for a year
  * only when it has both the base year and that year.
  */
-export function buildTrend(building: YearSummary[], comparables: YearSummary[][]): TrendPoint[] {
+/** Years shown in the trend; the historical rolls go back to 2005. */
+export const TREND_YEARS = 10;
+
+export function buildTrend(
+  allYears: YearSummary[],
+  comparables: YearSummary[][],
+  maxYears = TREND_YEARS
+): TrendPoint[] {
+  const building = allYears.slice(-maxYears);
   if (building.length === 0) return [];
   const base = building[0];
   return building.map((y) => {

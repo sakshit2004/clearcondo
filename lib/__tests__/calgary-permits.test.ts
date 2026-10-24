@@ -68,6 +68,40 @@ describe("toMajorPermit", () => {
   });
 });
 
+describe("toMajorPermit with real City rows", () => {
+  // Shape of real c2es-76ed rows: fields absent when null (no issueddate,
+  // no estprojectcost on a cancelled permit), unit-prefixed addresses.
+  const real = {
+    permitnum: "BP2026-03557",
+    statuscurrent: "Issued Permit",
+    applieddate: "2026-03-09T00:00:00.000",
+    permittype: "Commercial / Multi Family Project",
+    permitclass: "3101 - Apartment",
+    permitclassmapped: "Residential",
+    workclass: "Alteration",
+    workclassmapped: "Existing",
+    description: "Balcony membrane and railing replacement",
+    originaladdress: "#150 1111 6 AV SW",
+  };
+
+  it("keeps an applied-for permit with no issued date or declared value", () => {
+    const p = toMajorPermit(real, ADDR, SINCE);
+    assert.ok(p);
+    assert.equal(p.issued_date, null);
+    assert.equal(p.applied_date, "2026-03-09");
+    assert.equal(p.declared_value_cad, null);
+    assert.equal(p.work_class, "Alteration", "detailed workclass, not the coarse mapped one");
+    assert.deepEqual(p.categories, ["balcony"]);
+  });
+
+  it("drops cancelled, withdrawn and refused permits", () => {
+    for (const statuscurrent of ["Cancelled", "Withdrawn", "Refused", "Application Rejected"]) {
+      assert.equal(toMajorPermit({ ...real, statuscurrent }, ADDR, SINCE), null, statuscurrent);
+    }
+    assert.ok(toMajorPermit({ ...real, statuscurrent: "Completed" }, ADDR, SINCE));
+  });
+});
+
 describe("checkMentions (permit keyword logic)", () => {
   it("is 'mentioned' with the page where a term appears", () => {
     const docs = [
@@ -136,7 +170,7 @@ describe("fetchMajorPermits", () => {
     const { permits, query_url } = await fetchMajorPermits(["1111 6 AV SW"], now, { fetchImpl });
     assert.deepEqual(permits.map((p) => p.permit_number), ["BP2025-9", "BP2022-1"]);
     assert.match(seen, /upper\(originaladdress\) like '%1111 6 AV SW%'/);
-    assert.match(seen, new RegExp(`issueddate >= '${lookbackStart(now)}'`));
+    assert.match(seen, new RegExp(`issueddate >= '${lookbackStart(now)}T00:00:00'`));
     assert.match(query_url, /c2es-76ed/);
   });
 

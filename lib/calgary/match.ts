@@ -108,6 +108,8 @@ const STREET_TYPES: Record<string, string> = {
   PARADE: "PR",
   RISE: "RI",
   MANOR: "MR",
+  BAY: "BA", BA: "BA",
+  COVE: "CV", CV: "CV",
 };
 
 const QUADRANTS: Record<string, string> = {
@@ -139,14 +141,24 @@ export function normalizeStreetAddress(s: string | null | undefined): string | n
     .split(/\s+/)
     .filter(Boolean)
     .filter((tok) => tok !== "CALGARY" && tok !== "AB" && tok !== "ALBERTA")
-    .map((tok, i) => {
-      if (i > 0 && /^[0-9]+(ST|ND|RD|TH)$/.test(tok)) return tok.replace(/(ST|ND|RD|TH)$/, "");
-      if (i > 0 && STREET_TYPES[tok]) return STREET_TYPES[tok];
-      if (QUADRANTS[tok]) return QUADRANTS[tok];
-      return tok;
-    });
+    .map((tok) => QUADRANTS[tok] ?? tok);
+  // Only the street-type slot is abbreviated: the last word, or the one
+  // before the quadrant. "POINT" in "10 POINT DR NW" is the street's name.
+  const typeAt = streetTypeIndex(tokens);
+  for (let i = 1; i < tokens.length; i++) {
+    if (/^[0-9]+(ST|ND|RD|TH)$/.test(tokens[i])) tokens[i] = tokens[i].replace(/(ST|ND|RD|TH)$/, "");
+    else if (i === typeAt && STREET_TYPES[tokens[i]]) tokens[i] = STREET_TYPES[tokens[i]];
+  }
   return tokens.length >= 2 ? tokens.join(" ") : null;
 }
+
+/** Index of the street-type word: last token, or the one before a quadrant. */
+function streetTypeIndex(tokens: string[]): number {
+  const last = tokens.length - 1;
+  return QUADRANT_SET.has(tokens[last]) ? last - 1 : last;
+}
+
+const QUADRANT_SET = new Set(Object.values(QUADRANTS));
 
 /**
  * A roll address for a unit may carry the unit number first
@@ -158,10 +170,10 @@ export function stripUnitFromRollAddress(addr: string | null | undefined): strin
   if (!n) return null;
   const tokens = n.split(" ");
   const civic = /^[0-9]+[A-Z]?$/;
-  const streetTypes = new Set(Object.values(STREET_TYPES));
-  // "1111 6 AV SW" is number + numbered street; "1203 1111 6 AV SW" and
-  // "1203 1111 MAIN ST" carry a unit first.
-  if (tokens.length >= 3 && civic.test(tokens[0]) && civic.test(tokens[1]) && !streetTypes.has(tokens[2])) {
+  // "1111 6 AV SW" is civic + numbered street + type. "1203 1111 6 AV SW",
+  // "1 10 POINT DR NW" and "1203 1111 MAIN ST" carry a unit first: two
+  // leading numbers with at least one more word before the street type.
+  if (tokens.length >= 3 && civic.test(tokens[0]) && civic.test(tokens[1]) && streetTypeIndex(tokens) >= 3) {
     return tokens.slice(1).join(" ");
   }
   return n;

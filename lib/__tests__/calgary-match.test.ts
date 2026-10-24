@@ -77,6 +77,10 @@ describe("addresses", () => {
   it("strips a leading unit number from roll addresses", () => {
     assert.equal(stripUnitFromRollAddress("1203 1111 6 AV SW"), "1111 6 AV SW");
     assert.equal(stripUnitFromRollAddress("1111 6 AV SW"), "1111 6 AV SW");
+    // Real historical-roll addresses (4ur7-wsgc): unit, civic, street.
+    assert.equal(stripUnitFromRollAddress("1 10 POINT DR NW"), "10 POINT DR NW");
+    assert.equal(stripUnitFromRollAddress("1 101 25 AV SW"), "101 25 AV SW");
+    assert.equal(stripUnitFromRollAddress("#150 7505 48 ST SE"), "7505 48 ST SE");
   });
 
   it("scopes addresses to Calgary", () => {
@@ -213,5 +217,51 @@ describe("socrata helpers", () => {
   it("pads roll numbers to 9 digits", () => {
     assert.equal(normalizeRollNumber("12345678"), "012345678");
     assert.equal(normalizeRollNumber(123456789), "123456789");
+  });
+});
+
+describe("street names that look like street types", () => {
+  it("abbreviates only the street-type slot", () => {
+    assert.equal(normalizeStreetAddress("10 Point Drive NW, Calgary"), "10 POINT DR NW");
+    assert.equal(normalizeStreetAddress("200 Park Place SW"), "200 PARK PL SW");
+    assert.equal(normalizeStreetAddress("55 Hidden Hill Terrace NW"), "55 HIDDEN HILL TC NW");
+    assert.equal(normalizeStreetAddress("1111 6th Avenue SW"), "1111 6 AV SW");
+  });
+  it("document and roll spellings meet", () => {
+    assert.equal(normalizeStreetAddress("10 Point Dr. N.W."), stripUnitFromRollAddress("1 10 POINT DR NW"));
+  });
+});
+
+describe("real current-roll rows (4bsw-nn7w)", () => {
+  const rows = [
+    {
+      roll_year: "2026", roll_number: "150104206", address: "15 DEERMEADE PL SE",
+      assessed_value: "729000.0", assessment_class: "RE", short_legal: "7910655;17;15",
+      sub_property_use: "R110", property_type: "LI", comm_code: "DRN", comm_name: "DEER RUN",
+      year_of_construction: "1981.0",
+    },
+    {
+      roll_year: "2026", roll_number: "150157303", address: "16 DEERMEADE BA SE",
+      assessed_value: "587000.0", assessment_class: "RE", short_legal: "8011349;17;40B",
+      sub_property_use: "R120", property_type: "LI", comm_code: "DRN", comm_name: "DEER RUN",
+      year_of_construction: "1980.0",
+    },
+  ];
+
+  it("parses decimal-string values and years", () => {
+    const [u] = toRollUnits(rows);
+    assert.equal(u.assessed_value, 729000);
+    assert.equal(u.year_of_construction, 1981);
+    assert.equal(u.roll_year, 2026);
+    assert.equal(u.comm_code, "DRN");
+  });
+
+  it("takes the plan from plan;block;lot legals too", () => {
+    assert.equal(planPrefix(rows[1].short_legal), "8011349");
+  });
+
+  it("meets the City's Bay abbreviation", () => {
+    assert.equal(normalizeStreetAddress("16 Deermeade Bay SE, Calgary"), "16 DEERMEADE BA SE");
+    assert.equal(stripUnitFromRollAddress(rows[1].address), "16 DEERMEADE BA SE");
   });
 });
