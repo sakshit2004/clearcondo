@@ -3,8 +3,8 @@ import { test, expect } from "@playwright/test";
 const BASE = process.env.BASE_URL ?? "http://localhost:3000";
 
 /**
- * The service front door: /order (no-login intake), order status by ref
- * code, and the client-ready print view. These run keyless — the intake
+ * The order desk for buyers: /order (no-login intake), order status by
+ * ref code, and the print view. These run keyless — the intake
  * POST needs the database, so the spec covers rendering and client-side
  * behavior; persistence is covered by the service-order unit tests and
  * the schema.
@@ -14,7 +14,7 @@ test("order page renders the service form with no sign-in", async ({ page }) => 
   const res = await page.goto(`${BASE}/order`);
   expect(res?.status()).toBe(200);
   await expect(
-    page.getByRole("heading", { name: "Send a document package" })
+    page.getByRole("heading", { name: "Send your condo documents" })
   ).toBeVisible();
   await expect(page.getByLabel(/Your name/)).toBeVisible();
   await expect(page.getByLabel(/Email for the finished report/)).toBeVisible();
@@ -24,6 +24,8 @@ test("order page renders the service form with no sign-in", async ({ page }) => 
     page.getByRole("button", { name: "Send the package" })
   ).toBeVisible();
   await expect(page.getByText("Verified, or flagged")).toBeVisible();
+  // Buyer-only: no brokerage field.
+  await expect(page.getByLabel(/Brokerage/)).toHaveCount(0);
 });
 
 test("order form refuses to send without the package attached", async ({
@@ -33,7 +35,7 @@ test("order form refuses to send without the package attached", async ({
   await page.getByLabel(/Your name/).fill("Jordan Lee");
   await page
     .getByLabel(/Email for the finished report/)
-    .fill("jordan@brokerage.ca");
+    .fill("jordan@example.com");
   await page
     .getByLabel(/Property address/)
     .fill("Unit 506, 1234 North Hill Terrace NW, Calgary");
@@ -60,16 +62,16 @@ test("order status page handles a malformed ref code gracefully", async ({
   await expect(page.getByText(/couldn't find NOT-A-CODE/)).toBeVisible();
 });
 
-test("print view renders the client-ready report with a prepared-for cover", async ({
+test("print view renders the report with no realtor cover", async ({
   page,
 }) => {
+  // The old ?for=/?brokerage= personalization is gone; the params are ignored.
   const res = await page.goto(
     `${BASE}/demo/print?for=Jordan%20Lee&brokerage=Century%2021%20Bamber`
   );
   expect(res?.status()).toBe(200);
-  await expect(page.getByText("Prepared for")).toBeVisible();
-  await expect(page.getByText(/Jordan Lee/)).toBeVisible();
-  await expect(page.getByText(/Century 21 Bamber/)).toBeVisible();
+  await expect(page.getByText("Prepared for")).toHaveCount(0);
+  await expect(page.getByText(/Century 21 Bamber/)).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "North Hill Terrace" })
   ).toBeVisible();
@@ -84,10 +86,12 @@ test("print view renders the client-ready report with a prepared-for cover", asy
   ).toBeVisible();
 });
 
-test("landing leads with the service framing and links the dashboard", async ({
+test("landing speaks to buyers and links the dashboard", async ({
   page,
 }) => {
   await page.goto(`${BASE}/`);
+  await expect(page.getByText("For Calgary condo buyers")).toBeVisible();
+  await expect(page.getByText(/realtors/i)).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: /traced to the page/ })
   ).toBeVisible();
@@ -95,4 +99,11 @@ test("landing leads with the service framing and links the dashboard", async ({
     .getByRole("link", { name: "Take me to dashboard" })
     .first();
   await expect(cta).toHaveAttribute("href", "/app");
+});
+
+test("Calgary lookup renders with no sign-in", async ({ page }) => {
+  const res = await page.goto(`${BASE}/calgary`);
+  expect(res?.status()).toBe(200);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Calgary condo");
+  await expect(page.getByRole("combobox", { name: /Street address or condo plan number/ })).toBeVisible();
 });

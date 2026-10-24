@@ -76,7 +76,6 @@ export default async function OrderStatusPage({
               <td className="py-2.5 pr-4 font-semibold text-ink">Ordered by</td>
               <td className="py-2.5">
                 {order.realtorName}
-                {order.brokerage ? ` · ${order.brokerage}` : ""}
               </td>
             </tr>
             <tr className="border-t border-stone-200">

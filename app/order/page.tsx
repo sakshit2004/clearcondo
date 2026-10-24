@@ -6,8 +6,8 @@ const PROMISES = [
     "Every claim is checked against its cited page. A claim that can't be verified is downgraded — never critical, never carrying a dollar figure.",
   ],
   [
-    "Client-ready",
-    "Your name and brokerage on the report, in plain language your client can act on — online or as a PDF.",
+    "Plain language",
+    "Every flag explained in words you can act on, with questions to take to your lawyer — online or as a PDF.",
   ],
   [
     "Inside the window",
@@ -20,10 +20,9 @@ const PROMISES = [
 ];
 
 /**
- * The service desk. One page, no account: send the document package, get
- * a reference code, and the verified report comes back by email. This is
- * the front door of the service framing — the analysis app behind it is
- * the engine room, not the product the realtor operates.
+ * The order desk. One page, no account: a buyer sends the document
+ * package, gets a reference code, and the verified report comes back by
+ * email.
  */
 export default function OrderPage() {
   return (
@@ -44,13 +43,13 @@ export default function OrderPage() {
           ))}
         </ol>
         <h1 className="rise-in font-bold tracking-[-0.025em] leading-[1.1] text-4xl sm:text-[44px] text-ink max-w-3xl" style={{ animationDelay: "80ms" }}>
-          Send a document package
+          Send your condo documents
         </h1>
         <p className="rise-in text-muted text-[17px] leading-relaxed max-w-2xl mt-3" style={{ animationDelay: "160ms" }}>
-          Forward the condo documents the seller&apos;s side delivered. We read
-          every page, check every claim against the page it cites, and send
-          back a finished report with your name on it — inside the condition
-          window, not after it.
+          Send the condo documents your seller or property manager gave you.
+          We read every page, check every claim against the page it cites,
+          and email you the finished report — inside your condition window,
+          not after it.
         </p>
 
         <div className="mt-10">

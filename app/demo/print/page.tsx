@@ -13,19 +13,15 @@ function loadReport(file: string): VerifiedAnalysis {
 }
 
 /**
- * The service deliverable: the PDF version of the sample report — what
- * goes back to the realtor's inbox, with their name on the first page.
- * ?for= and ?brokerage= personalize it; ?download=1 opens the print
+ * The PDF version of the sample report. ?download=1 opens the print
  * dialog on arrival.
  */
 export default async function PrintReportPage({
   searchParams,
 }: {
-  searchParams: Promise<{ for?: string; brokerage?: string; download?: string }>;
+  searchParams: Promise<{ download?: string }>;
 }) {
   const sp = await searchParams;
-  const preparedFor = (sp.for || "A ClearCondo client").slice(0, 120);
-  const brokerage = (sp.brokerage || "").slice(0, 120);
 
   const older = loadReport("sample-report-2024.json");
   const newer = loadReport("sample-report-2026.json");
@@ -53,8 +49,6 @@ export default async function PrintReportPage({
       analysis={newer}
       buildingName={b.name || "Condominium"}
       buildingMeta={meta}
-      preparedFor={preparedFor}
-      brokerage={brokerage || undefined}
       timeline={timeline}
       deltas={deltas}
       isSample

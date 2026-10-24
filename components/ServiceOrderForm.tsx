@@ -104,7 +104,7 @@ export default function ServiceOrderForm({ emailHint }: { emailHint?: string }) 
         <p className="text-muted leading-relaxed mt-4 max-w-lg">
           Your package is with us. The verified report — every claim checked
           against the page it cites — will be delivered to your email. Keep
-          the reference code with the client file.
+          the reference code to track your order.
         </p>
         {confirmation.documents.length > 0 && (
           <ul className="mt-6 flex flex-col gap-2">
@@ -219,12 +219,6 @@ export default function ServiceOrderForm({ emailHint }: { emailHint?: string }) 
             <input id="so-name" name="realtorName" required autoComplete="name" placeholder="Jordan Lee" className={inputCls} />
           </div>
           <div>
-            <label htmlFor="so-brokerage" className={labelCls}>
-              Brokerage <span className="font-normal text-subtle">(optional)</span>
-            </label>
-            <input id="so-brokerage" name="brokerage" autoComplete="organization" placeholder="Century 21 Bamber" className={inputCls} />
-          </div>
-          <div>
             <label htmlFor="so-email" className={labelCls}>
               Email for the finished report
             </label>
@@ -234,7 +228,7 @@ export default function ServiceOrderForm({ emailHint }: { emailHint?: string }) 
               type="email"
               required
               autoComplete="email"
-              placeholder={emailHint || "you@brokerage.ca"}
+              placeholder={emailHint || "you@example.com"}
               className={inputCls}
             />
           </div>

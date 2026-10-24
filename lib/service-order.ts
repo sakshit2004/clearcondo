@@ -4,9 +4,9 @@ import type { PageText } from "./extract";
 /**
  * Service orders — the ClearCondo service front door.
  *
- * The service framing: a realtor (or an unrepresented buyer) does not sign
- * up for a tool. They send the document package, we run the same analysis
- * pipeline, and a finished, client-ready report goes back to their inbox.
+ * The order desk: a buyer doesn't have to operate the tool. They send the
+ * document package, we run the same analysis pipeline, and the finished
+ * report goes back to their inbox.
  * An order captures who sent it, which property it concerns, and the
  * extracted document text (raw PDF bytes are never stored — the same rule
  * as the self-serve app). Fulfilment runs the stored pages through the

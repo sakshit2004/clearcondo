@@ -24,7 +24,7 @@ function read(key: string): string {
 /**
  * "Ask your realtor or lawyer" as a working checklist. Ticks are a
  * per-viewer convenience kept in this browser (keyed by report), not
- * report data — a client and their realtor each track their own.
+ * report data — each person viewing the report tracks their own.
  */
 export default function QuestionsChecklist({
   questions,
