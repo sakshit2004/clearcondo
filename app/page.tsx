@@ -96,6 +96,12 @@ export default function LandingPage() {
                 <Arrow />
               </span>
             </Link>
+            <Link
+              href="/calgary"
+              className="inline-flex items-center rounded-full border border-white/30 hover:border-white text-white font-semibold px-6 min-h-12 transition-colors"
+            >
+              Look up a Calgary condo
+            </Link>
           </div>
           <p className="rise-in mt-5 text-sm text-white/50" style={{ animationDelay: "380ms" }}>
             Free during beta

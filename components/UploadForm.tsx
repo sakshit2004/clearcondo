@@ -95,14 +95,17 @@ const STAGES: { id: Exclude<Stage, "idle" | "done" | "error">; label: string; hi
 export default function UploadForm({
   stripeEnabled,
   credits,
+  initialBuildingName = "",
 }: {
   stripeEnabled: boolean;
   credits: number | null;
+  /** Pre-filled from /app/new?building=… (the Calgary lookup's "add documents"). */
+  initialBuildingName?: string;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
-  const [buildingName, setBuildingName] = useState("");
+  const [buildingName, setBuildingName] = useState(initialBuildingName);
   const [stage, setStage] = useState<Stage>("idle");
   const [error, setError] = useState<ApiError | null>(null);
   const [ephemeral, setEphemeral] = useState<ReportVM | null>(null);

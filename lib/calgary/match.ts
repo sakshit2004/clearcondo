@@ -152,6 +152,23 @@ export function normalizeStreetAddress(s: string | null | undefined): string | n
   return tokens.length >= 2 ? tokens.join(" ") : null;
 }
 
+/**
+ * Roll-style street words without a civic number ("Deermeade Bay SE" ->
+ * "DEERMEADE BA SE"), for partial searches. Null when nothing is left.
+ */
+export function normalizeStreetWords(s: string): string | null {
+  const tokens = s
+    .toUpperCase()
+    .replace(/[.,']/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((tok) => QUADRANTS[tok] ?? tok);
+  if (tokens.length === 0) return null;
+  const at = streetTypeIndex(tokens);
+  if (at > 0 && STREET_TYPES[tokens[at]]) tokens[at] = STREET_TYPES[tokens[at]];
+  return tokens.join(" ");
+}
+
 /** Index of the street-type word: last token, or the one before a quadrant. */
 function streetTypeIndex(tokens: string[]): number {
   const last = tokens.length - 1;
