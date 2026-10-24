@@ -130,8 +130,11 @@ body {
 }
 
 /* Header floating over the landing hero: white ink, glassy pills.
-   Keyed off the hero's presence, so no client-side routing check. */
-body:has(.landing-hero) .site-header {
+   Keyed off the hero's presence, so no client-side routing check. After a
+   client navigation Next keeps the landing page mounted but hidden (React
+   Activity sets display: none on its root), so a hidden hero must not
+   count — otherwise every page after the landing gets the dark header. */
+body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header {
   position: absolute;
   inset-inline: 0;
   top: 0;
@@ -139,16 +142,16 @@ body:has(.landing-hero) .site-header {
   backdrop-filter: none;
   border-bottom-color: transparent;
 }
-body:has(.landing-hero) .site-header {
+body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header {
   color: #ffffff;
   --logo-accent: #8fb0ff;
 }
-body:has(.landing-hero) .site-header .header-row {
+body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .header-row {
   height: 80px;
 }
-body:has(.landing-hero) .site-header .header-logo,
-body:has(.landing-hero) .site-header .nav-link,
-body:has(.landing-hero) .site-header .header-chip {
+body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .header-logo,
+body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .nav-link,
+body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .header-chip {
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.06);
@@ -156,27 +159,27 @@ body:has(.landing-hero) .site-header .header-chip {
   -webkit-backdrop-filter: blur(10px);
   color: rgba(255, 255, 255, 0.88);
 }
-body:has(.landing-hero) .site-header .header-logo {
+body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .header-logo {
   padding: 6px 16px 6px 8px;
 }
-body:has(.landing-hero) .site-header .nav-link {
+body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .nav-link {
   padding: 9px 16px;
   transition: background-color 0.2s, border-color 0.2s;
 }
-body:has(.landing-hero) .site-header .nav-link:hover {
+body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .nav-link:hover {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.14);
   border-color: rgba(255, 255, 255, 0.35);
 }
-body:has(.landing-hero) .site-header .nav-link::after {
+body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .nav-link::after {
   display: none;
 }
-body:has(.landing-hero) .site-header .header-cta {
+body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .header-cta {
   background: #ffffff;
   color: #15181c;
   border-radius: 999px;
 }
-body:has(.landing-hero) .site-header .header-chip {
+body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .header-chip {
   padding: 8px 14px;
 }
 
