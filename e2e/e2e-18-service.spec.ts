@@ -92,7 +92,7 @@ test("landing leads with the service framing and links the dashboard", async ({
     page.getByRole("heading", { name: /traced to the page/ })
   ).toBeVisible();
   const cta = page
-    .getByRole("link", { name: "Send a document package" })
+    .getByRole("link", { name: "Take me to dashboard" })
     .first();
   await expect(cta).toHaveAttribute("href", "/app");
 });
