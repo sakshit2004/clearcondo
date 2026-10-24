@@ -108,6 +108,8 @@ const STREET_TYPES: Record<string, string> = {
   PARADE: "PR",
   RISE: "RI",
   MANOR: "MR",
+  BAY: "BA", BA: "BA",
+  COVE: "CV", CV: "CV",
 };
 
 const QUADRANTS: Record<string, string> = {

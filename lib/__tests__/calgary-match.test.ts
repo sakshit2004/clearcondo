@@ -231,3 +231,37 @@ describe("street names that look like street types", () => {
     assert.equal(normalizeStreetAddress("10 Point Dr. N.W."), stripUnitFromRollAddress("1 10 POINT DR NW"));
   });
 });
+
+describe("real current-roll rows (4bsw-nn7w)", () => {
+  const rows = [
+    {
+      roll_year: "2026", roll_number: "150104206", address: "15 DEERMEADE PL SE",
+      assessed_value: "729000.0", assessment_class: "RE", short_legal: "7910655;17;15",
+      sub_property_use: "R110", property_type: "LI", comm_code: "DRN", comm_name: "DEER RUN",
+      year_of_construction: "1981.0",
+    },
+    {
+      roll_year: "2026", roll_number: "150157303", address: "16 DEERMEADE BA SE",
+      assessed_value: "587000.0", assessment_class: "RE", short_legal: "8011349;17;40B",
+      sub_property_use: "R120", property_type: "LI", comm_code: "DRN", comm_name: "DEER RUN",
+      year_of_construction: "1980.0",
+    },
+  ];
+
+  it("parses decimal-string values and years", () => {
+    const [u] = toRollUnits(rows);
+    assert.equal(u.assessed_value, 729000);
+    assert.equal(u.year_of_construction, 1981);
+    assert.equal(u.roll_year, 2026);
+    assert.equal(u.comm_code, "DRN");
+  });
+
+  it("takes the plan from plan;block;lot legals too", () => {
+    assert.equal(planPrefix(rows[1].short_legal), "8011349");
+  });
+
+  it("meets the City's Bay abbreviation", () => {
+    assert.equal(normalizeStreetAddress("16 Deermeade Bay SE, Calgary"), "16 DEERMEADE BA SE");
+    assert.equal(stripUnitFromRollAddress(rows[1].address), "16 DEERMEADE BA SE");
+  });
+});
