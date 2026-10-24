@@ -549,16 +549,19 @@ export async function getBuildingHistory(
     { id: buildingId, owner: ownerId }
   );
   if (buildings.length === 0) return null;
-  const reports = await q<ReportRow[]>(
-    db,
-    "SELECT * FROM report WHERE building = type::record($id) ORDER BY created_at DESC",
-    { id: buildingId }
-  );
-  const flags = await q<FlagRow[]>(
-    db,
-    "SELECT * FROM flag WHERE building = type::record($id) ORDER BY created_at DESC",
-    { id: buildingId }
-  );
+  // Independent reads on the same connection — run them concurrently.
+  const [reports, flags] = await Promise.all([
+    q<ReportRow[]>(
+      db,
+      "SELECT * FROM report WHERE building = type::record($id) ORDER BY created_at DESC",
+      { id: buildingId }
+    ),
+    q<FlagRow[]>(
+      db,
+      "SELECT * FROM flag WHERE building = type::record($id) ORDER BY created_at DESC",
+      { id: buildingId }
+    ),
+  ]);
   return { building: buildings[0], reports, flags };
 }
 
