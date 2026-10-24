@@ -4,6 +4,14 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  async redirects() {
+    // The owner side moved behind sign-in (/app/own); keep old links working.
+    return [
+      { source: "/own", destination: "/app/own", permanent: false },
+      { source: "/calgary", destination: "/app/own", permanent: false },
+      { source: "/calgary/:plan", destination: "/app/own/:plan", permanent: false },
+    ];
+  },
   async headers() {
     // Baseline security headers for every route. No sensitive data is
     // cached publicly: user-scoped pages call auth() (dynamic), and the

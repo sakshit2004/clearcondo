@@ -157,3 +157,48 @@ DEFINE FIELD IF NOT EXISTS declared_value_cad ON TABLE public_record_fact TYPE o
 DEFINE FIELD IF NOT EXISTS text ON TABLE public_record_fact TYPE string;
 DEFINE FIELD IF NOT EXISTS created_at ON TABLE public_record_fact TYPE datetime DEFAULT time::now();
 DEFINE INDEX IF NOT EXISTS public_record_fact_key ON TABLE public_record_fact COLUMNS owner_id, building, fact_key UNIQUE;
+
+-- Owner savings-estimate requests (lib/owner.ts): an owner asks for a
+-- property tax savings estimate and gives the facts open data can't see.
+-- Read by the team, who reply by email. Owner-scoped like every other table.
+DEFINE TABLE IF NOT EXISTS owner_request SCHEMAFULL;
+DEFINE FIELD IF NOT EXISTS owner_id ON TABLE owner_request TYPE string;
+DEFINE FIELD IF NOT EXISTS name ON TABLE owner_request TYPE string;
+DEFINE FIELD IF NOT EXISTS email ON TABLE owner_request TYPE string;
+DEFINE FIELD IF NOT EXISTS phone ON TABLE owner_request TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS plan ON TABLE owner_request TYPE string;
+DEFINE FIELD IF NOT EXISTS address ON TABLE owner_request TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS unit ON TABLE owner_request TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS unit_size_sqft ON TABLE owner_request TYPE option<number>;
+DEFINE FIELD IF NOT EXISTS bedrooms ON TABLE owner_request TYPE option<number>;
+DEFINE FIELD IF NOT EXISTS bathrooms ON TABLE owner_request TYPE option<number>;
+DEFINE FIELD IF NOT EXISTS parking ON TABLE owner_request TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS storage ON TABLE owner_request TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS renovations ON TABLE owner_request TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS condition_issues ON TABLE owner_request TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS past_complaint ON TABLE owner_request TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS notes ON TABLE owner_request TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS status ON TABLE owner_request TYPE string DEFAULT "new";
+DEFINE FIELD IF NOT EXISTS created_at ON TABLE owner_request TYPE datetime DEFAULT time::now();
+DEFINE INDEX IF NOT EXISTS owner_request_owner ON TABLE owner_request COLUMNS owner_id;
+
+-- An owner's saved property (lib/owner.ts): the unit they looked up on
+-- /app/own and its assessment as of the last check. One row per owner +
+-- plan + unit; each check refreshes it. City facts only.
+DEFINE TABLE IF NOT EXISTS owner_property SCHEMAFULL;
+DEFINE FIELD IF NOT EXISTS owner_id ON TABLE owner_property TYPE string;
+DEFINE FIELD IF NOT EXISTS plan ON TABLE owner_property TYPE string;
+DEFINE FIELD IF NOT EXISTS unit ON TABLE owner_property TYPE string;
+DEFINE FIELD IF NOT EXISTS address ON TABLE owner_property TYPE string;
+DEFINE FIELD IF NOT EXISTS assessed_value ON TABLE owner_property TYPE option<number>;
+DEFINE FIELD IF NOT EXISTS roll_year ON TABLE owner_property TYPE option<number>;
+DEFINE FIELD IF NOT EXISTS prev_value ON TABLE owner_property TYPE option<number>;
+DEFINE FIELD IF NOT EXISTS prev_year ON TABLE owner_property TYPE option<number>;
+DEFINE FIELD IF NOT EXISTS est_tax ON TABLE owner_property TYPE option<number>;
+DEFINE FIELD IF NOT EXISTS complaints_filed ON TABLE owner_property TYPE option<number>;
+DEFINE FIELD IF NOT EXISTS created_at ON TABLE owner_property TYPE datetime DEFAULT time::now();
+DEFINE FIELD IF NOT EXISTS checked_at ON TABLE owner_property TYPE datetime DEFAULT time::now();
+DEFINE INDEX IF NOT EXISTS owner_property_unit ON TABLE owner_property COLUMNS owner_id, plan, unit UNIQUE;
+
+-- Link a savings-estimate request to the saved property it was sent from.
+DEFINE FIELD IF NOT EXISTS property ON TABLE owner_request TYPE option<record<owner_property>>;

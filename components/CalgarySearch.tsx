@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CondoSearchResult } from "@/lib/calgary/search";
+import { ownerBuildingHref } from "@/lib/owner-links";
 
 type Status = "idle" | "loading" | "done" | "error";
 
@@ -26,10 +27,10 @@ function BuildingIcon() {
 }
 
 /**
- * Search-as-you-type for Calgary condo buildings. Suggestions come from
+ * Search-as-you-type for an owner's Calgary condo. Suggestions come from
  * /api/calgary/search (debounced, cancellable); Enter on a suggestion
- * opens the building, Enter otherwise submits the full results page, so
- * the form still works without JavaScript.
+ * opens the building (with the unit, if one was typed), Enter otherwise
+ * submits the full results page, so the form still works without JavaScript.
  */
 export default function CalgarySearch({ defaultValue = "" }: { defaultValue?: string }) {
   const router = useRouter();
@@ -37,6 +38,7 @@ export default function CalgarySearch({ defaultValue = "" }: { defaultValue?: st
   const [q, setQ] = useState(defaultValue);
   const [results, setResults] = useState<CondoSearchResult[]>([]);
   const [nearbyStreet, setNearbyStreet] = useState<string | null>(null);
+  const [unit, setUnit] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>("idle");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
@@ -55,6 +57,7 @@ export default function CalgarySearch({ defaultValue = "" }: { defaultValue?: st
         if (!res.ok) throw new Error(body.error);
         setResults(body.results ?? []);
         setNearbyStreet(body.nearbyStreet ?? null);
+        setUnit(body.unit ?? null);
         setActive(-1);
         setStatus("done");
       } catch (e) {
@@ -76,13 +79,13 @@ export default function CalgarySearch({ defaultValue = "" }: { defaultValue?: st
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
 
-  const go = (r: CondoSearchResult) => router.push(`/calgary/${encodeURIComponent(r.plan)}`);
+  const go = (r: CondoSearchResult) => router.push(ownerBuildingHref(r.plan, unit));
   const showList = open && q.trim().length >= MIN && status !== "idle";
 
   return (
     <div ref={boxRef} className="relative">
       <form
-        action="/calgary"
+        action="/app/own"
         method="get"
         role="search"
         onSubmit={(e) => {
@@ -128,7 +131,7 @@ export default function CalgarySearch({ defaultValue = "" }: { defaultValue?: st
           required
           autoComplete="off"
           spellCheck={false}
-          placeholder="Address or condo plan, e.g. 1111 6 Ave SW"
+          placeholder="Your address with unit, e.g. 1203-1111 6 Ave SW"
           className="field-input flex-1 min-w-0 bg-transparent text-[17px] min-h-12 focus:outline-none placeholder:text-subtle/80"
         />
         <button
@@ -183,7 +186,7 @@ export default function CalgarySearch({ defaultValue = "" }: { defaultValue?: st
                       </span>
                     </span>
                     <span className="text-[13px] text-muted tabular-nums whitespace-nowrap">
-                      {r.units} unit{r.units === 1 ? "" : "s"}
+                      {unit ? `Unit ${unit}` : `${r.units} unit${r.units === 1 ? "" : "s"}`}
                     </span>
                   </li>
                 ))}
