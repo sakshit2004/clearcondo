@@ -45,7 +45,8 @@ export default function UnitTaxCard({
 }: {
   unit: UnitRecord;
   buildingMedian: number | null;
-  sourceUrl: string;
+  /** Omitted on the sample report. */
+  sourceUrl?: string;
 }) {
   const year = unit.roll_year ?? 2026;
   const filed = unit.complaints?.reduce((n, y) => n + y.filed, 0) ?? null;
@@ -68,9 +69,13 @@ export default function UnitTaxCard({
           label={`Assessed value, ${year}`}
           note={
             <NumberLabel kind="Fact">
-              <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">
-                City assessment roll
-              </a>
+              {sourceUrl ? (
+                <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">
+                  City assessment roll
+                </a>
+              ) : (
+                "sample data"
+              )}
             </NumberLabel>
           }
         />

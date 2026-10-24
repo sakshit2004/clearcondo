@@ -86,38 +86,52 @@ test("print view renders the report with no realtor cover", async ({
   ).toBeVisible();
 });
 
-test("landing speaks to buyers and links the dashboard", async ({
-  page,
-}) => {
+test("landing is generic and splits into buyers and owners", async ({ page }) => {
   await page.goto(`${BASE}/`);
   await expect(page.getByText("For condo buyers and owners")).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Stop overpaying for your condo");
-  await expect(page.getByText("Before you buy", { exact: true }).first()).toBeVisible();
-  await expect(page.getByText("After you buy", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Two ways to stop overpaying." })).toBeVisible();
   await expect(page.getByText("Buying a condo", { exact: true })).toBeVisible();
   await expect(page.getByText("Owning a condo", { exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Check a condo before you buy/ })).toHaveAttribute("href", "/app");
-  await expect(page.getByRole("link", { name: /Check my property tax/ })).toHaveAttribute("href", "/app/own");
+  await expect(page.getByRole("link", { name: /ClearCondo for buyers/ }).first()).toHaveAttribute("href", "/buyers");
+  await expect(page.getByRole("link", { name: /ClearCondo for owners/ }).first()).toHaveAttribute("href", "/owners");
   await expect(page.getByText(/30% of the saving, plus \$10\/month/)).toBeVisible();
-  await expect(page.getByRole("link", { name: /I'm buying a condo/ }).first()).toHaveAttribute("href", "/app");
-  await expect(page.getByRole("link", { name: /I own a condo/ }).first()).toHaveAttribute("href", "/app/own");
+  await expect(page.getByRole("link", { name: /I'm buying a condo/ }).first()).toHaveAttribute("href", "/buyers");
+  await expect(page.getByRole("link", { name: /I own a condo/ }).first()).toHaveAttribute("href", "/owners");
+  // Header buttons go straight to each dashboard.
+  const header = page.locator("header");
+  await expect(header.getByRole("link", { name: /buy/i })).toHaveAttribute("href", "/app");
+  await expect(header.getByRole("link", { name: /own/i })).toHaveAttribute("href", "/app/own");
   const roadmap = page.getByRole("list", { name: "Where ClearCondo goes next" });
   await expect(roadmap.getByRole("heading", { name: "Condos" })).toBeVisible();
   await expect(roadmap.getByRole("heading", { name: "Houses" })).toBeVisible();
   await expect(roadmap.getByRole("heading", { name: "Land" })).toBeVisible();
   await expect(page.getByText(/realtors/i)).toHaveCount(0);
-  await expect(
-    page.getByRole("heading", { name: /traced to the page/ })
-  ).toBeVisible();
-  // The buyer's door goes to the dashboard (document analysis).
-  const cta = page.getByRole("link", { name: /I'm buying a condo/ }).first();
-  await expect(cta).toHaveAttribute("href", "/app");
+});
+
+test("buyers page: buyer-only content, dashboard link, switch to owners", async ({ page }) => {
+  const res = await page.goto(`${BASE}/buyers`);
+  expect(res?.status()).toBe(200);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Know the real price");
+  await expect(page.getByRole("link", { name: /Open the buyer dashboard/ })).toHaveAttribute("href", "/app");
+  await expect(page.getByRole("heading", { name: /traced to the page/ })).toBeVisible();
+  await expect(page.getByText(/property tax/i)).toHaveCount(1); // only the switch band
+  await expect(page.getByRole("link", { name: /ClearCondo for owners/ })).toHaveAttribute("href", "/owners");
+});
+
+test("owners page: owner-only content, dashboard link, switch to buyers", async ({ page }) => {
+  const res = await page.goto(`${BASE}/owners`);
+  expect(res?.status()).toBe(200);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("paying too much property tax");
+  await expect(page.getByRole("link", { name: /Open the owner dashboard/ })).toHaveAttribute("href", "/app/own");
+  await expect(page.getByRole("link", { name: "See a sample report" })).toHaveAttribute("href", "/demo/own");
+  await expect(page.getByRole("heading", { name: "You only pay if you save." })).toBeVisible();
+  await expect(page.getByRole("link", { name: /ClearCondo for buyers/ })).toHaveAttribute("href", "/buyers");
 });
 
 test("owner pages sit behind sign-in; old public links redirect", async ({ request }) => {
   for (const [from, to] of [
-    ["/own", "/app/own"],
+    ["/own", "/owners"],
     ["/calgary", "/app/own"],
     ["/calgary/0812345", "/app/own/0812345"],
   ]) {
@@ -130,4 +144,15 @@ test("owner pages sit behind sign-in; old public links redirect", async ({ reque
 test("owner estimate requests need sign-in", async ({ request }) => {
   const res = await request.post(`${BASE}/api/owner-requests`, { data: {} });
   expect([401, 503]).toContain(res.status());
+});
+
+test("owner sample report is public and linked from the owning box", async ({ page }) => {
+  await page.goto(`${BASE}/`);
+  const links = page.getByRole("link", { name: "See a sample report" });
+  await expect(links).toHaveCount(2);
+  await expect(links.nth(1)).toHaveAttribute("href", "/demo/own");
+  const res = await page.goto(`${BASE}/demo/own`);
+  expect(res?.status()).toBe(200);
+  await expect(page.getByText("Sample data", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your savings estimate" })).toBeVisible();
 });

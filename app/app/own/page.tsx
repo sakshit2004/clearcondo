@@ -145,18 +145,6 @@ export default async function OwnPage({ searchParams }: { searchParams: Promise<
               ))}
             </ul>
           </section>
-          <section className="rounded-2xl bg-ink text-white p-6">
-            <h2 className="text-lg font-bold">Buying instead?</h2>
-            <p className="text-sm text-[#c3cad4] mt-1.5 mb-4 leading-relaxed">
-              Upload a condo&apos;s document package and see what&apos;s buried in it before you make an offer.
-            </p>
-            <Link
-              href="/app/new"
-              className="btn-lift inline-flex items-center justify-center rounded-lg bg-white text-ink font-semibold text-[15px] px-5 min-h-11"
-            >
-              New analysis
-            </Link>
-          </section>
         </aside>
       </div>
     </div>
