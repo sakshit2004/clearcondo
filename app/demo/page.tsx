@@ -5,6 +5,7 @@ import { VerifiedAnalysisSchema } from "@/lib/report-schema";
 import { computeDeltas } from "@/lib/deltas";
 import ReportView, { ReportToolbar } from "@/components/ReportView";
 import { pointFromFacts } from "@/lib/timeline";
+import BuyerPricing from "@/components/BuyerPricing";
 
 function loadReport(file: string) {
   const json = JSON.parse(
@@ -68,7 +69,10 @@ export default function DemoPage() {
           pdfHref="/demo/print?download=1"
           storageKey="demo"
         />
-        <div className="mt-12 flex flex-wrap items-center justify-center gap-3">
+        <div className="mt-12">
+          <BuyerPricing />
+        </div>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/order"
             className="btn-lift inline-flex items-center rounded-[10px] bg-accent hover:bg-accent-dark text-white font-semibold px-7 min-h-12"
