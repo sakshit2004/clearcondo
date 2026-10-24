@@ -30,6 +30,7 @@ import {
   type MatchMethod,
 } from "./match.ts";
 import {
+  median,
   buildTrend,
   currentYearValues,
   fetchComparableUnits,
@@ -42,6 +43,7 @@ import {
   type SimilarityBasis,
   type TrendPoint,
 } from "./values.ts";
+import { fetchBuildingAppeals, type AppealsSection } from "./appeals.ts";
 import {
   checkMentions,
   fetchMajorPermits,
@@ -94,8 +96,13 @@ export type CityRecords = { identity_key: string; fetched_at: string } & (
       building_addresses: string[];
       comm_name: string | null;
       year_of_construction: number | null;
+      /** Current-roll total and median unit value (null when the roll has none). */
+      current_total: number | null;
+      current_median: number | null;
       values: ValuesSection | Unavailable;
       permits: PermitsSection | Unavailable;
+      /** Absent in records cached before the appeals preview shipped. */
+      appeals?: AppealsSection | Unavailable;
     }
 );
 
@@ -206,7 +213,13 @@ export async function fetchCityRecords(
     return { status: "ok", since, items: permits, query_url };
   })();
 
-  const [values, permits] = await Promise.allSettled([valuesP, permitsP]);
+  const appealsP = fetchBuildingAppeals(
+    units.map((u) => u.address).filter((a): a is string => !!a),
+    opts
+  );
+
+  const [values, permits, appeals] = await Promise.allSettled([valuesP, permitsP, appealsP]);
+  const currentValues = units.map((u) => u.assessed_value).filter((v): v is number => v != null && v > 0);
   const yoc = units.map((u) => u.year_of_construction).find((y): y is number => !!y) ?? null;
 
   return {
@@ -225,6 +238,10 @@ export async function fetchCityRecords(
       values.status === "fulfilled" ? values.value : { status: "unavailable", message: errMessage(values.reason) },
     permits:
       permits.status === "fulfilled" ? permits.value : { status: "unavailable", message: errMessage(permits.reason) },
+    current_total: currentValues.length ? currentValues.reduce((a, b) => a + b, 0) : null,
+    current_median: currentValues.length ? median(currentValues) : null,
+    appeals:
+      appeals.status === "fulfilled" ? appeals.value : { status: "unavailable", message: errMessage(appeals.reason) },
   };
 }
 
