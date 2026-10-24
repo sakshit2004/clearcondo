@@ -1,6 +1,14 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { buildSearchQuery, groupCondoResults, isCondoLegal, searchCondoBuildings } from "../calgary/search.ts";
+import {
+  addressMatchScore,
+  buildSearchQuery,
+  groupCondoResults,
+  isCondoLegal,
+  nearbyCondoResults,
+  searchCondoBuildings,
+  splitCivic,
+} from "../calgary/search.ts";
 import { CityDataError } from "../calgary/socrata.ts";
 
 const condo = (roll: string, legal: string, address: string) => ({
@@ -66,7 +74,69 @@ describe("groupCondoResults", () => {
   });
 });
 
+describe("match ranking", () => {
+  it("scores exact > prefix (incl. half-typed) > whole words > mid-word", () => {
+    assert.equal(addressMatchScore("1111 6 AV SW", "1111 6 AV SW"), 3);
+    assert.equal(addressMatchScore("1111 6 AV SW", "1111 6 A"), 2);
+    assert.equal(addressMatchScore("16 DEERMEADE BA SE", "DEERMEADE"), 1);
+    assert.equal(addressMatchScore("21111 6 AV SW", "1111 6 AV SW"), 0);
+  });
+
+  it("drops mid-word false positives and puts the exact building first", () => {
+    const rows = [
+      condo("1", "0954321;1", "1 21111 6 AV SW"), // LIKE hit, not a match
+      condo("2", "0954321;2", "2 21111 6 AV SW"),
+      condo("3", "0812345;1", "101 1111 6 AV SW"),
+      condo("4", "0700001;1", "5 1111 6 AV SW NE PLAZA"),
+    ];
+    const r = groupCondoResults(rows, "1111 6 AV SW");
+    assert.deepEqual(r.map((b) => [b.plan, b.match]), [["0812345", "exact"], ["0700001", "prefix"]]);
+  });
+
+  it("orders a building's addresses best match first", () => {
+    const rows = [
+      condo("1", "0812345;1", "1 1120 6 AV SW"),
+      condo("2", "0812345;2", "2 1120 6 AV SW"),
+      condo("3", "0812345;3", "3 1111 6 AV SW"),
+    ];
+    assert.deepEqual(groupCondoResults(rows, "1111 6 AV SW")[0].addresses, ["1111 6 AV SW", "1120 6 AV SW"]);
+  });
+});
+
+describe("nearby fallback", () => {
+  it("splits the civic number from the street", () => {
+    assert.deepEqual(splitCivic("1111 6 AV SW"), { civic: 1111, street: "6 AV SW" });
+    assert.equal(splitCivic("DEERMEADE BA SE"), null);
+    assert.equal(splitCivic("1111 MAIN"), null, "needs at least street + type");
+  });
+
+  it("lists same-street buildings nearest civic number first, labelled nearby", () => {
+    const rows = [
+      condo("1", "0900001;1", "1 1300 6 AV SW"),
+      condo("2", "0900002;1", "1 1120 6 AV SW"),
+      condo("3", "0900003;1", "1 1120 16 AV SW"), // other street
+    ];
+    const r = nearbyCondoResults(rows, 1111, "6 AV SW");
+    assert.deepEqual(r.map((b) => b.plan), ["0900002", "0900001"]);
+    assert.ok(r.every((b) => b.match === "nearby"));
+  });
+});
+
 describe("searchCondoBuildings", () => {
+  it("falls back to the same street when the civic number has no condos", async () => {
+    const urls: string[] = [];
+    const fetchImpl = (async (u: RequestInfo | URL) => {
+      const url = decodeURIComponent(String(u));
+      urls.push(url);
+      const rows = url.includes("% 6 AV SW%") ? [condo("9", "0900002;1", "1 1120 6 AV SW")] : [];
+      return new Response(JSON.stringify(rows));
+    }) as typeof fetch;
+    const out = await searchCondoBuildings("1111 6 Ave SW", { fetchImpl });
+    assert.equal(out?.nearbyStreet, "6 AV SW");
+    assert.equal(out?.results[0].plan, "0900002");
+    assert.equal(urls.length, 2);
+  });
+
   it("queries the roll and returns grouped buildings", async () => {
     let url = "";
     const fetchImpl = (async (u: RequestInfo | URL) => {
