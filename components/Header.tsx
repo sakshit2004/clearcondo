@@ -16,10 +16,10 @@ export default function Header() {
         </Link>
         <nav className="flex items-center gap-5 sm:gap-7">
           <Link
-            href="/calgary"
+            href="/own"
             className="nav-link hidden sm:inline text-[15px] text-muted hover:text-ink whitespace-nowrap transition-colors"
           >
-            Calgary lookup
+            For owners
           </Link>
           {configured ? (
             /* Auth state is runtime data: under Cache Components the

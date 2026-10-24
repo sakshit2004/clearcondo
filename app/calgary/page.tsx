@@ -7,9 +7,9 @@ import { MIN_QUERY, type CondoSearchResponse, type MatchQuality } from "@/lib/ca
 import { CALGARY_DATASETS, DATASET_TITLES, datasetPageUrl } from "@/lib/calgary/socrata";
 
 export const metadata: Metadata = {
-  title: "Look up a Calgary condo — ClearCondo",
+  title: "Check your condo's property tax — ClearCondo",
   description:
-    "What will this condo really cost you? Search any Calgary condo for its assessed value against similar buildings, property tax, past assessment appeals and major permits, from City of Calgary open data.",
+    "Check your Calgary condo's property tax: what the City says your building is worth against similar buildings, the tax on a typical unit, past assessment appeals and major work on record, from City of Calgary open data.",
 };
 
 const MATCH_LABEL: Record<MatchQuality, string | null> = {
@@ -22,12 +22,12 @@ const MATCH_LABEL: Record<MatchQuality, string | null> = {
 
 const WHAT_YOU_GET: [string, string, string][] = [
   [
-    "What it's worth",
+    "What the City says it's worth",
     "Ten years of City assessments for the building, against similar condos in the same community.",
     "M2 15l4.5-5 3 3L16 5M12 5h4v4",
   ],
   [
-    "Property tax & appeals",
+    "Your tax & past appeals",
     "The yearly tax on a typical unit, and whether owners have appealed their assessments before.",
     "M3 2h12v14l-2-1.5L11 16l-2-1.5L7 16l-2-1.5L3 16zM6 6h6M6 9h6M6 12h3",
   ],
@@ -165,14 +165,14 @@ export default function CalgaryLookupPage({
     <div>
       <section className="bg-surface border-b border-line">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 pt-14 pb-12 sm:pt-20 sm:pb-16">
-          <span className="micro-label text-accent-dark">Calgary condos · free · no sign-in</span>
+          <span className="micro-label text-accent-dark">Property tax check · Calgary · free · no sign-in</span>
           <h1 className="font-bold text-[34px] sm:text-5xl tracking-[-0.03em] leading-[1.08] text-ink mt-3" style={{ textWrap: "balance" }}>
-            What will this condo really cost you?
+            Check your condo&apos;s property tax.
           </h1>
           <p className="text-[17px] text-ink2 mt-4 mb-8 max-w-2xl leading-relaxed">
-            The list price is only the first bill. Search any Calgary condo for what the City says it&apos;s
-            worth, the property tax that comes with it, whether owners have appealed, and the major work on
-            record, before you read a single page.
+            Search your building by address or condo plan number. See what the City says it&apos;s worth against
+            similar buildings, the property tax on a typical unit, whether owners have appealed their
+            assessments, and the major work on record.
           </p>
           <Suspense fallback={<CalgarySearch />}>
             <SearchArea searchParams={searchParams} />
@@ -185,7 +185,7 @@ export default function CalgaryLookupPage({
       </section>
 
       <section className="mx-auto max-w-5xl px-4 sm:px-6 py-14 sm:py-16">
-        <h2 className="font-bold text-2xl tracking-tight text-ink">The real price, from public records</h2>
+        <h2 className="font-bold text-2xl tracking-tight text-ink">What the check shows</h2>
         <div className="grid sm:grid-cols-3 gap-4 mt-6">
           {WHAT_YOU_GET.map(([title, body, icon]) => (
             <div key={title} className="report-paper p-6">
@@ -199,18 +199,17 @@ export default function CalgaryLookupPage({
         </div>
         <div className="mt-4 rounded-[14px] bg-ink text-white p-6 sm:p-7 flex flex-wrap items-center gap-x-8 gap-y-4">
           <div className="flex-1 min-w-64">
-            <h3 className="font-bold text-lg">Buying is the first bill. Owning is the rest.</h3>
+            <h3 className="font-bold text-lg">Property tax is where owner savings start.</h3>
             <p className="text-sm text-[#c3cad4] mt-1.5 leading-relaxed">
-              Add the condo documents from your seller or property manager and ClearCondo prices what&apos;s buried
-              in them: special assessments, thin reserves, lawsuits, every claim traced to its page, plus any
-              permit the minutes never mention. Next, the same check for your property tax assessment.
+              Insurance, energy and your mortgage are next. Buying instead? Upload the condo&apos;s document package
+              and ClearCondo prices what&apos;s buried in it, every claim traced to its page.
             </p>
           </div>
           <Link
-            href="/demo"
+            href="/own"
             className="btn-lift inline-flex items-center justify-center rounded-lg bg-white text-ink font-semibold text-[15px] px-5 min-h-11"
           >
-            See a sample report
+            More ways owners save
           </Link>
         </div>
         <p className="text-[13px] text-stone-500 mt-8">
