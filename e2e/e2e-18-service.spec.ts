@@ -90,7 +90,9 @@ test("landing speaks to buyers and links the dashboard", async ({
   page,
 }) => {
   await page.goto(`${BASE}/`);
-  await expect(page.getByText("For Calgary condo buyers")).toBeVisible();
+  await expect(page.getByText("For condo buyers")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Don't overpay for a condo");
+  await expect(page.getByRole("heading", { name: "The real price has three parts." })).toBeVisible();
   await expect(page.getByText(/realtors/i)).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: /traced to the page/ })
@@ -104,6 +106,6 @@ test("landing speaks to buyers and links the dashboard", async ({
 test("Calgary lookup renders with no sign-in", async ({ page }) => {
   const res = await page.goto(`${BASE}/calgary`);
   expect(res?.status()).toBe(200);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Calgary condo");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("What will this condo really cost you?");
   await expect(page.getByRole("combobox", { name: /Street address or condo plan number/ })).toBeVisible();
 });

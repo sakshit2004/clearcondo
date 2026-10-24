@@ -1,10 +1,14 @@
 # ClearCondo
 
-**Know what you're buying before you buy it.** ClearCondo reads a condo's
-document stack — reserve fund study, bylaws, board/AGM minutes, information
-statements — and produces a red-flag report for buyers: severity-grouped
-flags, verbatim evidence quotes with source documents, dollar exposures, and
-questions to take to a realtor or lawyer.
+**Don't overpay for a condo.** The list price isn't the real price.
+ClearCondo reads a condo's document stack — reserve fund study, bylaws,
+board/AGM minutes, information statements — and prices what's buried in it:
+severity-grouped red flags, verbatim evidence quotes with source documents,
+dollar exposures, and questions to take to a realtor or lawyer. For Calgary
+buildings it adds the public record (assessed value against similar
+buildings, major permits) and a preview of what owning costs every year
+(property tax and assessment appeal history), free and without sign-in at
+`/calgary`.
 
 Built for **Build North 2026** (Georgian). This is a real product, not a demo
 throwaway: per-report Stripe monetization (test mode), Clerk auth, and a
