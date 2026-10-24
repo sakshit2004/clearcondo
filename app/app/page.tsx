@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { getUserId, isClerkConfigured } from "@/lib/auth";
 import { withDb, listReports, dbQuery, isDbConfigured } from "@/lib/db";
 import { cad, formatDate, timeAgo } from "@/lib/format";
@@ -7,6 +8,8 @@ import SetupNotice from "@/components/SetupNotice";
 
 
 export default async function DashboardPage() {
+  // DB-backed and per-user: render at request time (see /app layout).
+  await connection();
   if (!isClerkConfigured()) return <SetupNotice />;
   const userId = await getUserId();
   if (!userId) redirect("/sign-in");

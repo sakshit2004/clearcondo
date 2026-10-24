@@ -57,7 +57,7 @@ describe("deleteReportCascade", () => {
     // Documents are scoped to the REPORT, not the building — other reports'
     // documents must survive.
     const docDelete = deletes.find((c) => c.sql.startsWith("DELETE document"))!;
-    assert.match(docDelete.sql, /report = type::thing\(\$id\)/);
+    assert.match(docDelete.sql, /report = type::record\(\$id\)/);
     assert.ok(!docDelete.sql.includes("building ="), "must not delete by building");
   });
 

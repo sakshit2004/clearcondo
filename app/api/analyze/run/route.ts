@@ -160,7 +160,7 @@ export async function POST(req: Request) {
       if (chosenBuildingId) {
         const rows = await dbQuery<{ id: unknown }[]>(
           db,
-          "SELECT id FROM building WHERE id = type::thing($id) AND owner_id = $owner LIMIT 1",
+          "SELECT id FROM building WHERE id = type::record($id) AND owner_id = $owner LIMIT 1",
           { id: chosenBuildingId, owner: userId }
         );
         if (rows.length > 0) bid = String(rows[0].id);
@@ -169,8 +169,9 @@ export async function POST(req: Request) {
         const rows = await dbQuery<{ id: unknown }[]>(
           db,
           `SELECT id FROM building WHERE owner_id = $owner
-           AND (name ILIKE $like OR dedupe_key ILIKE $like) LIMIT 1`,
-          { owner: userId, like: `%${buildingNameHint}%` }
+           AND (string::lowercase(name) CONTAINS $needle
+             OR string::lowercase(dedupe_key) CONTAINS $needle) LIMIT 1`,
+          { owner: userId, needle: buildingNameHint.toLowerCase() }
         );
         if (rows.length > 0) bid = String(rows[0].id);
       }

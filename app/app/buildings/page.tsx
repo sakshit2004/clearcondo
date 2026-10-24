@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { getUserId, isClerkConfigured } from "@/lib/auth";
 import { withDb, listBuildings, isDbConfigured } from "@/lib/db";
 import { timeAgo } from "@/lib/format";
@@ -12,6 +13,8 @@ const shortId = (rid: string) => {
 };
 
 export default async function BuildingsPage() {
+  // DB-backed and per-user: render at request time (see /app layout).
+  await connection();
   if (!isClerkConfigured()) return <SetupNotice />;
   const userId = await getUserId();
   if (!userId) redirect("/sign-in");
