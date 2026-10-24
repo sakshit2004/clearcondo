@@ -126,9 +126,14 @@ async function OwnerUnit({ params, searchParams }: { params: Params; searchParam
           <SavingsPanel unit={unit} saving={saving} />
 
           <section id="estimate" className="report-paper rounded-2xl p-6 sm:p-8 scroll-mt-6" aria-labelledby="estimate-heading">
-            <h2 id="estimate-heading" className="text-lg font-bold">Get my savings estimate</h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 id="estimate-heading" className="text-lg font-bold">Get my savings estimate</h2>
+              <span className="rounded-md bg-info-soft text-info-dark px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">
+                Beta
+              </span>
+            </div>
             <p className="text-sm text-subtle mt-1 mb-6 max-w-2xl">
-              Add what you know and see an instant estimate. We then check it against recent sales and confirm by email, before anything is filed.
+              Three numbers give you an instant estimate. We check it by hand and confirm by email, before anything is filed.
             </p>
             <OwnerRequestForm
               plan={plan}
