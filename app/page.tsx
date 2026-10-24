@@ -76,6 +76,7 @@ const TRACKS: {
     ],
     href: "/app/own",
     cta: "Check my property tax",
+    secondary: { href: "/demo/own", label: "See a sample report" },
     pricing: "You only pay if you save: 30% of the saving, plus $10/month for the software. Free during beta.",
   },
 ];
@@ -241,7 +242,12 @@ export default function LandingPage() {
                         {t.cta} <Arrow />
                       </Link>
                       {t.secondary && (
-                        <Link href={t.secondary.href} className="font-semibold text-ink underline underline-offset-4 decoration-line2 hover:decoration-ink">
+                        <Link
+                          href={t.secondary.href}
+                          className={`font-semibold underline underline-offset-4 ${
+                            dark ? "text-white decoration-white/40 hover:decoration-white" : "text-ink decoration-line2 hover:decoration-ink"
+                          }`}
+                        >
                           {t.secondary.label}
                         </Link>
                       )}

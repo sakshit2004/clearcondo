@@ -131,3 +131,14 @@ test("owner estimate requests need sign-in", async ({ request }) => {
   const res = await request.post(`${BASE}/api/owner-requests`, { data: {} });
   expect([401, 503]).toContain(res.status());
 });
+
+test("owner sample report is public and linked from the owning box", async ({ page }) => {
+  await page.goto(`${BASE}/`);
+  const links = page.getByRole("link", { name: "See a sample report" });
+  await expect(links).toHaveCount(2);
+  await expect(links.nth(1)).toHaveAttribute("href", "/demo/own");
+  const res = await page.goto(`${BASE}/demo/own`);
+  expect(res?.status()).toBe(200);
+  await expect(page.getByText("Sample data", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your savings estimate" })).toBeVisible();
+});
