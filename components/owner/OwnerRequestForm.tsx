@@ -103,8 +103,6 @@ export default function OwnerRequestForm({
           bathrooms: get("bathrooms"),
           parking: get("parking"),
           storage: get("storage"),
-          renovations: get("renovations"),
-          condition_issues: get("condition_issues"),
           past_complaint: get("past_complaint"),
           notes: get("notes"),
           consent: f.get("consent") === "on",
@@ -137,11 +135,18 @@ export default function OwnerRequestForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-5" aria-label="Get my savings estimate">
+      <p className="rounded-lg bg-info-soft text-info-dark text-sm px-4 py-3 leading-relaxed">
+        <span className="rounded bg-info-dark text-white px-1.5 py-px text-[11px] font-semibold uppercase tracking-wide mr-2">
+          Beta
+        </span>
+        Estimates are free while we test this. Treat the number as a starting point: we check it by hand.
+      </p>
       {alreadyRequested && (
-        <p className="rounded-lg bg-info-soft text-info-dark text-sm px-4 py-3">
+        <p className="rounded-lg bg-stone-100 text-stone-700 text-sm px-4 py-3">
           You&apos;ve already asked about this unit. Send again to add or correct details.
         </p>
       )}
+
       <div className="grid sm:grid-cols-2 gap-4">
         <Field id="or-name" label="Your name">
           <input id="or-name" name="name" required minLength={2} maxLength={120} defaultValue={defaultName} autoComplete="name" className={input} />
@@ -149,125 +154,119 @@ export default function OwnerRequestForm({
         <Field id="or-email" label="Email">
           <input id="or-email" name="email" type="email" required maxLength={200} defaultValue={defaultEmail} autoComplete="email" className={input} />
         </Field>
-        <Field id="or-phone" label="Phone" optional>
-          <input id="or-phone" name="phone" type="tel" maxLength={40} autoComplete="tel" className={input} />
-        </Field>
-        <Field id="or-unit" label="Unit number">
-          <input id="or-unit" name="unit" required maxLength={20} defaultValue={unit ?? ""} placeholder="e.g. 1203" className={input} />
-        </Field>
       </div>
+      {unit ? (
+        <input type="hidden" name="unit" value={unit} />
+      ) : (
+        <Field id="or-unit" label="Unit number">
+          <input id="or-unit" name="unit" required maxLength={20} placeholder="e.g. 1203" className={`${input} sm:max-w-[200px]`} />
+        </Field>
+      )}
 
-      <fieldset>
-        <legend className="text-sm font-semibold">
-          About your unit <span className={hint}>(optional, but it&apos;s what makes the estimate possible)</span>
-        </legend>
-        <p className="text-[13px] text-subtle mt-1 mb-3">
-          The City&apos;s open data has no size, layout or condition. These are what an assessment is argued on.
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <Field id="or-size" label="Size (sq ft)">
-            <input id="or-size" name="unit_size_sqft" type="number" min={0} max={20000} inputMode="numeric" placeholder="e.g. 720" value={size} onChange={(e) => setSize(e.target.value)} className={input} />
-          </Field>
-          <Field id="or-beds" label="Bedrooms">
-            <input id="or-beds" name="bedrooms" type="number" min={0} max={20} inputMode="numeric" className={input} />
-          </Field>
-          <Field id="or-baths" label="Bathrooms">
-            <input id="or-baths" name="bathrooms" type="number" min={0} max={20} step={0.5} inputMode="decimal" className={input} />
-          </Field>
-          <Field id="or-parking" label="Parking">
-            <select id="or-parking" name="parking" defaultValue="" className={input}>
-              <option value="">Not sure</option>
-              <option>None</option>
-              <option>Assigned stall</option>
-              <option>Titled stall</option>
-              <option>Two or more stalls</option>
-            </select>
-          </Field>
-          <Field id="or-storage" label="Storage">
-            <select id="or-storage" name="storage" defaultValue="" className={input}>
-              <option value="">Not sure</option>
-              <option>None</option>
-              <option>In-suite</option>
-              <option>Storage locker</option>
-            </select>
-          </Field>
-          <Field id="or-past" label="Complained before?">
-            <select id="or-past" name="past_complaint" defaultValue="" className={input}>
-              <option value="">Not sure</option>
-              <option>Never</option>
-              <option>Yes, it was lowered</option>
-              <option>Yes, no change</option>
-            </select>
-          </Field>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend className="text-sm font-semibold">
-          Your evidence <span className={hint}>(optional, for an instant estimate)</span>
-        </legend>
-        <p className="text-[13px] text-subtle mt-1 mb-3">
-          2026 values reflect the market on July 1, 2025, so use prices from around then.
-        </p>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <Field id="or-pp" label="What you paid">
-            <input id="or-pp" inputMode="numeric" placeholder="e.g. 385000" value={purchase.price} onChange={(e) => setPurchase((p) => ({ ...p, price: e.target.value }))} className={input} />
-          </Field>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <Field id="or-size" label="Unit size (sq ft)">
+          <input id="or-size" name="unit_size_sqft" type="number" min={0} max={20000} inputMode="numeric" placeholder="e.g. 720" value={size} onChange={(e) => setSize(e.target.value)} className={input} />
+        </Field>
+        <Field id="or-pp" label="What you paid">
+          <input id="or-pp" inputMode="numeric" placeholder="e.g. 385000" value={purchase.price} onChange={(e) => setPurchase((p) => ({ ...p, price: e.target.value }))} className={input} />
+        </Field>
+        <div className="col-span-2 sm:col-span-1">
           <Field id="or-pd" label="Month you bought">
             <input id="or-pd" type="month" placeholder="2025-03" value={purchase.date} onChange={(e) => setPurchase((p) => ({ ...p, date: e.target.value }))} className={input} />
           </Field>
-          <Field id="or-av" label="Appraised value">
-            <input id="or-av" inputMode="numeric" placeholder="e.g. 390000" value={appraisal.value} onChange={(e) => setAppraisal((a) => ({ ...a, value: e.target.value }))} className={input} />
-          </Field>
-          <Field id="or-ad" label="Month of appraisal">
-            <input id="or-ad" type="month" placeholder="2025-05" value={appraisal.date} onChange={(e) => setAppraisal((a) => ({ ...a, date: e.target.value }))} className={input} />
-          </Field>
         </div>
+      </div>
 
-        <p className="text-sm font-semibold mt-5">Sales of similar units</p>
-        <p className="text-[13px] text-subtle mt-0.5 mb-2">
-          In your building or nearby, from a listing site or your realtor. Uses your unit size above.
-        </p>
-        <div className="space-y-2">
-          <div className="hidden sm:grid grid-cols-3 gap-3 text-[12px] font-semibold text-stone-500">
-            <span>Sale price</span>
-            <span>Size (sq ft)</span>
-            <span>Month sold (optional)</span>
+      {estimate ? (
+        <EstimateCard estimate={estimate} />
+      ) : (
+        <p className="text-[13px] text-subtle">Pick your unit above to see an instant estimate.</p>
+      )}
+
+      <details className="group rounded-xl border border-line">
+        <summary className="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-semibold text-ink">
+          <span>
+            Add more for a better estimate <span className={hint}>(optional)</span>
+          </span>
+          <span aria-hidden className="text-subtle transition-transform group-open:rotate-180">⌄</span>
+        </summary>
+        <div className="px-4 pb-5 pt-1 space-y-5 border-t border-line">
+          <div className="grid sm:grid-cols-2 gap-4 pt-4">
+            <Field id="or-av" label="Appraised value">
+              <input id="or-av" inputMode="numeric" placeholder="e.g. 390000" value={appraisal.value} onChange={(e) => setAppraisal((a) => ({ ...a, value: e.target.value }))} className={input} />
+            </Field>
+            <Field id="or-ad" label="Month of appraisal">
+              <input id="or-ad" type="month" placeholder="2025-05" value={appraisal.date} onChange={(e) => setAppraisal((a) => ({ ...a, date: e.target.value }))} className={input} />
+            </Field>
           </div>
-          {comps.map((c, i) => (
-            <div key={i} className="grid grid-cols-3 gap-2 sm:gap-3">
-              <input aria-label={`Sale ${i + 1} price`} inputMode="numeric" placeholder="Price" value={c.price} onChange={(e) => setComp(i, "price", e.target.value)} className={`${input} min-w-0 !px-2.5 sm:!px-3.5`} />
-              <input aria-label={`Sale ${i + 1} size in square feet`} inputMode="numeric" placeholder="Sq ft" value={c.sqft} onChange={(e) => setComp(i, "sqft", e.target.value)} className={`${input} min-w-0 !px-2.5 sm:!px-3.5`} />
-              <input aria-label={`Sale ${i + 1} month`} type="month" value={c.date} onChange={(e) => setComp(i, "date", e.target.value)} className={`${input} min-w-0 !px-2.5 sm:!px-3.5`} />
+
+          <div>
+            <p className="text-sm font-semibold">Sales of similar units</p>
+            <p className="text-[13px] text-subtle mt-0.5 mb-2">
+              In your building or nearby, from a listing site or your realtor. Uses your unit size.
+            </p>
+            <div className="space-y-2">
+              <div className="hidden sm:grid grid-cols-3 gap-3 text-[12px] font-semibold text-stone-500">
+                <span>Sale price</span>
+                <span>Size (sq ft)</span>
+                <span>Month sold (optional)</span>
+              </div>
+              {comps.map((c, i) => (
+                <div key={i} className="grid grid-cols-3 gap-2 sm:gap-3">
+                  <input aria-label={`Sale ${i + 1} price`} inputMode="numeric" placeholder="Price" value={c.price} onChange={(e) => setComp(i, "price", e.target.value)} className={`${input} min-w-0 !px-2.5 sm:!px-3.5`} />
+                  <input aria-label={`Sale ${i + 1} size in square feet`} inputMode="numeric" placeholder="Sq ft" value={c.sqft} onChange={(e) => setComp(i, "sqft", e.target.value)} className={`${input} min-w-0 !px-2.5 sm:!px-3.5`} />
+                  <input aria-label={`Sale ${i + 1} month`} type="month" value={c.date} onChange={(e) => setComp(i, "date", e.target.value)} className={`${input} min-w-0 !px-2.5 sm:!px-3.5`} />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
 
-        <div className="mt-4">
-          {estimate ? (
-            <EstimateCard estimate={estimate} />
-          ) : (
-            <p className="text-[13px] text-subtle">Pick your unit above to see an instant estimate.</p>
-          )}
-        </div>
-      </fieldset>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <Field id="or-beds" label="Bedrooms">
+              <input id="or-beds" name="bedrooms" type="number" min={0} max={20} inputMode="numeric" className={input} />
+            </Field>
+            <Field id="or-baths" label="Bathrooms">
+              <input id="or-baths" name="bathrooms" type="number" min={0} max={20} step={0.5} inputMode="decimal" className={input} />
+            </Field>
+            <Field id="or-parking" label="Parking">
+              <select id="or-parking" name="parking" defaultValue="" className={input}>
+                <option value="">Not sure</option>
+                <option>None</option>
+                <option>Assigned stall</option>
+                <option>Titled stall</option>
+                <option>Two or more stalls</option>
+              </select>
+            </Field>
+            <Field id="or-storage" label="Storage">
+              <select id="or-storage" name="storage" defaultValue="" className={input}>
+                <option value="">Not sure</option>
+                <option>None</option>
+                <option>In-suite</option>
+                <option>Storage locker</option>
+              </select>
+            </Field>
+            <Field id="or-past" label="Complained before?">
+              <select id="or-past" name="past_complaint" defaultValue="" className={input}>
+                <option value="">Not sure</option>
+                <option>Never</option>
+                <option>Yes, it was lowered</option>
+                <option>Yes, no change</option>
+              </select>
+            </Field>
+            <Field id="or-phone" label="Phone">
+              <input id="or-phone" name="phone" type="tel" maxLength={40} autoComplete="tel" className={input} />
+            </Field>
+          </div>
 
-      <Field id="or-cond" label="Condition issues" optional>
-        <textarea id="or-cond" name="condition_issues" maxLength={1000} placeholder="Leaks, original finishes, noise, a poor view, building problems…" className={area} />
-      </Field>
-      <Field id="or-reno" label="Renovations" optional>
-        <textarea id="or-reno" name="renovations" maxLength={1000} placeholder="What's been updated, and roughly when" className={area} />
-      </Field>
-      <Field id="or-notes" label="Anything else" optional>
-        <textarea id="or-notes" name="notes" maxLength={2000} placeholder="What you paid and when, a recent appraisal or listing, special assessments…" className={area} />
-      </Field>
+          <Field id="or-notes" label="Condition, renovations, anything else">
+            <textarea id="or-notes" name="notes" maxLength={2000} placeholder="Leaks, original finishes, a poor view, recent updates, special assessments…" className={area} />
+          </Field>
+        </div>
+      </details>
 
       <label className="flex items-start gap-3 cursor-pointer text-sm text-muted leading-relaxed">
         <input type="checkbox" name="consent" required className="mt-0.5 w-5 h-5 flex-none accent-[#1d4ed8]" />
-        <span>
-          Contact me by email (or phone, if given) about a savings estimate for this unit. Nothing is filed with the
-          City without my go-ahead.
-        </span>
+        <span>Contact me about a savings estimate for this unit. Nothing is filed with the City without my go-ahead.</span>
       </label>
 
       {error && (
@@ -284,7 +283,7 @@ export default function OwnerRequestForm({
         >
           {status === "sending" ? "Sending…" : "Get my savings estimate"}
         </button>
-        <span className="text-[13px] text-subtle">Free during beta. You only pay if you save.</span>
+        <span className="text-[13px] text-subtle">Beta: free for now. You only pay if you save.</span>
       </div>
     </form>
   );
