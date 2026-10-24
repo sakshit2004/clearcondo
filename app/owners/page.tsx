@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Reveal from "@/components/Reveal";
 import { OWNER_PRICING } from "@/lib/owner";
 import { OWNER_BILLS } from "@/lib/owner-bills";
-import { AudienceHero, SectionHead, SwitchBand } from "@/components/landing/parts";
+import { AudienceHero, SectionHead } from "@/components/landing/parts";
 
 export const metadata: Metadata = {
   title: "For condo owners — ClearCondo",
@@ -126,12 +126,6 @@ export default function OwnersPage() {
         </ul>
       </section>
 
-      <SwitchBand
-        title="Buying a condo instead?"
-        body="Know the real price before your conditions come off: what the document package hides, priced per unit."
-        href="/buyers"
-        label="ClearCondo for buyers"
-      />
     </div>
   );
 }

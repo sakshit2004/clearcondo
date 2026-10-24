@@ -75,22 +75,3 @@ export function AudienceHero({
     </section>
   );
 }
-
-/** The one link between the two sides, at the foot of each page. */
-export function SwitchBand({ title, body, href, label }: { title: string; body: string; href: string; label: string }) {
-  return (
-    <section className="border-t border-line">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12">
-        <div className="rounded-[14px] border border-line bg-white p-6 sm:p-7 flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
-          <div className="max-w-xl">
-            <h2 className="text-xl font-bold text-ink">{title}</h2>
-            <p className="mt-1.5 text-muted leading-relaxed">{body}</p>
-          </div>
-          <Link href={href} className={secondaryBtn}>
-            {label} <span aria-hidden className="ml-2">→</span>
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
