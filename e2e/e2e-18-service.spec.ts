@@ -98,6 +98,10 @@ test("landing speaks to buyers and links the dashboard", async ({
   await expect(page.getByRole("link", { name: /Analyze your documents/ })).toHaveAttribute("href", "/app");
   await expect(page.getByRole("link", { name: /I'm buying a condo/ }).first()).toHaveAttribute("href", "/app");
   await expect(page.getByRole("link", { name: /I own a condo/ }).first()).toHaveAttribute("href", "/own");
+  const roadmap = page.getByRole("list", { name: "Where ClearCondo goes next" });
+  await expect(roadmap.getByRole("heading", { name: "Condos" })).toBeVisible();
+  await expect(roadmap.getByRole("heading", { name: "Houses" })).toBeVisible();
+  await expect(roadmap.getByRole("heading", { name: "Land" })).toBeVisible();
   await expect(page.getByText(/realtors/i)).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: /traced to the page/ })

@@ -81,7 +81,8 @@ export default function OwnPage() {
 
         <h2 className="font-bold text-2xl tracking-tight text-ink mt-14">Coming next</h2>
         <p className="text-[15px] text-stone-600 mt-1.5 max-w-2xl">
-          The other bills that come with owning a condo, in the order we&apos;re taking them on.
+          The other bills that come with owning a condo, in the order we&apos;re taking them on. We&apos;re starting
+          with condos; houses and land come after.
         </p>
         <div className="grid sm:grid-cols-3 gap-4 mt-6">
           {COMING.map((c) => (
