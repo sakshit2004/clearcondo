@@ -77,6 +77,10 @@ describe("addresses", () => {
   it("strips a leading unit number from roll addresses", () => {
     assert.equal(stripUnitFromRollAddress("1203 1111 6 AV SW"), "1111 6 AV SW");
     assert.equal(stripUnitFromRollAddress("1111 6 AV SW"), "1111 6 AV SW");
+    // Real historical-roll addresses (4ur7-wsgc): unit, civic, street.
+    assert.equal(stripUnitFromRollAddress("1 10 POINT DR NW"), "10 POINT DR NW");
+    assert.equal(stripUnitFromRollAddress("1 101 25 AV SW"), "101 25 AV SW");
+    assert.equal(stripUnitFromRollAddress("#150 7505 48 ST SE"), "7505 48 ST SE");
   });
 
   it("scopes addresses to Calgary", () => {
@@ -213,5 +217,17 @@ describe("socrata helpers", () => {
   it("pads roll numbers to 9 digits", () => {
     assert.equal(normalizeRollNumber("12345678"), "012345678");
     assert.equal(normalizeRollNumber(123456789), "123456789");
+  });
+});
+
+describe("street names that look like street types", () => {
+  it("abbreviates only the street-type slot", () => {
+    assert.equal(normalizeStreetAddress("10 Point Drive NW, Calgary"), "10 POINT DR NW");
+    assert.equal(normalizeStreetAddress("200 Park Place SW"), "200 PARK PL SW");
+    assert.equal(normalizeStreetAddress("55 Hidden Hill Terrace NW"), "55 HIDDEN HILL TC NW");
+    assert.equal(normalizeStreetAddress("1111 6th Avenue SW"), "1111 6 AV SW");
+  });
+  it("document and roll spellings meet", () => {
+    assert.equal(normalizeStreetAddress("10 Point Dr. N.W."), stripUnitFromRollAddress("1 10 POINT DR NW"));
   });
 });

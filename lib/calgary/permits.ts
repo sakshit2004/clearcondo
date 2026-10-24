@@ -172,6 +172,13 @@ export function lookbackStart(now: Date, years = PERMIT_LOOKBACK_YEARS): string 
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * Statuses where the work never went ahead. Real rows include e.g.
+ * "statuscurrent": "Cancelled" — showing those as roof/envelope work
+ * would put work on the record that never happened.
+ */
+const DEAD_STATUSES = /cancel|withdraw|refus|reject|denied|void/i;
+
 /** Row -> MajorPermit, or null when the row isn't a major permit at the address. */
 export function toMajorPermit(
   row: SocrataRow,
@@ -180,6 +187,8 @@ export function toMajorPermit(
 ): MajorPermit | null {
   const num = str(row, "permitnum", "permit_number");
   if (!num) return null;
+  const status = str(row, "statuscurrent");
+  if (status && DEAD_STATUSES.test(status)) return null;
   const address = str(row, "originaladdress", "address");
   if (!buildingAddresses.has(stripUnitFromRollAddress(address) ?? "")) return null;
   const issued = str(row, "issueddate");
@@ -187,9 +196,11 @@ export function toMajorPermit(
   const date = (issued ?? applied ?? "").slice(0, 10);
   if (!date || date < since) return null;
   const description = str(row, "description") ?? "";
-  const workClass = str(row, "workclassmapped", "workclass");
+  // workclass ("Alteration") and permitclass ("3204 - Warehouse/Office")
+  // carry the detail; the *mapped variants are coarse ("Existing").
+  const workClass = str(row, "workclass", "workclassmapped");
   const categories = classifyPermit(
-    [description, workClass, str(row, "permitclassmapped", "permitclass")].filter(Boolean).join(" · ")
+    [description, workClass, str(row, "permitclass", "permitclassmapped")].filter(Boolean).join(" · ")
   );
   if (categories.length === 0) return null;
   return {
@@ -197,7 +208,7 @@ export function toMajorPermit(
     address,
     issued_date: issued ? issued.slice(0, 10) : null,
     applied_date: applied ? applied.slice(0, 10) : null,
-    status: str(row, "statuscurrent"),
+    status,
     description: description || workClass || "No description",
     work_class: workClass,
     declared_value_cad: parseMoney(row.estprojectcost),
@@ -209,7 +220,9 @@ export function toMajorPermit(
 /** SoQL $where for permits at the building's civic addresses since a date. */
 export function permitsWhere(addresses: string[], since: string): string {
   const addr = addresses.map((a) => `upper(originaladdress) like ${soqlString(`%${a}%`)}`).join(" OR ");
-  const date = `(issueddate >= ${soqlString(since)} OR applieddate >= ${soqlString(since)})`;
+  // Floating-timestamp columns: compare with a full timestamp literal.
+  const ts = soqlString(`${since}T00:00:00`);
+  const date = `(issueddate >= ${ts} OR applieddate >= ${ts})`;
   return `(${addr}) AND ${date}`;
 }
 
