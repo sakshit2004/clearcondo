@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { DOC_CHECKLIST } from "@/lib/doc-checklist";
+import { guessChecklist } from "@/lib/doc-hints";
 
 interface SentDoc {
   filename: string;
@@ -16,21 +16,6 @@ interface Confirmation {
 
 const MAX_BYTES = 4 * 1024 * 1024;
 const MAX_FILES = 12;
-
-/**
- * Filename hints for the live package checklist. A guess to help the
- * sender spot gaps before sending — the real document types are
- * classified from the text once we read them.
- */
-const NAME_HINTS: Record<string, RegExp> = {
-  bylaws: /bylaw/i,
-  financials: /financ/i,
-  budget: /budget/i,
-  reserve_study: /reserve/i,
-  minutes: /minute|agm|board/i,
-  info_statement: /estoppel|info/i,
-  insurance: /insur|certificate/i,
-};
 
 const inputCls =
   "w-full rounded-lg border border-line2 bg-white px-3.5 min-h-[46px] text-[15px] text-ink placeholder:text-subtle focus:outline-2 focus:outline-accent focus:outline-offset-1 focus:border-accent";
@@ -56,10 +41,7 @@ export default function ServiceOrderForm({ emailHint }: { emailHint?: string }) 
 
   const totalBytes = files.reduce((n, f) => n + f.size, 0);
   const tooBig = totalBytes > MAX_BYTES;
-  const covered = DOC_CHECKLIST.map((item) => ({
-    ...item,
-    have: files.some((f) => NAME_HINTS[item.id]?.test(f.name)),
-  }));
+  const covered = guessChecklist(files.map((f) => f.name));
   const coveredCount = covered.filter((c) => c.have).length;
 
   function addFiles(list: FileList | null) {
