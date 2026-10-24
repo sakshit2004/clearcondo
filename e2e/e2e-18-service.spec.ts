@@ -84,7 +84,7 @@ test("print view renders the client-ready report with a prepared-for cover", asy
   ).toBeVisible();
 });
 
-test("landing leads with the service framing and links the order desk", async ({
+test("landing leads with the service framing and links the dashboard", async ({
   page,
 }) => {
   await page.goto(`${BASE}/`);
@@ -94,5 +94,5 @@ test("landing leads with the service framing and links the order desk", async ({
   const cta = page
     .getByRole("link", { name: "Send a document package" })
     .first();
-  await expect(cta).toHaveAttribute("href", "/order");
+  await expect(cta).toHaveAttribute("href", "/app");
 });

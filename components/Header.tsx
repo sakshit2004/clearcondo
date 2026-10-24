@@ -4,9 +4,6 @@ import { isClerkConfigured } from "@/lib/auth";
 import { Show, UserButton } from "@clerk/nextjs";
 import Logo from "./Logo";
 
-const navLink =
-  "nav-link hidden sm:inline text-[15px] text-muted hover:text-ink transition-colors";
-
 export default function Header() {
   const configured = isClerkConfigured();
   return (
@@ -18,9 +15,6 @@ export default function Header() {
           <Logo size={28} animate />
         </Link>
         <nav className="flex items-center gap-5 sm:gap-7">
-          <Link href="/demo" className={navLink}>
-            Sample report
-          </Link>
           {configured ? (
             /* Auth state is runtime data: under Cache Components the
                static shell (including /_not-found) can only prerender

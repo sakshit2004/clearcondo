@@ -88,19 +88,13 @@ export default function LandingPage() {
           </p>
           <div className="rise-in mt-8 flex flex-wrap items-center gap-3" style={{ animationDelay: "280ms" }}>
             <Link
-              href="/order"
+              href="/app"
               className="btn-lift inline-flex items-center gap-2.5 rounded-full bg-white text-ink font-semibold pl-6 pr-2 min-h-12"
             >
               Send a document package
               <span className="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center">
                 <Arrow />
               </span>
-            </Link>
-            <Link
-              href="/demo"
-              className="inline-flex items-center rounded-full border border-white/25 bg-white/[0.06] backdrop-blur px-6 min-h-12 font-semibold text-white hover:bg-white/15 transition-colors"
-            >
-              See a sample report
             </Link>
           </div>
           <p className="rise-in mt-5 text-sm text-white/50" style={{ animationDelay: "380ms" }}>
@@ -167,7 +161,7 @@ export default function LandingPage() {
             </p>
           </div>
           <Link
-            href="/order"
+            href="/app"
             className="btn-lift inline-flex items-center gap-2.5 rounded-[10px] bg-white text-ink font-semibold px-6 min-h-12"
           >
             Send a document package <Arrow />
