@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import type { VerifiedAnalysis } from "@/lib/report-schema";
 import { FLAG_TYPE_LABELS, SEVERITY_LABELS } from "@/lib/report-schema";
 import type { Delta } from "@/lib/deltas";
@@ -33,6 +34,7 @@ export default function ReportPrint({
   backHref,
   backLabel,
   autoPrint = false,
+  publicRecords,
 }: {
   analysis: VerifiedAnalysis;
   buildingName: string;
@@ -47,6 +49,8 @@ export default function ReportPrint({
   backHref: string;
   backLabel: string;
   autoPrint?: boolean;
+  /** The public record check (City of Calgary), rendered server-side. */
+  publicRecords?: ReactNode;
 }) {
   const flags = sortFlags(analysis);
   const counts = { critical: 0, warning: 0, info: 0 };
@@ -225,6 +229,8 @@ export default function ReportPrint({
             </ul>
           </>
         )}
+
+        {publicRecords && <div className="mt-9">{publicRecords}</div>}
 
         {auditRows.length > 0 && (
           <>

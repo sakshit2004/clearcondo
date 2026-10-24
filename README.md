@@ -58,6 +58,26 @@ Upload (PDFs, 4 MB total — Vercel request-body cap)
      belief layer that reasons over time. Partitioning uses labels
      (`app=clearcondo`, `owner=…`, `building=…`) so no scope pre-registration
      is needed; everything degrades gracefully when `SPECTRON_*` is unset.
+- **Public record check (Calgary only, `lib/calgary/`):** each report gets a
+  "Public records (City of Calgary). Context, not a verdict." section built
+  from City of Calgary Open Data (Socrata, no key needed): current roll
+  `4bsw-nn7w`, historical rolls `4ur7-wsgc`, building permits `c2es-76ed`.
+  The building is matched by condo plan number (roll `short_legal` prefix
+  before `;`), with a normalized Calgary street address as fallback only when
+  it maps to exactly one plan; anything ambiguous shows "Couldn't match this
+  building to City records" rather than a guess. The section shows an
+  identity check (plan/units/address, docs vs roll), the assessed value trend
+  vs same-use buildings in the same community, and major permits (roof,
+  envelope, parkade, balcony, structural) from the last 5 years. A permit is
+  flagged "not mentioned" only when a keyword search of the extracted pages
+  finds nothing, and the section lists the terms and documents it searched.
+  Fetches happen server-side with per-request timeouts
+  (`CALGARY_DATA_TIMEOUT_MS`, default 8s). Results are cached per building
+  for 24h (`public_record_cache`). The section streams in under Suspense, and
+  failures show "City data unavailable". Matched permits go into building
+  memory as `public_record_fact` rows (a separate source type from document
+  evidence) and into Agent Memory under a `source=public-record` label.
+  Optional: `CALGARY_SOCRATA_APP_TOKEN` raises the City's rate limit.
 - **Graceful degradation:** without `ANTHROPIC_API_KEY`, `/api/analyze/run`
   returns a clear "add your key" state; without SurrealDB, reports render
   ephemerally; without Clerk keys, `/app/*` shows a setup notice. `/demo`

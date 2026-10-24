@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { getUserId, isClerkConfigured } from "@/lib/auth";
 import { isDbConfigured } from "@/lib/db";
@@ -5,6 +6,7 @@ import { loadReportVM } from "@/lib/report-loader";
 import SetupNotice from "@/components/SetupNotice";
 import DeleteReportButton from "@/components/DeleteReportButton";
 import ReportView, { ReportToolbar } from "@/components/ReportView";
+import PublicRecords, { PublicRecordsPending } from "@/components/PublicRecords";
 
 export default async function ReportDetailPage({
   params,
@@ -25,7 +27,16 @@ export default async function ReportDetailPage({
   return (
     <div>
       <ReportToolbar backHref="/app" backLabel="All reports" pdfHref={pdfHref} />
-      <ReportView report={vm} pdfHref={pdfHref} storageKey={id} />
+      <ReportView
+        report={vm}
+        pdfHref={pdfHref}
+        storageKey={id}
+        publicRecords={
+          <Suspense fallback={<PublicRecordsPending />}>
+            <PublicRecords userId={userId} reportId={id} />
+          </Suspense>
+        }
+      />
       <div className="mt-10 pt-6 border-t border-line">
         <DeleteReportButton reportId={id} />
       </div>

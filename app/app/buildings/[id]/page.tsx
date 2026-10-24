@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getUserId, isClerkConfigured } from "@/lib/auth";
-import { withDb, getBuildingHistory, isDbConfigured } from "@/lib/db";
+import { withDb, getBuildingHistory, isDbConfigured, listPublicRecordFacts } from "@/lib/db";
 import { cad, formatDate } from "@/lib/format";
 import { FLAG_TYPE_LABELS } from "@/lib/report-schema";
 import SetupNotice from "@/components/SetupNotice";
@@ -53,6 +53,7 @@ export default async function BuildingHistoryPage({
   const fullId = `building:${decodeURIComponent(id)}`;
   const data = await withDb((db) => getBuildingHistory(db, userId, fullId));
   if (!data) return notFound();
+  const publicFacts = (await withDb((db) => listPublicRecordFacts(db, userId, fullId)).catch(() => null)) ?? [];
 
   const { building, reports, flags } = data;
   const accumulated = accumulateFlags(flags);
@@ -120,6 +121,30 @@ export default async function BuildingHistoryPage({
           </div>
         )}
       </section>
+
+      {/* Public-record facts — a separate source type from document evidence */}
+      {publicFacts.length > 0 && (
+        <section className="mb-10">
+          <h2 className="font-bold text-2xl tracking-tight text-ink mb-1.5">Public records (City of Calgary)</h2>
+          <p className="text-sm text-stone-600 mb-4">
+            Verified against City of Calgary open data, not taken from the uploaded documents. Context, not a
+            verdict.
+          </p>
+          <div className="space-y-3">
+            {publicFacts.map((f) => (
+              <div key={String(f.id)} className="report-paper px-5 py-4">
+                <div className="micro-label !text-[10px] text-stone-500">
+                  Public record · {f.observed_on ?? "date not stated"} ·{" "}
+                  <a href={f.source_url} target="_blank" rel="noopener noreferrer" className="underline">
+                    {f.source_name}
+                  </a>
+                </div>
+                <p className="text-stone-700 text-sm mt-1.5">{f.text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Agent Memory recall — reconciled beliefs, when configured */}
       <AgentMemoryPanel ownerId={userId} buildingRecordId={fullId} />

@@ -10,6 +10,9 @@ import type {
   VerifiedStructuredFacts,
 } from "./report-schema";
 import type { PageText } from "./extract";
+import type { CityRecords, CityRecordsCache } from "./calgary/check";
+import type { SearchableDoc } from "./calgary/permits";
+import type { PublicRecordFact } from "./calgary/facts";
 
 /* ------------------------------------------------------------------ */
 /* Connection                                                          */
@@ -459,6 +462,15 @@ export async function deleteReportCascade(
   );
   let buildingDeleted = false;
   if (remaining.length === 0) {
+    // Public-record facts and the City cache belong to the building shell.
+    await db.query(
+      "DELETE public_record_fact WHERE building = type::record($building) AND owner_id = $owner",
+      { building: buildingId, owner: ownerId }
+    );
+    await db.query(
+      "DELETE public_record_cache WHERE building = type::record($building) AND owner_id = $owner",
+      { building: buildingId, owner: ownerId }
+    );
     await db.query(
       "DELETE building WHERE id = type::record($building) AND owner_id = $owner",
       { building: buildingId, owner: ownerId }
@@ -626,6 +638,131 @@ export async function getPriorFlags(
     evidence: [],
     money_exposure: null,
   }));
+}
+
+/* ------------------------------------------------------------------ */
+/* Public record check (City of Calgary)                               */
+/* ------------------------------------------------------------------ */
+
+/** The report's uploaded documents with their extracted page text. */
+export async function getReportDocuments(
+  db: Surreal,
+  ownerId: string,
+  reportId: string
+): Promise<SearchableDoc[]> {
+  const rows = await q<
+    { filename: string; doc_type: string; pages: { page_number: number; text: string }[] }[]
+  >(
+    db,
+    `SELECT filename, doc_type, pages FROM document
+     WHERE report = type::record($id) AND owner_id = $owner`,
+    { id: reportId, owner: ownerId }
+  );
+  return rows.map((r) => ({
+    filename: r.filename,
+    docType: r.doc_type,
+    pages: (r.pages ?? []).map((p) => ({ page: p.page_number, text: p.text ?? "" })),
+  }));
+}
+
+/** SurrealDB-backed 24h cache for one owner's buildings (lib/calgary/check.ts). */
+export function cityRecordsDbCache(db: Surreal, ownerId: string): CityRecordsCache {
+  return {
+    async get(buildingId) {
+      const rows = await q<{ payload: string; fetched_at: unknown }[]>(
+        db,
+        `SELECT payload, fetched_at FROM public_record_cache
+         WHERE building = type::record($b) AND owner_id = $owner LIMIT 1`,
+        { b: buildingId, owner: ownerId }
+      );
+      if (rows.length === 0) return null;
+      try {
+        return JSON.parse(rows[0].payload) as CityRecords;
+      } catch {
+        return null;
+      }
+    },
+    async set(buildingId, value) {
+      await q(
+        db,
+        "DELETE public_record_cache WHERE building = type::record($b) AND owner_id = $owner",
+        { b: buildingId, owner: ownerId }
+      );
+      await q(
+        db,
+        `CREATE public_record_cache CONTENT {
+           building: type::record($b), owner_id: $owner, payload: $payload
+         }`,
+        { b: buildingId, owner: ownerId, payload: JSON.stringify(value) }
+      );
+    },
+  };
+}
+
+export interface PublicRecordFactRow extends PublicRecordFact {
+  id: string;
+  created_at: string;
+}
+
+/**
+ * Add public-record facts to a building's memory. Idempotent by fact_key:
+ * returns only the facts that were new, so callers remember each once.
+ */
+export async function recordPublicRecordFacts(
+  db: Surreal,
+  ownerId: string,
+  buildingId: string,
+  facts: PublicRecordFact[]
+): Promise<PublicRecordFact[]> {
+  if (facts.length === 0) return [];
+  const existing = await q<{ fact_key: string }[]>(
+    db,
+    `SELECT fact_key FROM public_record_fact
+     WHERE building = type::record($b) AND owner_id = $owner`,
+    { b: buildingId, owner: ownerId }
+  );
+  const known = new Set(existing.map((e) => e.fact_key));
+  const fresh = facts.filter((f) => !known.has(f.fact_key));
+  for (const f of fresh) {
+    await q(
+      db,
+      `CREATE public_record_fact CONTENT {
+         building: type::record($b), owner_id: $owner, source_type: $sourceType,
+         dataset: $dataset, source_name: $sourceName, source_url: $sourceUrl,
+         fact_key: $key, categories: $categories, observed_on: $observed,
+         declared_value_cad: $value, text: $text
+       }`,
+      {
+        b: buildingId,
+        owner: ownerId,
+        sourceType: f.source_type,
+        dataset: f.dataset,
+        sourceName: f.source_name,
+        sourceUrl: f.source_url,
+        key: f.fact_key,
+        categories: f.categories,
+        observed: opt(f.observed_on),
+        value: opt(f.declared_value_cad),
+        text: f.text,
+      }
+    );
+  }
+  return fresh;
+}
+
+/** A building's public-record facts, newest observation first. */
+export async function listPublicRecordFacts(
+  db: Surreal,
+  ownerId: string,
+  buildingId: string
+): Promise<PublicRecordFactRow[]> {
+  return q<PublicRecordFactRow[]>(
+    db,
+    `SELECT * FROM public_record_fact
+     WHERE building = type::record($b) AND owner_id = $owner
+     ORDER BY observed_on DESC`,
+    { b: buildingId, owner: ownerId }
+  );
 }
 
 /* ------------------------------------------------------------------ */

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import type { Severity, VerifiedAnalysis } from "@/lib/report-schema";
 import type { Delta } from "@/lib/deltas";
 import type { MissingDoc } from "@/lib/db";
@@ -54,10 +55,13 @@ export default function ReportView({
   report,
   pdfHref,
   storageKey = "report",
+  publicRecords,
 }: {
   report: ReportVM;
   pdfHref?: string;
   storageKey?: string;
+  /** The public record check (City of Calgary), rendered server-side. */
+  publicRecords?: ReactNode;
 }) {
   const { analysis } = report;
   const flags = sortFlags(analysis);
@@ -172,6 +176,7 @@ export default function ReportView({
           <FlagList flags={flags} />
           {report.timeline && report.timeline.length >= 2 && <BuildingTimeline points={report.timeline} />}
           {report.deltas && report.deltas.length > 0 && <DeltasSection deltas={report.deltas} />}
+          {publicRecords}
           <VerificationAudit analysis={analysis} />
           <section className="report-paper px-5 py-4 text-sm text-muted leading-relaxed">
             <strong className="text-ink">Disclaimer.</strong> ClearCondo summarizes what your

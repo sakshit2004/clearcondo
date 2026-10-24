@@ -48,8 +48,8 @@ describe("deleteReportCascade", () => {
     const deletes = db.calls.filter((c) => c.sql.startsWith("DELETE"));
     assert.deepEqual(
       deletes.map((c) => c.sql.match(/^DELETE (\w+)/)![1]),
-      ["flag", "document", "report", "building"],
-      "children first, then the report, then the empty building"
+      ["flag", "document", "report", "public_record_fact", "public_record_cache", "building"],
+      "children first, then the report, then the empty building and its public records"
     );
     for (const c of deletes) {
       assert.equal(c.params?.owner, OWNER, `owner-scoped: ${c.sql}`);

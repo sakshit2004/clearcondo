@@ -125,3 +125,35 @@ DEFINE FIELD IF NOT EXISTS consent ON TABLE service_order TYPE bool DEFAULT fals
 DEFINE FIELD OVERWRITE documents ON TABLE service_order TYPE array<object> FLEXIBLE DEFAULT [];
 DEFINE FIELD IF NOT EXISTS created_at ON TABLE service_order TYPE datetime DEFAULT time::now();
 DEFINE INDEX IF NOT EXISTS service_order_ref ON TABLE service_order COLUMNS ref_code UNIQUE;
+
+-- Public record check (lib/calgary/*): City of Calgary open data about a
+-- building. NOT document evidence — a separate source type, never mixed
+-- into flags, facts_snapshot or the verification audit.
+--
+-- public_record_cache: the City's answer for one building, cached 24h.
+-- payload is JSON text (the shape is lib/calgary/check.ts CityRecords).
+DEFINE TABLE IF NOT EXISTS public_record_cache SCHEMAFULL;
+DEFINE FIELD IF NOT EXISTS building ON TABLE public_record_cache TYPE record<building>;
+DEFINE FIELD IF NOT EXISTS owner_id ON TABLE public_record_cache TYPE string;
+DEFINE FIELD IF NOT EXISTS payload ON TABLE public_record_cache TYPE string;
+DEFINE FIELD IF NOT EXISTS fetched_at ON TABLE public_record_cache TYPE datetime DEFAULT time::now();
+DEFINE INDEX IF NOT EXISTS public_record_cache_building ON TABLE public_record_cache COLUMNS owner_id, building UNIQUE;
+
+-- public_record_fact: verified public-record facts in building memory (today:
+-- major building permits matched to the building). source_type is always
+-- "public_record"; fact_key (e.g. "permit:BP2024-01234") makes writes
+-- idempotent per building.
+DEFINE TABLE IF NOT EXISTS public_record_fact SCHEMAFULL;
+DEFINE FIELD IF NOT EXISTS building ON TABLE public_record_fact TYPE record<building>;
+DEFINE FIELD IF NOT EXISTS owner_id ON TABLE public_record_fact TYPE string;
+DEFINE FIELD IF NOT EXISTS source_type ON TABLE public_record_fact TYPE string DEFAULT "public_record";
+DEFINE FIELD IF NOT EXISTS dataset ON TABLE public_record_fact TYPE string;
+DEFINE FIELD IF NOT EXISTS source_name ON TABLE public_record_fact TYPE string;
+DEFINE FIELD IF NOT EXISTS source_url ON TABLE public_record_fact TYPE string;
+DEFINE FIELD IF NOT EXISTS fact_key ON TABLE public_record_fact TYPE string;
+DEFINE FIELD IF NOT EXISTS categories ON TABLE public_record_fact TYPE array<string> DEFAULT [];
+DEFINE FIELD IF NOT EXISTS observed_on ON TABLE public_record_fact TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS declared_value_cad ON TABLE public_record_fact TYPE option<number>;
+DEFINE FIELD IF NOT EXISTS text ON TABLE public_record_fact TYPE string;
+DEFINE FIELD IF NOT EXISTS created_at ON TABLE public_record_fact TYPE datetime DEFAULT time::now();
+DEFINE INDEX IF NOT EXISTS public_record_fact_key ON TABLE public_record_fact COLUMNS owner_id, building, fact_key UNIQUE;
