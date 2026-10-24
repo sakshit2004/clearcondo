@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { extractPdfText } from "../extract.ts";
+import { classifyDocType, extractPdfText } from "../extract.ts";
 
 /**
  * Build a minimal valid multi-page PDF in pure JS (no fixtures, no deps).
@@ -65,5 +65,39 @@ describe("extractPdfText page counts", () => {
     assert.equal(doc.truncated, false);
     assert.equal(doc.pages.length, 3);
     assert.match(doc.pages[0].text, /Page 1 of the test document/);
+  });
+});
+
+describe("classifyDocType", () => {
+  // Minutes nearly always discuss the reserve fund; the title must win.
+  const minutesBody =
+    "Minutes of the Meeting of the Board of Directors\nThe reserve fund balance was reviewed.";
+
+  it("classifies minutes that mention the reserve fund as minutes", () => {
+    assert.equal(classifyDocType("upload.pdf", minutesBody), "minutes_board");
+    assert.equal(
+      classifyDocType("doc.pdf", "Minutes of the Annual General Meeting\nReserve fund study adopted."),
+      "minutes_agm"
+    );
+  });
+
+  it("trusts the filename first, whatever the separators", () => {
+    assert.equal(classifyDocType("demo-01-board-minutes-2026-09-09.pdf", "Reserve fund plan"), "minutes_board");
+    assert.equal(classifyDocType("agm_minutes_2025.pdf", ""), "minutes_agm");
+    assert.equal(classifyDocType("By-Laws 2019.pdf", ""), "bylaws");
+    assert.equal(classifyDocType("bylaws_consolidated.pdf", ""), "bylaws");
+    assert.equal(classifyDocType("information-statement-unit-506.pdf", ""), "info_statement");
+    assert.equal(classifyDocType("Reserve_Fund_Study_2024.pdf", ""), "reserve_study");
+  });
+
+  it("reads the title past a watermark line", () => {
+    const text = `${"SAMPLE DOCUMENT — DEMO DATA ONLY · ".repeat(5)}\nReserve Fund Plan — Summary for Owners`;
+    assert.equal(classifyDocType("scan001.pdf", text), "reserve_study");
+  });
+
+  it("falls back to the body, then 'other'", () => {
+    const body = `${"x ".repeat(400)} the operating budget for 2026`;
+    assert.equal(classifyDocType("scan002.pdf", body), "budget");
+    assert.equal(classifyDocType("scan003.pdf", "nothing to see"), "other");
   });
 });

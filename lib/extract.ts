@@ -133,17 +133,54 @@ export async function extractPdfText(
   };
 }
 
-/** Classify a document from its filename + first chunk of text. Deterministic. */
+const SEP = "[\\s_-]*";
+const rx = (s: string) => new RegExp(s.replace(/ /g, SEP));
+
+/**
+ * Title-first order, for the filename and the document header: a title
+ * says what the document IS ("Minutes of the Annual General Meeting"),
+ * while "reserve fund" turns up in nearly every minutes body.
+ */
+const TITLE_RULES: [RegExp, string][] = [
+  [rx("estoppel|information statement|form 26|unit information"), "info_statement"],
+  [rx("annual general meeting|\\bagm\\b"), "minutes_agm"],
+  [/minutes/, "minutes_board"],
+  [rx("reserve fund"), "reserve_study"],
+  [/by[\s-]?laws?/, "bylaws"],
+  [rx("financial statement|\\baudit"), "financials"],
+  [/budget/, "budget"],
+  [/insurance/, "insurance"],
+];
+
+/** Body order (fallback): the original keyword priority. */
+const BODY_RULES: [RegExp, string][] = [
+  [/reserve fund/, "reserve_study"],
+  [/estoppel|information statement|form 26|unit information/, "info_statement"],
+  [/annual general meeting|\bagm\b/, "minutes_agm"],
+  [/minutes/, "minutes_board"],
+  [/by-?law/, "bylaws"],
+  [/budget/, "budget"],
+  [/financial statement|audit/, "financials"],
+  [/insurance/, "insurance"],
+];
+
+/** Header window: long enough to get past a watermark line to the title. */
+const HEADER_CHARS = 500;
+
+/**
+ * Classify a document: filename first, then its header (title), then the
+ * first chunk of body text. Deterministic.
+ */
 export function classifyDocType(filename: string, text: string): string {
-  const hay = `${filename} ${text.slice(0, 2000)}`.toLowerCase();
-  if (/reserve fund/.test(hay)) return "reserve_study";
-  if (/estoppel|information statement|form 26|unit information/.test(hay))
-    return "info_statement";
-  if (/annual general meeting|\bagm\b/.test(hay)) return "minutes_agm";
-  if (/minutes/.test(hay)) return "minutes_board";
-  if (/by-?law/.test(hay)) return "bylaws";
-  if (/budget/.test(hay)) return "budget";
-  if (/financial statement|audit/.test(hay)) return "financials";
-  if (/insurance/.test(hay)) return "insurance";
+  // "agm_minutes.pdf" -> "agm minutes": "_" is a word char, so \b would miss.
+  const name = filename.toLowerCase().replace(/\.pdf$/, "").replace(/[_.\-]+/g, " ");
+  const passes: [string, [RegExp, string][]][] = [
+    [name, TITLE_RULES],
+    [text.slice(0, HEADER_CHARS).toLowerCase(), TITLE_RULES],
+    [text.slice(0, 2000).toLowerCase(), BODY_RULES],
+  ];
+  for (const [hay, rules] of passes) {
+    for (const [re, type] of rules) if (re.test(hay)) return type;
+  }
   return "other";
 }
