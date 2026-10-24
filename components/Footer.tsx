@@ -23,7 +23,7 @@ export default function Footer() {
             <Link href="/privacy" className="text-muted hover:text-ink transition-colors">
               Privacy
             </Link>
-            <span className="text-subtle">Know before you buy</span>
+            <span className="text-subtle">Before you buy, and after</span>
           </div>
         </div>
       </div>

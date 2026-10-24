@@ -18,9 +18,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   // Absolute base for the social preview images (opengraph-image.png).
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://clearcondo.vercel.app"),
-  title: "ClearCondo — Don't overpay for a condo",
+  title: "ClearCondo — Stop overpaying for your condo",
   description:
-    "The list price isn't the real price. ClearCondo prices what's buried in a condo's documents — special assessments, thin reserves, lawsuits — every claim traced to its page, plus the building's public record and property tax.",
+    "Before you buy, ClearCondo prices what's buried in a condo's documents — special assessments, thin reserves, lawsuits — every claim traced to its page. After you buy, it checks what the City says your building is worth and the tax that comes with it.",
 };
 
 const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
