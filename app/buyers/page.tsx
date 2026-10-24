@@ -7,7 +7,7 @@ import { pointFromFacts } from "@/lib/timeline";
 import EvidenceDemo from "@/components/EvidenceDemo";
 import MemoryRecord, { recordRows } from "@/components/MemoryRecord";
 import Reveal from "@/components/Reveal";
-import { AudienceHero, SectionHead, SwitchBand } from "@/components/landing/parts";
+import { AudienceHero, SectionHead } from "@/components/landing/parts";
 
 export const metadata: Metadata = {
   title: "For condo buyers — ClearCondo",
@@ -100,12 +100,6 @@ export default function BuyersPage() {
         </Reveal>
       </section>
 
-      <SwitchBand
-        title="Already own a condo?"
-        body="Find out if you're paying too much property tax, and what you could save."
-        href="/owners"
-        label="ClearCondo for owners"
-      />
     </div>
   );
 }

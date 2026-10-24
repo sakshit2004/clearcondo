@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Reveal from "@/components/Reveal";
 import { OWNER_PRICING } from "@/lib/owner";
-import { AudienceHero, SectionHead, SwitchBand } from "@/components/landing/parts";
+import { OWNER_BILLS } from "@/lib/owner-bills";
+import { AudienceHero, SectionHead } from "@/components/landing/parts";
 
 export const metadata: Metadata = {
   title: "For condo owners — ClearCondo",
@@ -33,7 +34,6 @@ const STEPS: [string, string][] = [
   ["Get your number", "Tell us about the unit (size, condition, parking) and we come back with your potential saving."],
 ];
 
-const COMING = ["Home & condo insurance", "Energy & electricity", "Mortgage & refinancing"];
 
 /** Everything for owners, on one page. The owner dashboard is /app/own. */
 export default function OwnersPage() {
@@ -115,9 +115,9 @@ export default function OwnersPage() {
       <section className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
         <SectionHead title="Next for owners." body="The other bills that come with owning a condo, in the order we're taking them on." />
         <ul className="grid grid-cols-[minmax(0,1fr)] sm:grid-cols-3 gap-4">
-          {COMING.map((c) => (
-            <li key={c} className="rounded-[14px] border border-dashed border-line2 bg-white p-5 flex items-center justify-between gap-3">
-              <span className="font-semibold text-ink">{c}</span>
+          {OWNER_BILLS.map((b) => (
+            <li key={b.slug} className="rounded-[14px] border border-dashed border-line2 bg-white p-5 flex items-center justify-between gap-3">
+              <span className="font-semibold text-ink">{b.title}</span>
               <span className="rounded-md bg-info-soft text-info-dark px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">
                 Soon
               </span>
@@ -126,12 +126,6 @@ export default function OwnersPage() {
         </ul>
       </section>
 
-      <SwitchBand
-        title="Buying a condo instead?"
-        body="Know the real price before your conditions come off: what the document package hides, priced per unit."
-        href="/buyers"
-        label="ClearCondo for buyers"
-      />
     </div>
   );
 }
