@@ -6,7 +6,8 @@
  * One action accent (blue) for buttons, links and "verified" marks.
  * Risk has its own scale — critical orange, warning amber, info slate —
  * so action color and risk color never compete.
- * Motion is quiet and purposeful, and switches off for reduced motion.
+ * Motion only where it explains something (a quote being found, a number
+ * being totalled), and it switches off for reduced motion.
  */
 
 :root {
@@ -108,23 +109,6 @@ body {
   transform: translateX(4px);
 }
 
-/* Card hover lift */
-.card-lift {
-  transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.3s, border-color 0.3s;
-}
-.card-lift:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 16px 36px rgba(21, 24, 28, 0.09);
-  border-color: #cfd3cd;
-}
-.card-lift .card-icon {
-  transition: background-color 0.3s, transform 0.3s;
-}
-.card-lift:hover .card-icon {
-  background: #eaf0fd;
-  transform: rotate(-6deg) scale(1.06);
-}
-
 /* Nav underline */
 .nav-link {
   position: relative;
@@ -163,10 +147,6 @@ body {
   60% { transform: scale(1.08); opacity: 1; }
   100% { transform: none; opacity: 1; }
 }
-@keyframes cc-ping {
-  0% { box-shadow: 0 0 0 0 rgba(29, 78, 216, 0.5); }
-  100% { box-shadow: 0 0 0 10px rgba(29, 78, 216, 0); }
-}
 @keyframes cc-draw-o {
   from { stroke-dashoffset: 75.4; }
   to { stroke-dashoffset: 0; }
@@ -180,23 +160,6 @@ body {
   70% { transform: scale(1.3); }
   100% { transform: scale(1); }
 }
-@keyframes cc-spin {
-  to { transform: rotate(360deg); }
-}
-@keyframes cc-spin-r {
-  to { transform: rotate(-360deg); }
-}
-@keyframes cc-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-@keyframes cc-scan {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(420%); }
-}
-@keyframes cc-marquee {
-  to { transform: translateX(-50%); }
-}
 @keyframes cc-open {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: none; }
@@ -205,17 +168,7 @@ body {
 .rise-in { animation: cc-up 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 .grow-x { transform-origin: left; animation: cc-grow 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 .pop-in { animation: cc-pop 0.5s 0.8s both; }
-.ping { animation: cc-ping 1.8s ease-out infinite; }
-.float { animation: cc-float 7s ease-in-out infinite; }
-.float:hover, .float:focus-within { animation-play-state: paused; }
-.scanline { animation: cc-scan 2.6s ease-in-out infinite; }
-.swap-in { animation: cc-up 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 .open-in { animation: cc-open 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
-.timer-bar { transform-origin: left; animation: cc-grow 4.5s linear both; }
-.spin-slow { animation: cc-spin 80s linear infinite; transform-origin: 50% 50%; }
-.spin-slow-r { animation: cc-spin-r 55s linear infinite; transform-origin: 50% 50%; }
-.marquee { display: flex; width: max-content; animation: cc-marquee 38s linear infinite; }
-.marquee-box:hover .marquee { animation-play-state: paused; }
 
 /* Marker sweep over a quoted line of evidence */
 .highlight-sweep {
@@ -225,6 +178,40 @@ body {
   animation: cc-hl 1.1s 0.3s ease-out forwards;
   border-radius: 3px;
 }
+
+/* Landing demo: the quoted sentence is highlighted, then the flag it
+   becomes slides in — when the demo scrolls into view (see Reveal.tsx). */
+.evidence-sweep {
+  background-image: linear-gradient(#dbe6fd, #dbe6fd);
+  background-repeat: no-repeat;
+  background-size: 0 100%;
+  border-radius: 3px;
+  transition: background-size 1.1s 0.5s ease-out;
+}
+.evidence-demo.in .evidence-sweep { background-size: 100% 100%; }
+.evidence-late {
+  opacity: 0;
+  transform: translateX(-12px);
+  transition: opacity 0.6s 1.5s ease-out, transform 0.6s 1.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.evidence-demo.in .evidence-late { opacity: 1; transform: none; }
+
+/* Landing building record: rows arrive in turn, then each superseded
+   value is struck through — the "end-dated, not overwritten" beat. */
+.memory-record .record-row {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.5s ease-out, transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.memory-record.in .record-row { opacity: 1; transform: none; }
+.record-old {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 55%;
+  background-size: 0 1.5px;
+  transition: background-size 0.5s ease-out;
+}
+.memory-record.in .record-old { background-size: 100% 1.5px; }
 
 /* Logo draw-in */
 .logo-draw .arc-o { stroke-dasharray: 75.4; animation: cc-draw-o 1.1s cubic-bezier(0.6, 0, 0.2, 1) both; }
@@ -277,8 +264,17 @@ body {
     opacity: 1;
     transform: none;
   }
-  .highlight-sweep {
+  .highlight-sweep,
+  .evidence-sweep {
     background-size: 100% 100%;
+  }
+  .evidence-late,
+  .memory-record .record-row {
+    opacity: 1;
+    transform: none;
+  }
+  .record-old {
+    background-size: 100% 1.5px;
   }
   html {
     scroll-behavior: auto;

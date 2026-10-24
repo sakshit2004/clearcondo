@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { LogoMark } from "@/components/Logo";
 
 /**
  * Route-segment error boundary. Next.js renders this when a page throws
@@ -26,15 +27,13 @@ export default function Error({
 
   return (
     <div className="mx-auto max-w-2xl px-4 sm:px-6 py-16 text-center">
-      <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center border border-stone-300 text-2xl">
-        <span role="img" aria-label="Warning">
-          ⚠️
-        </span>
+      <div className="mx-auto mb-6 flex justify-center">
+        <LogoMark size={48} />
       </div>
       <h1 className="font-bold text-3xl tracking-tight text-ink">
         Something went wrong
       </h1>
-      <p className="mt-3 text-stone-600">
+      <p className="mt-3 text-muted">
         ClearCondo hit an unexpected error loading this page. Your uploaded
         documents are safe — nothing was lost.
       </p>
@@ -42,14 +41,14 @@ export default function Error({
         {tryAgain && (
           <button
             onClick={tryAgain}
-            className="bg-ink px-6 py-2.5 font-semibold text-white hover:bg-accent transition-colors"
+            className="btn-lift rounded-[10px] bg-ink px-6 min-h-11 font-semibold text-white hover:bg-accent"
           >
             Try again
           </button>
         )}
         <Link
           href="/"
-          className="border border-stone-400 px-6 py-2.5 font-semibold text-ink hover:border-ink transition-colors"
+          className="inline-flex items-center rounded-[10px] border border-line2 px-6 min-h-11 font-semibold text-ink hover:border-ink transition-colors"
         >
           Back to home
         </Link>
