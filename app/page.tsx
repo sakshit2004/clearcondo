@@ -74,17 +74,18 @@ export default function LandingPage() {
       <section className="landing-hero relative isolate min-h-[max(640px,100svh)] bg-[#070a12] text-white overflow-hidden flex flex-col">
         <HeroScene />
         <div className="relative z-10 mt-auto mx-auto w-full max-w-6xl px-4 sm:px-6 pb-14 sm:pb-20 pt-40">
-          <p className="rise-in text-[15px] text-white/65">For Calgary condo buyers</p>
+          <p className="rise-in text-[15px] text-white/65">For condo buyers</p>
           <h1
             className="rise-in mt-4 max-w-3xl font-semibold tracking-[-0.035em] leading-[1.02] text-[44px] sm:text-[64px] lg:text-[80px]"
             style={{ animationDelay: "80ms", textWrap: "balance" }}
           >
-            Every red flag, traced to the page.
+            Don&apos;t overpay for a condo.
           </h1>
           <p className="rise-in mt-5 max-w-xl text-lg leading-relaxed text-white/70" style={{ animationDelay: "180ms" }}>
-            Special assessments, thin reserves, lawsuits — quoted from the
-            condo documents they came from. And every building keeps its
-            record, so the next deal there starts with what we already know.
+            The list price isn&apos;t the real price. ClearCondo reads the full
+            document package and prices what&apos;s buried in it — special
+            assessments, thin reserves, lawsuits — every claim traced to the
+            page it came from, before your conditions expire.
           </p>
           <div className="rise-in mt-8 flex flex-wrap items-center gap-3" style={{ animationDelay: "280ms" }}>
             <Link
@@ -113,7 +114,7 @@ export default function LandingPage() {
       <section className="bg-surface border-b border-line">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-24">
           <SectionHead
-            title="Checked against the page."
+            title="Every red flag, traced to the page."
             body="Every claim is matched to the sentence it came from. If we can't find it, the flag is downgraded and loses its dollar figure."
           />
           <EvidenceDemo />
@@ -149,6 +150,16 @@ export default function LandingPage() {
               </Reveal>
             ))}
           </ol>
+        </div>
+      </section>
+
+      {/* The vision */}
+      <section className="border-t border-line bg-surface">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-24">
+          <SectionHead
+            title="Buying is the first bill. Owning is the rest."
+            body="ClearCondo starts with the purchase — what a condo will really cost you before you own it. Next we're building the same check for property tax assessments: if a city overvalues your home, we flag it and build the appeal. One record of what your property actually costs you."
+          />
         </div>
       </section>
 
