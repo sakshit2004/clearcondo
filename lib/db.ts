@@ -866,7 +866,8 @@ export async function getOwnerProperty(
 export async function createOwnerRequest(
   db: Surreal,
   ownerId: string,
-  r: OwnerRequest
+  r: OwnerRequest,
+  estimate?: { indicated_value: number | null; annual_saving: number | null }
 ): Promise<string> {
   // Link to the owner's saved property when there is one (only their own).
   const prop = r.unit
@@ -883,7 +884,10 @@ export async function createOwnerRequest(
        plan: $plan, address: $address, unit: $unit,
        unit_size_sqft: $size, bedrooms: $beds, bathrooms: $baths,
        parking: $parking, storage: $storage, renovations: $renovations,
-       condition_issues: $condition, past_complaint: $past, notes: $notes
+       condition_issues: $condition, past_complaint: $past, notes: $notes,
+       purchase_price: $pp, purchase_date: $pd, appraisal_value: $av, appraisal_date: $ad,
+       comparables: $comps, assessed_value: $assessed, indicated_value: $indicated,
+       est_saving: $saving
      } RETURN id`,
     {
       owner: ownerId,
@@ -903,6 +907,14 @@ export async function createOwnerRequest(
       condition: opt(r.condition_issues),
       past: opt(r.past_complaint),
       notes: opt(r.notes),
+      pp: opt(r.purchase_price),
+      pd: opt(r.purchase_date),
+      av: opt(r.appraisal_value),
+      ad: opt(r.appraisal_date),
+      comps: r.comparables?.length ? JSON.stringify(r.comparables) : undefined,
+      assessed: opt(r.assessed_value),
+      indicated: opt(estimate?.indicated_value),
+      saving: opt(estimate?.annual_saving),
     }
   );
   return rid(created[0].id);

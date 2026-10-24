@@ -202,3 +202,14 @@ DEFINE INDEX IF NOT EXISTS owner_property_unit ON TABLE owner_property COLUMNS o
 
 -- Link a savings-estimate request to the saved property it was sent from.
 DEFINE FIELD IF NOT EXISTS property ON TABLE owner_request TYPE option<record<owner_property>>;
+
+-- Evidence and the instant estimate sent with an owner request
+-- (lib/owner-estimate.ts). Comparables are stored as JSON text.
+DEFINE FIELD IF NOT EXISTS purchase_price ON TABLE owner_request TYPE option<number>;
+DEFINE FIELD IF NOT EXISTS purchase_date ON TABLE owner_request TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS appraisal_value ON TABLE owner_request TYPE option<number>;
+DEFINE FIELD IF NOT EXISTS appraisal_date ON TABLE owner_request TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS comparables ON TABLE owner_request TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS assessed_value ON TABLE owner_request TYPE option<number>;
+DEFINE FIELD IF NOT EXISTS indicated_value ON TABLE owner_request TYPE option<number>;
+DEFINE FIELD IF NOT EXISTS est_saving ON TABLE owner_request TYPE option<number>;
