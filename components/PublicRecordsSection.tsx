@@ -242,7 +242,6 @@ export default function PublicRecordsSection({
       <AssessmentCheck
         appeals={records.appeals}
         currentMedian={records.current_median ?? null}
-        units={records.unit_count}
         rollYear={records.roll_year}
       />
 

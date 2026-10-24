@@ -1,13 +1,11 @@
-import { describe, it, beforeEach, afterEach } from "node:test";
+import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   annualTax,
-  appealsParamsFromEnv,
   complaintOutcome,
   fetchBuildingAppeals,
   isParkingStall,
   summarizeComplaints,
-  taxSaving,
 } from "../calgary/appeals.ts";
 import { fetchCityRecords } from "../calgary/check.ts";
 import { CityDataError } from "../calgary/socrata.ts";
@@ -18,21 +16,6 @@ const arb = (year: string, location_address: string, status: string, board_s_dec
 });
 const STREET = "500 SAMPLE ST SW";
 const units = new Set(Array.from({ length: 6 }, (_, i) => `${101 + i} ${STREET}`));
-const PARAMS = { groupMin: 3, groupWinShare: 0.5, typicalCut: 0.1 }; // test values, not production ones
-
-const ENV = ["APPEALS_GROUP_MIN", "APPEALS_GROUP_WIN_SHARE", "APPEALS_TYPICAL_CUT"] as const;
-let saved: Record<string, string | undefined> = {};
-beforeEach(() => {
-  saved = Object.fromEntries(ENV.map((k) => [k, process.env[k]]));
-  for (const k of ENV) delete process.env[k];
-});
-afterEach(() => {
-  for (const k of ENV) {
-    if (saved[k] === undefined) delete process.env[k];
-    else process.env[k] = saved[k];
-  }
-});
-
 describe("complaintOutcome", () => {
   it("reads the dataset's status/decision values", () => {
     assert.equal(complaintOutcome("Mutual Agreement", "Resolved without hearing"), "settled");
@@ -54,50 +37,35 @@ describe("summarizeComplaints", () => {
     arb("2024", `12V ${STREET}`, "Hearing Occured", "No Change"), // stall: excluded
     arb("2024", `999 ${STREET}`, "Withdrawn", ""), // another building's unit
     arb("2021", `106 ${STREET}`, "Hearing Occurred", "No Change"),
-    arb("2021", `106 ${STREET}`, "Mutual Agreement", ""), // same unit twice in a year: one, lowered
+    arb("2021", `106 ${STREET}`, "Mutual Agreement", ""), // same unit twice in a year: counted once
   ];
 
-  it("gives facts only, with no reading, when no private parameters are set", () => {
+  it("counts complaints per year by recorded outcome", () => {
     const s = summarizeComplaints(rows, units);
     assert.deepEqual(s.history, [
-      { year: 2024, filed: 4, lowered: 4, not_lowered: 0 },
-      { year: 2021, filed: 1, lowered: 1, not_lowered: 0 },
+      { year: 2024, filed: 4, settled_or_decreased: 4, other: 0 },
+      { year: 2021, filed: 1, settled_or_decreased: 1, other: 0 },
     ]);
     assert.equal(s.filed_total, 5);
-    assert.equal(s.reading, null);
-    assert.equal(s.typical_cut, null);
+    assert.equal(s.settled_or_decreased_total, 5);
   });
 
-  it("reads group filings with the configured parameters", () => {
-    const s = summarizeComplaints(rows, units, PARAMS);
-    assert.equal(s.reading, "group_lowered");
-    assert.equal(s.reading_year?.year, 2024);
-    assert.equal(s.typical_cut, 0.1);
-    const losing = [...units].slice(0, 4).map((a) => arb("2023", a, "Hearing Occurred", "No Change"));
-    assert.equal(summarizeComplaints(losing, units, PARAMS).reading, "group_not_lowered");
-    assert.equal(summarizeComplaints([], units, PARAMS).reading, "no_group");
+  it("counts no-change and withdrawn as other outcomes", () => {
+    const s = summarizeComplaints(
+      [arb("2023", `101 ${STREET}`, "Hearing Occurred", "No Change"), arb("2023", `102 ${STREET}`, "Withdrawn", "")],
+      units
+    );
+    assert.deepEqual(s.history, [{ year: 2023, filed: 2, settled_or_decreased: 0, other: 2 }]);
   });
-});
 
-describe("appealsParamsFromEnv", () => {
-  it("is all null when unset, and ignores out-of-range values", () => {
-    assert.deepEqual(appealsParamsFromEnv(), { groupMin: null, groupWinShare: null, typicalCut: null });
-    process.env.APPEALS_GROUP_WIN_SHARE = "7";
-    process.env.APPEALS_TYPICAL_CUT = "abc";
-    assert.deepEqual(appealsParamsFromEnv(), { groupMin: null, groupWinShare: null, typicalCut: null });
-  });
-  it("reads valid values", () => {
-    process.env.APPEALS_GROUP_MIN = "4";
-    process.env.APPEALS_GROUP_WIN_SHARE = "0.6";
-    process.env.APPEALS_TYPICAL_CUT = "0.05";
-    assert.deepEqual(appealsParamsFromEnv(), { groupMin: 4, groupWinShare: 0.6, typicalCut: 0.05 });
+  it("only returns facts: no reading or estimate fields", () => {
+    assert.deepEqual(Object.keys(summarizeComplaints(rows, units)).sort(), ["filed_total", "history", "settled_or_decreased_total"]);
   });
 });
 
 describe("tax calculations", () => {
   it("applies the 2026 Calgary residential rate", () => {
     assert.equal(Math.round(annualTax(400_000)), 2660); // 400,000 × 0.66499%
-    assert.equal(Math.round(taxSaving(400_000, 0.1)), 266);
   });
 });
 
@@ -111,8 +79,7 @@ describe("fetchBuildingAppeals", () => {
     const s = await fetchBuildingAppeals(["101 500 Sample St SW", `12V ${STREET}`], { fetchImpl });
     assert.match(url, /myiv-ju9n/);
     assert.match(url, new RegExp(`upper\\(location_address\\) in \\('101 ${STREET}'\\)`));
-    assert.equal(s.lowered_total, 1);
-    assert.equal(s.reading, null, "no reading without private parameters");
+    assert.equal(s.settled_or_decreased_total, 1);
   });
 
   it("surfaces City failure as CityDataError", async () => {
