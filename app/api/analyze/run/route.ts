@@ -18,10 +18,7 @@ import {
   spendCredit,
 } from "@/lib/db";
 import { computeDeltas, type Delta } from "@/lib/deltas";
-import {
-  checkDailyAnalysisLimit,
-  checkRunPayloadCap,
-} from "@/lib/rate-limit";
+import { checkRunPayloadCap } from "@/lib/rate-limit";
 import {
   docTextWithPageMarkers,
   type PageText,
@@ -130,21 +127,6 @@ export async function POST(req: Request) {
           checkoutUrl: "/api/checkout",
         },
         { status: 402 }
-      );
-    }
-  }
-
-  // Cost guard (beta mode): per-user daily analysis cap. Only when the DB
-  // is configured — serverless has nowhere durable to count otherwise.
-  if (dbOn && !stripeOn) {
-    const usage = await withDb((db) => checkDailyAnalysisLimit(db, userId));
-    if (usage && !usage.allowed) {
-      return NextResponse.json(
-        {
-          code: "daily_limit",
-          error: `Daily analysis limit reached (${usage.limit}/day). Try again tomorrow.`,
-        },
-        { status: 429 }
       );
     }
   }

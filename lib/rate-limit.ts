@@ -1,25 +1,16 @@
 /**
- * Cost guards for the analysis pipeline.
+ * Payload guard for the analysis pipeline.
  *
- * With STRIPE_ENABLED=false (the default beta mode) there is no payment
- * gate, so without these a signed-in stranger could run unlimited analyses
- * and burn the owner's Anthropic budget (a 100-page stack is ~40k input
- * tokens; worst case ~450k). Two guards:
+ * checkRunPayloadCap — stateless, always enforced: the run route must
+ * not accept more pages than the start route could ever produce
+ * (12 files x 100 pages). A crafted POST that bypasses /api/analyze/start
+ * gets a 413 here. This equals the physical maximum of a legitimate
+ * stack, so it never blocks real use.
  *
- *  1. checkRunPayloadCap — stateless, always enforced: the run route must
- *     not accept more pages than the start route could ever produce
- *     (12 files x 100 pages). A crafted POST that bypasses /api/analyze/start
- *     gets a 413 here.
- *  2. checkDailyAnalysisLimit — per-user daily counter in SurrealDB
- *     (env MAX_ANALYSES_PER_DAY, default 10). Only applies when the DB is
- *     configured: serverless has nowhere durable to count otherwise.
+ * (The former per-user daily analysis cap was removed at the owner's
+ * direction on 2026-10-24 — beta usage is uncapped. The daily_usage
+ * table remains in the schema, unused, if a cap is ever wanted back.)
  */
-
-/** Daily analysis cap per user. Tunable via MAX_ANALYSES_PER_DAY. */
-export function maxAnalysesPerDay(): number {
-  const v = Number(process.env.MAX_ANALYSES_PER_DAY);
-  return Number.isFinite(v) && v > 0 ? Math.floor(v) : 10;
-}
 
 /**
  * Max total pages the run route accepts in one request. Mirrors the
@@ -29,54 +20,6 @@ export function maxAnalysesPerDay(): number {
 export function maxPagesPerRun(): number {
   const v = Number(process.env.MAX_PAGES_PER_RUN);
   return Number.isFinite(v) && v > 0 ? Math.floor(v) : 1200;
-}
-
-export interface DailyUsage {
-  allowed: boolean;
-  used: number;
-  limit: number;
-  /** YYYY-MM-DD (UTC) bucket the count was recorded in. */
-  day: string;
-}
-
-/** Minimal DB surface: anything with .query works (real Surreal or a test fake). */
-export interface UsageDb {
-  query: (
-    sql: string,
-    params?: Record<string, unknown>
-  ) => Promise<unknown[]>;
-}
-
-function utcDay(d = new Date()): string {
-  return d.toISOString().slice(0, 10);
-}
-
-/**
- * Record one analysis attempt for this user today and report whether
- * another run is allowed. Read-then-write in a single call; a tiny race
- * window between concurrent requests is acceptable for a cost guard
- * (worst case: a small overshoot, not a bypass).
- *
- * Call AFTER input validation and BEFORE analyzeDocuments — only attempts
- * that actually reach the model should count.
- */
-export async function checkDailyAnalysisLimit(
-  db: UsageDb,
-  ownerId: string
-): Promise<DailyUsage> {
-  const day = utcDay();
-  const limit = maxAnalysesPerDay();
-  const key = `${ownerId}:${day}`;
-  const res = (await db.query(
-    `SELECT VALUE count FROM ONLY type::record("daily_usage", $key)`,
-    { key }
-  )) as unknown[];
-  const used = Number(res[0] ?? 0) + 1;
-  await db.query(
-    `UPSERT type::record("daily_usage", $key) SET owner_id = $owner, day = $day, count = $used`,
-    { key, owner: ownerId, day, used }
-  );
-  return { allowed: used <= limit, used, limit, day };
 }
 
 /**
