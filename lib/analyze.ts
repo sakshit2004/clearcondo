@@ -152,21 +152,32 @@ Analyze the following condominium document stack and return ONLY the JSON report
 ${fileListBlock}
 ${docsBlock}`;
 
-  const raw = await callClaude(client, model, userPrompt);
-  const parsed = tryParseAnalysis(raw);
+  const first = await callClaude(client, model, userPrompt);
+  const parsed = tryParseAnalysis(first.text);
   if (parsed) return { analysis: parsed, model };
 
   // One repair attempt: validation errors + the source documents (see
   // lib/repair.ts — the repair used to resend only the errors, so it
   // could never succeed on a real stack).
-  const { errors } = tryParseAnalysisWithErrors(raw);
+  const { errors } = tryParseAnalysisWithErrors(first.text);
+  // Server-side diagnostics: when a run fails validation, the reason
+  // (truncation vs schema drift) must survive in the function logs —
+  // the first live failures were undiagnosable because nothing logged
+  // the stop reason or the validation errors.
+  console.error(
+    `[analyze] first pass failed validation: stop_reason=${first.stopReason} output_tokens=${first.outputTokens} raw_chars=${first.text.length} errors=${errors}`
+  );
   const repair = await callClaude(
     client,
     model,
-    repairPrompt(errors, input.docs, raw)
+    repairPrompt(errors, input.docs, first.text)
   );
-  const repaired = tryParseAnalysis(repair);
+  const repaired = tryParseAnalysis(repair.text);
   if (repaired) return { analysis: repaired, model };
+  const repairErrors = tryParseAnalysisWithErrors(repair.text).errors;
+  console.error(
+    `[analyze] repair pass failed validation: stop_reason=${repair.stopReason} output_tokens=${repair.outputTokens} raw_chars=${repair.text.length} errors=${repairErrors}`
+  );
   throw new Error(
     "The AI returned a response we could not validate. Please try again."
   );
@@ -176,16 +187,19 @@ async function callClaude(
   client: Anthropic,
   model: string,
   userPrompt: string
-): Promise<string> {
+): Promise<{ text: string; stopReason: string | null; outputTokens: number | null }> {
   let message;
   try {
     message = await client.messages.create(
       {
         model,
-        // 8000 leaves room for Sonnet 5.5's default thinking (billed as
-        // output) plus the full JSON report. No temperature/top_p: the
-        // 5.5 API rejects them when thinking is on, and we never set them.
-        max_tokens: 8000,
+        // Thinking is billed as output and shares this budget with the
+        // JSON report itself. At 8000 the first live runs truncated
+        // mid-JSON on multi-document stacks (stop_reason=max_tokens)
+        // and failed validation; 16000 leaves room for the thinking
+        // plus the full report. No temperature/top_p: the 5.5 API
+        // rejects them when thinking is on, and we never set them.
+        max_tokens: 16000,
         system: SYSTEM_PROMPT,
         messages: [{ role: "user", content: userPrompt }],
       },
@@ -206,10 +220,14 @@ async function callClaude(
     .join("");
 
   // Strip accidental markdown fences.
-  return text
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```\s*$/, "")
-    .trim();
+  return {
+    text: text
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/\s*```\s*$/, "")
+      .trim(),
+    stopReason: message.stop_reason ?? null,
+    outputTokens: message.usage?.output_tokens ?? null,
+  };
 }
 
 function tryParseAnalysis(raw: string): Analysis | null {
@@ -224,7 +242,21 @@ function tryParseAnalysisWithErrors(raw: string):
   try {
     json = JSON.parse(raw);
   } catch {
-    return { ok: false, errors: "Response was not valid JSON." };
+    // Salvage: a preamble sentence or trailing prose around an intact
+    // JSON object should not sink the run — slice first { to last }
+    // and try once more. (True truncation has no closing brace and
+    // still fails here, which the stop_reason log then proves.)
+    const start = raw.indexOf("{");
+    const end = raw.lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      try {
+        json = JSON.parse(raw.slice(start, end + 1));
+      } catch {
+        return { ok: false, errors: "Response was not valid JSON." };
+      }
+    } else {
+      return { ok: false, errors: "Response was not valid JSON." };
+    }
   }
   const parsed = AnalysisSchema.safeParse(json);
   if (parsed.success) return { ok: true, value: parsed.data, errors: "" };
