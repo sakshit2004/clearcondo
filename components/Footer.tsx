@@ -20,7 +20,7 @@ export default function Footer() {
             <Link href="/privacy" className="text-muted hover:text-ink transition-colors">
               Privacy
             </Link>
-            <span className="text-subtle">Built for Build North 2026 · Calgary, Alberta</span>
+            <span className="text-subtle">Calgary, Alberta</span>
           </div>
         </div>
       </div>
