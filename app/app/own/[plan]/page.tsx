@@ -128,7 +128,7 @@ async function OwnerUnit({ params, searchParams }: { params: Params; searchParam
           <section id="estimate" className="report-paper rounded-2xl p-6 sm:p-8 scroll-mt-6" aria-labelledby="estimate-heading">
             <h2 id="estimate-heading" className="text-lg font-bold">Get my savings estimate</h2>
             <p className="text-sm text-subtle mt-1 mb-6 max-w-2xl">
-              We check your unit against comparable sales and tell you what you could save, before anything is filed.
+              Add what you know and see an instant estimate. We then check it against recent sales and confirm by email, before anything is filed.
             </p>
             <OwnerRequestForm
               plan={plan}
@@ -137,6 +137,7 @@ async function OwnerUnit({ params, searchParams }: { params: Params; searchParam
               defaultName={user?.fullName ?? ""}
               defaultEmail={user?.primaryEmailAddress?.emailAddress ?? ""}
               alreadyRequested={Boolean(alreadyRequested)}
+              assessedValue={unit?.assessed_value ?? null}
             />
           </section>
 
