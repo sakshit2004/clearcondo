@@ -15,6 +15,12 @@ export default function Header() {
           <Logo size={28} animate />
         </Link>
         <nav className="flex items-center gap-5 sm:gap-7">
+          <Link
+            href="/calgary"
+            className="nav-link hidden sm:inline text-[15px] text-muted hover:text-ink whitespace-nowrap transition-colors"
+          >
+            Calgary lookup
+          </Link>
           {configured ? (
             /* Auth state is runtime data: under Cache Components the
                static shell (including /_not-found) can only prerender

@@ -14,6 +14,9 @@ export default function Footer() {
             </p>
           </div>
           <div className="flex flex-col gap-2 text-sm sm:items-end">
+            <Link href="/calgary" className="text-muted hover:text-ink transition-colors">
+              Look up a Calgary condo
+            </Link>
             <Link href="/demo" className="text-muted hover:text-ink transition-colors">
               Sample report
             </Link>

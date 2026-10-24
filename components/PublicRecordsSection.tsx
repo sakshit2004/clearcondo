@@ -42,7 +42,7 @@ function StatusPill({ status }: { status: CheckStatus }) {
 const pctLabel = (n: number | null) =>
   n == null ? "—" : `${n > 0 ? "+" : ""}${n.toFixed(1)}%`;
 
-function Shell({ children, fetchedAt }: { children: ReactNode; fetchedAt?: string }) {
+function Shell({ children, fetchedAt, lookup }: { children: ReactNode; fetchedAt?: string; lookup?: boolean }) {
   return (
     <section className="report-paper p-6 sm:p-8 break-inside-avoid-page" aria-labelledby="public-records-heading">
       <div className="micro-label text-stone-400 mb-2">Public record check</div>
@@ -51,8 +51,10 @@ function Shell({ children, fetchedAt }: { children: ReactNode; fetchedAt?: strin
         <span className="text-subtle font-semibold">{PUBLIC_RECORDS_SUBLABEL}</span>
       </h2>
       <p className="text-sm text-stone-500 mb-6 max-w-3xl">
-        What the City&apos;s open data says about this building, set beside the uploaded
-        documents. Every item links to the City record it came from.
+        {lookup
+          ? "What the City's open data says about this building, before any documents. "
+          : "What the City's open data says about this building, set beside the uploaded documents. "}
+        Every item links to the City record it came from.
         {fetchedAt && <> Retrieved {formatDate(fetchedAt)}; refreshed at most once a day.</>}
       </p>
       {children}
@@ -95,16 +97,30 @@ function MentionNote({ item, minutesLabel }: { item: PermitWithMention; minutesL
  * as context — wording says what something "may reflect", never what it
  * "means".
  */
-export default function PublicRecordsSection({ check }: { check: PublicRecordCheck }) {
+export interface LookupMode {
+  /** Where "add your documents" goes (upload flow, building pre-filled). */
+  addDocsHref: string;
+}
+
+export default function PublicRecordsSection({
+  check,
+  lookup,
+}: {
+  check: PublicRecordCheck;
+  /** Set on the public building page: no documents yet. */
+  lookup?: LookupMode;
+}) {
   const { records } = check;
+  const isLookup = Boolean(lookup);
 
   if (records.status === "unavailable") {
     return (
-      <Shell>
+      <Shell lookup={isLookup}>
         <p className="font-semibold text-ink">City data unavailable</p>
         <p className="text-sm text-stone-600 mt-1">
           The City of Calgary open-data service didn&apos;t answer in time, so this check was skipped. It
-          will be retried the next time this report is opened. Nothing else in the report depends on it.
+          will be retried the next time this {isLookup ? "page" : "report"} is opened.
+          {!isLookup && " Nothing else in the report depends on it."}
         </p>
       </Shell>
     );
@@ -112,7 +128,7 @@ export default function PublicRecordsSection({ check }: { check: PublicRecordChe
 
   if (records.status === "no_match") {
     return (
-      <Shell fetchedAt={records.fetched_at}>
+      <Shell fetchedAt={records.fetched_at} lookup={isLookup}>
         <p className="font-semibold text-ink">Couldn&apos;t match this building to City records</p>
         <p className="text-sm text-stone-600 mt-1">
           {records.reason} We only show City records when the match is unambiguous, so nothing is shown
@@ -136,7 +152,36 @@ export default function PublicRecordsSection({ check }: { check: PublicRecordChe
   const minutesLabel = "Not mentioned in uploaded minutes";
 
   return (
-    <Shell fetchedAt={records.fetched_at}>
+    <Shell fetchedAt={records.fetched_at} lookup={isLookup}>
+      {lookup ? (
+        /* a. Building facts — no documents to compare against yet */
+        <div className="mb-8">
+          <h3 className="font-bold text-lg text-ink mb-3">Building facts</h3>
+          <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3 text-sm">
+            {[
+              ["Condo plan", records.plan],
+              ["Units on the roll", `${records.unit_count}${records.residential_unit_count !== records.unit_count ? ` (${records.residential_unit_count} residential)` : ""}`],
+              ["Address", records.building_addresses.join("; ") || "—"],
+              ["Community", records.comm_name ?? "—"],
+              ["Year built", records.year_of_construction ? String(records.year_of_construction) : "—"],
+              ["Assessment roll", records.roll_year ? String(records.roll_year) : "Current"],
+            ].map(([k, v]) => (
+              <div key={k} className="min-w-0">
+                <dt className="micro-label text-stone-400">{k}</dt>
+                <dd className="text-ink font-semibold mt-0.5 break-words">{v}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="text-[13px] text-stone-500 mt-3">
+            Source:{" "}
+            <SourceLink href={records.roll_query_url}>
+              {records.unit_count} assessment-roll unit{records.unit_count === 1 ? "" : "s"} on condo plan {records.plan}
+            </SourceLink>
+            .
+          </p>
+        </div>
+      ) : (
+      <>
       {/* a. Identity check */}
       <h3 className="font-bold text-lg text-ink mb-1">Identity check</h3>
       <p className="text-[13px] text-stone-500 mb-3">
@@ -190,6 +235,8 @@ export default function PublicRecordsSection({ check }: { check: PublicRecordChe
           </p>
         )}
       </div>
+      </>
+      )}
 
       {/* b. Value trend */}
       <h3 className="font-bold text-lg text-ink mb-1">Assessed value over time</h3>
@@ -299,13 +346,30 @@ export default function PublicRecordsSection({ check }: { check: PublicRecordChe
                     </div>
                     <p className="text-[15px] text-stone-700 mt-1 leading-relaxed">{p.description}</p>
                     {!p.issued_date && <p className="text-[12px] text-stone-500">Applied for; not shown as issued.</p>}
-                    <MentionNote item={item} minutesLabel={minutesLabel} />
+                    {!isLookup && <MentionNote item={item} minutesLabel={minutesLabel} />}
                   </li>
                 );
               })}
             </ul>
           )}
         </>
+      )}
+      {lookup && (
+        <div className="mt-8 rounded-[14px] bg-ink text-white p-6">
+          <h3 className="text-lg font-bold">Have this building&apos;s documents?</h3>
+          <p className="text-sm text-[#c3cad4] mt-1.5 mb-4 max-w-2xl">
+            Add the minutes, reserve fund study and bylaws for the full red-flag report: special
+            assessments, reserve health and litigation, every claim checked against its page, and a
+            check of whether each permit above was disclosed in the minutes. Condo documents aren&apos;t
+            public, so they come from the seller or property manager.
+          </p>
+          <a
+            href={lookup.addDocsHref}
+            className="btn-lift inline-flex items-center justify-center rounded-lg bg-white text-ink font-semibold text-[15px] px-5 min-h-11"
+          >
+            Add documents for the full report
+          </a>
+        </div>
       )}
     </Shell>
   );
