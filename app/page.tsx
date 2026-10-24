@@ -15,25 +15,25 @@ const STEPS = [
   ["Get the real price", "Every red flag priced per unit and traced to its page, online or as a PDF for your lawyer, before conditions come off."],
 ];
 
-/** The three parts of what a condo really costs, each with where to see it. */
+/** Three ways in: see a report, check your own documents, check the tax side. */
 const PRICE_PARTS: { title: string; body: string; href: string; cta: string; preview?: boolean }[] = [
   {
-    title: "What the documents hide",
-    body: "Special assessments, reserve shortfalls, lawsuits and insurance deductibles, priced per unit and quoted from the page they came from.",
+    title: "See what the documents hide",
+    body: "A full sample report: special assessments, reserve shortfalls, lawsuits and insurance deductibles, priced per unit and quoted from the page they came from.",
     href: "/demo",
     cta: "See a sample report",
   },
   {
-    title: "What the public record shows",
-    body: "The building's assessed value against similar buildings and its major roof, envelope and parkade permits, from City of Calgary open data.",
-    href: "/calgary",
-    cta: "Look up a Calgary condo",
+    title: "Check your condo before you buy",
+    body: "Upload the document package from your seller or property manager. ClearCondo prices every red flag per unit and traces each claim to its page, before your conditions come off.",
+    href: "/app",
+    cta: "Analyze your documents",
   },
   {
-    title: "What you'll pay every year",
-    body: "Property tax on a typical unit, and whether the building's owners have appealed their assessments before.",
+    title: "Check the tax side after you buy",
+    body: "What the City says the building is worth against similar buildings, the property tax on a typical unit, and whether owners have appealed. Starting in Calgary.",
     href: "/calgary",
-    cta: "See tax & appeals",
+    cta: "Check a Calgary condo",
     preview: true,
   },
 ];
@@ -153,8 +153,8 @@ export default function LandingPage() {
       <section className="border-b border-line">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-24">
           <SectionHead
-            title="The real price has three parts."
-            body="The number on the listing, what the documents say you'll owe, and what you'll keep paying after you move in. ClearCondo shows all three."
+            title="Three ways to stop overpaying."
+            body="See what a report finds, check your own condo's documents before you buy, then check the tax side once you own."
           />
           <div className="grid grid-cols-[minmax(0,1fr)] md:grid-cols-3 gap-4">
             {PRICE_PARTS.map((p, i) => (

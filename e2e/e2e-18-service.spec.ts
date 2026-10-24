@@ -94,7 +94,8 @@ test("landing speaks to buyers and links the dashboard", async ({
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Stop overpaying for your condo");
   await expect(page.getByText("Before you buy", { exact: true })).toBeVisible();
   await expect(page.getByText("After you buy", { exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "The real price has three parts." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Three ways to stop overpaying." })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Analyze your documents/ })).toHaveAttribute("href", "/app");
   await expect(page.getByText(/realtors/i)).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: /traced to the page/ })
