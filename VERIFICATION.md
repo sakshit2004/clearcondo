@@ -14,8 +14,8 @@ runs had to be retried after transient ENOSPC.
 
 ## Fix commits made during this verification
 
-All on `verify/pre-submission`, each a small separate commit, authored as
-`sakshit <sakshit2004@gmail.com>`:
+All on `verify/pre-submission`, each a small separate commit by the repo
+owner:
 
 | SHA | Fix |
 |-----|-----|

@@ -10,7 +10,7 @@ import { PublicRecordsPending } from "@/components/PublicRecords";
 export const metadata: Metadata = {
   title: "Calgary condo public records — ClearCondo",
   description:
-    "A Calgary condo building's assessed value trend, similar buildings, and major permits from City of Calgary open data.",
+    "What a Calgary condo really costs: assessed value against similar buildings, property tax, past assessment appeals and major permits, from City of Calgary open data.",
 };
 
 /** Where "add documents" goes: the upload flow, with the building pre-filled. */
@@ -31,9 +31,13 @@ async function BuildingRecords({ params }: { params: Promise<{ plan: string }> }
 
   return (
     <>
-      <h1 className="font-bold text-3xl sm:text-4xl tracking-[-0.02em] text-ink mt-1.5 mb-6 break-words">
+      <h1 className="font-bold text-3xl sm:text-4xl tracking-[-0.02em] text-ink mt-1.5 break-words">
         {address ?? `Condo plan ${plan}`}
       </h1>
+      <p className="text-[17px] text-ink2 mt-2 mb-6 max-w-2xl">
+        What this condo really costs: its value against similar buildings, the property tax that comes with it, past
+        appeals and major work on record.
+      </p>
       <PublicRecordsSection check={check} lookup={{ addDocsHref: addDocsHref(plan, address) }} />
     </>
   );

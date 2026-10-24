@@ -17,6 +17,8 @@ export const CALGARY_DATASETS = {
   historicalRolls: "4ur7-wsgc",
   /** Building permits. */
   permits: "c2es-76ed",
+  /** Assessment Review Board complaints (2013 onward). */
+  reviewBoard: "myiv-ju9n",
 } as const;
 
 export type CalgaryDataset = (typeof CALGARY_DATASETS)[keyof typeof CALGARY_DATASETS];
@@ -25,6 +27,7 @@ export const DATASET_TITLES: Record<CalgaryDataset, string> = {
   "4bsw-nn7w": "Current Year Property Assessments",
   "4ur7-wsgc": "Historical Property Assessments",
   "c2es-76ed": "Building Permits",
+  "myiv-ju9n": "Assessment Review Board Complaints",
 };
 
 export type SocrataRow = Record<string, unknown>;
