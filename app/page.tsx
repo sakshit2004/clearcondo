@@ -1,19 +1,7 @@
 import Link from "next/link";
-import { readFileSync } from "fs";
-import { join } from "path";
-import { VerifiedAnalysisSchema } from "@/lib/report-schema";
-import { computeDeltas } from "@/lib/deltas";
-import { pointFromFacts } from "@/lib/timeline";
-import EvidenceDemo from "@/components/EvidenceDemo";
 import HeroScene from "@/components/HeroScene";
-import MemoryRecord, { recordRows } from "@/components/MemoryRecord";
 import Reveal from "@/components/Reveal";
-
-const STEPS = [
-  ["Add the documents", "Buying? Upload the PDFs from your seller or property manager: minutes, reserve study, bylaws."],
-  ["Get the real price", "Every red flag priced per unit and traced to its page, online or as a PDF for your lawyer, before conditions come off."],
-  ["Keep it lower", "Own it? Check your unit's property tax and get a savings estimate. You only pay if you save."],
-];
+import { Arrow, SectionHead } from "@/components/landing/parts";
 
 /** Where the two checks go after condos. Only "Now" is live. */
 const ROADMAP: { when: "Now" | "Next" | "Later"; what: string; before: string; own: string }[] = [
@@ -59,8 +47,8 @@ const TRACKS: {
       "Every claim traced to the page it came from",
       "City records for Calgary buildings: value trend, permits, appeals",
     ],
-    href: "/app",
-    cta: "Check a condo before you buy",
+    href: "/buyers",
+    cta: "ClearCondo for buyers",
     secondary: { href: "/demo", label: "See a sample report" },
     pricing: "Free during beta.",
   },
@@ -74,63 +62,14 @@ const TRACKS: {
       "How it sits against the rest of the building",
       "A savings estimate from comparable sales, on request",
     ],
-    href: "/app/own",
-    cta: "Check my property tax",
+    href: "/owners",
+    cta: "ClearCondo for owners",
     secondary: { href: "/demo/own", label: "See a sample report" },
     pricing: "You only pay if you save: 30% of the saving, plus $10/month for the software. Free during beta.",
   },
 ];
 
-/** The sample building's record across its two reviews (sample data). */
-function getSampleRecord() {
-  const load = (f: string) =>
-    VerifiedAnalysisSchema.parse(
-      JSON.parse(readFileSync(join(process.cwd(), "sample-data", f), "utf8"))
-    );
-  const older = load("sample-report-2024.json");
-  const newer = load("sample-report-2026.json");
-  const [from, to] = [older, newer].map((r, i) =>
-    pointFromFacts({
-      facts: r.structured_facts,
-      docDate: r.structured_facts.doc_date,
-      exposureCad: r.money_exposure_total_cad,
-      fallbackLabel: i === 0 ? "Earlier" : "Latest",
-      fallbackSortKey: String(i),
-    })
-  );
-  const b = newer.building;
-  return {
-    buildingName: b.name || "Sample building",
-    buildingMeta: b.corp_number ? `Corp No. ${b.corp_number}` : "",
-    fromLabel: from.label,
-    toLabel: to.label,
-    rows: recordRows(
-      [from.fundedPct, to.fundedPct],
-      computeDeltas(older.structured_facts, newer.structured_facts)
-    ),
-  };
-}
-
-function Arrow() {
-  return (
-    <svg className="nudge" width="16" height="16" viewBox="0 0 16 16" aria-hidden>
-      <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function SectionHead({ title, body }: { title: string; body: string }) {
-  return (
-    <Reveal className="max-w-2xl mb-10">
-      <h2 className="text-3xl sm:text-[40px] font-bold tracking-[-0.025em] leading-[1.1]">{title}</h2>
-      <p className="mt-3 text-lg text-muted leading-relaxed">{body}</p>
-    </Reveal>
-  );
-}
-
 export default function LandingPage() {
-  const record = getSampleRecord();
-
   return (
     <div>
       {/* Hero: full-bleed night scene, headline over it */}
@@ -144,30 +83,13 @@ export default function LandingPage() {
           >
             Stop overpaying for your condo.
           </h1>
-          <dl className="rise-in mt-6 max-w-2xl grid gap-4 text-lg leading-relaxed text-white/70" style={{ animationDelay: "180ms" }}>
-            <div className="flex flex-col sm:flex-row gap-1 sm:gap-4">
-              <dt className="flex-none sm:w-32 sm:pt-1 text-[13px] font-semibold uppercase tracking-[0.08em] text-white">
-                Before you buy
-              </dt>
-              <dd>
-                We read the document package and price what&apos;s buried in it:
-                special assessments, thin reserves, lawsuits, every claim traced
-                to its page.
-              </dd>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-1 sm:gap-4">
-              <dt className="flex-none sm:w-32 sm:pt-1 text-[13px] font-semibold uppercase tracking-[0.08em] text-white">
-                After you buy
-              </dt>
-              <dd>
-                We check whether you&apos;re paying too much property tax and
-                what you could save. Insurance, energy and your mortgage are next.
-              </dd>
-            </div>
-          </dl>
+          <p className="rise-in mt-6 max-w-2xl text-lg sm:text-xl leading-relaxed text-white/70" style={{ animationDelay: "180ms" }}>
+            The money side of a condo, in one place: what it really costs before you buy, and what you pay every
+            year once you own. Pick the one that&apos;s you.
+          </p>
           <div className="rise-in mt-8 flex flex-wrap items-center gap-3" style={{ animationDelay: "280ms" }}>
             <Link
-              href="/app"
+              href="/buyers"
               className="btn-lift inline-flex items-center gap-2.5 rounded-full bg-white text-ink font-semibold pl-6 pr-2 min-h-12"
             >
               I&apos;m buying a condo
@@ -176,7 +98,7 @@ export default function LandingPage() {
               </span>
             </Link>
             <Link
-              href="/app/own"
+              href="/owners"
               className="inline-flex items-center gap-2.5 rounded-full border border-white/30 hover:border-white text-white font-semibold pl-6 pr-2 min-h-12 transition-colors"
             >
               I own a condo
@@ -196,7 +118,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-24">
           <SectionHead
             title="Two ways to stop overpaying."
-            body="One before you buy, one for every year after. Pick the one you need."
+            body="Buying and owning are different jobs, so they get different tools. Pick the one you need."
           />
           <div className="grid grid-cols-[minmax(0,1fr)] md:grid-cols-2 gap-5">
             {TRACKS.map((t, i) => {
@@ -257,49 +179,6 @@ export default function LandingPage() {
               );
             })}
           </div>
-        </div>
-      </section>
-
-      {/* Verification */}
-      <section className="bg-surface border-b border-line">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-24">
-          <SectionHead
-            title="Every red flag, traced to the page."
-            body="Every claim is matched to the sentence it came from. If we can't find it, the flag is downgraded and loses its dollar figure."
-          />
-          <EvidenceDemo />
-        </div>
-      </section>
-
-      {/* Building memory */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-24">
-        <SectionHead
-          title="The building remembers."
-          body="Every building keeps one record of what it really costs. Each new package is checked against what we already verified, and facts that changed are dated, not overwritten."
-        />
-        <MemoryRecord {...record} />
-        <Reveal className="mt-5">
-          <p className="text-sm text-subtle max-w-2xl">
-            Only verified facts are written to a building&apos;s record, so it
-            can&apos;t drift on a guess. Sample data shown.
-          </p>
-        </Reveal>
-      </section>
-
-      {/* How it works */}
-      <section className="border-t border-line">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20">
-          <ol className="grid grid-cols-[minmax(0,1fr)] md:grid-cols-3 gap-10 md:gap-8">
-            {STEPS.map(([title, body], i) => (
-              <Reveal key={title} delay={i * 100}>
-                <li className="border-t border-ink pt-5 list-none">
-                  <span className="data-label text-subtle">0{i + 1}</span>
-                  <h2 className="mt-2 text-xl font-bold tracking-[-0.01em]">{title}</h2>
-                  <p className="mt-1.5 text-muted">{body}</p>
-                </li>
-              </Reveal>
-            ))}
-          </ol>
         </div>
       </section>
 
@@ -366,10 +245,10 @@ export default function LandingPage() {
             <div className="rounded-[14px] border border-white/15 p-6 flex flex-col">
               <span className="micro-label text-white/60">Buying</span>
               <p className="mt-2 text-[#c3cad4] leading-relaxed flex-1">
-                Upload the document package. PDFs are read in memory and never stored.
+                What the document package hides, priced per unit, before your conditions come off.
               </p>
               <Link
-                href="/app"
+                href="/buyers"
                 className="btn-lift mt-5 self-start inline-flex items-center gap-2.5 rounded-[10px] bg-white text-ink font-semibold px-6 min-h-12"
               >
                 I&apos;m buying a condo <Arrow />
@@ -378,10 +257,10 @@ export default function LandingPage() {
             <div className="rounded-[14px] bg-white/[0.06] border border-white/15 p-6 flex flex-col">
               <span className="micro-label text-white/60">Owning</span>
               <p className="mt-2 text-[#c3cad4] leading-relaxed flex-1">
-                Check your unit&apos;s property tax. You only pay if you save.
+                Whether you&apos;re paying too much property tax, and what you could save.
               </p>
               <Link
-                href="/app/own"
+                href="/owners"
                 className="btn-lift mt-5 self-start inline-flex items-center gap-2.5 rounded-[10px] bg-white text-ink font-semibold px-6 min-h-12"
               >
                 I own a condo <Arrow />

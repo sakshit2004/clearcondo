@@ -5,9 +5,9 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   async redirects() {
-    // The owner side moved behind sign-in (/app/own); keep old links working.
+    // Old owner links: /own is now /owners; the property tax check lives in /app/own.
     return [
-      { source: "/own", destination: "/app/own", permanent: false },
+      { source: "/own", destination: "/owners", permanent: false },
       { source: "/calgary", destination: "/app/own", permanent: false },
       { source: "/calgary/:plan", destination: "/app/own/:plan", permanent: false },
     ];
