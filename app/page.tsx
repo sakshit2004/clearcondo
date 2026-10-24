@@ -15,6 +15,28 @@ const STEPS = [
   ["Keep it lower", "Own it? Check your property tax, free for any Calgary condo. Insurance, energy and your mortgage are next."],
 ];
 
+/** Where the two checks go after condos. Only "Now" is live. */
+const ROADMAP: { when: "Now" | "Next" | "Later"; what: string; before: string; own: string }[] = [
+  {
+    when: "Now",
+    what: "Condos",
+    before: "the document package, every red flag priced and traced to its page.",
+    own: "property tax, live in Calgary; insurance, energy and your mortgage next.",
+  },
+  {
+    when: "Next",
+    what: "Houses",
+    before: "the home inspection, title and survey.",
+    own: "property tax first: the same assessment check, for detached and semi-detached homes.",
+  },
+  {
+    when: "Later",
+    what: "Land",
+    before: "zoning, land-use applications and title.",
+    own: "property tax and land-use changes nearby.",
+  },
+];
+
 /** Three ways in: see a report, check your own documents, check the tax side. */
 const PRICE_PARTS: { title: string; body: string; href: string; cta: string; preview?: boolean }[] = [
   {
@@ -233,8 +255,34 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-24">
           <SectionHead
             title="Buying is the first bill. Owning is the rest."
-            body="ClearCondo starts with the purchase: what a condo will really cost you before you own it. Then it keeps the cost of owning down, starting with property tax: every Calgary building page already shows its assessment, the tax that comes with it and its appeal history. Insurance, energy and your mortgage are next. One record of what your condo actually costs you."
+            body="ClearCondo starts with the purchase: what a condo will really cost you before you own it. Then it keeps the cost of owning down, starting with property tax: every Calgary building page already shows its assessment, the tax that comes with it and its appeal history. Insurance, energy and your mortgage are next. We're starting with condos; the same two checks, before you buy and once you own, work for any home."
           />
+          <ol className="grid grid-cols-[minmax(0,1fr)] md:grid-cols-3 gap-4 mb-10" aria-label="Where ClearCondo goes next">
+            {ROADMAP.map((r, i) => (
+              <Reveal key={r.what} delay={i * 100}>
+                <li
+                  className={`list-none h-full rounded-[14px] p-6 ${
+                    r.when === "Now" ? "bg-white border border-ink" : "bg-white/60 border border-dashed border-line2"
+                  }`}
+                >
+                  <span
+                    className={`rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
+                      r.when === "Now" ? "bg-ink text-white" : "bg-info-soft text-info-dark"
+                    }`}
+                  >
+                    {r.when}
+                  </span>
+                  <h3 className="mt-3 text-xl font-bold tracking-[-0.01em] text-ink">{r.what}</h3>
+                  <p className="mt-2 text-sm text-muted leading-relaxed">
+                    <strong className="text-ink font-semibold">Before you buy:</strong> {r.before}
+                  </p>
+                  <p className="mt-1.5 text-sm text-muted leading-relaxed">
+                    <strong className="text-ink font-semibold">Once you own:</strong> {r.own}
+                  </p>
+                </li>
+              </Reveal>
+            ))}
+          </ol>
           <Reveal>
             <Link href="/own" className={primaryBtn}>
               See how owners save <Arrow />
