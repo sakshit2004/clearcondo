@@ -10,9 +10,32 @@ import MemoryRecord, { recordRows } from "@/components/MemoryRecord";
 import Reveal from "@/components/Reveal";
 
 const STEPS = [
-  ["Upload the package", "The PDFs from your seller or property manager: minutes, reserve study, bylaws."],
-  ["We check every page", "Each risk is matched to the exact sentence that supports it."],
-  ["Get the report", "Online, or as a PDF to take to your lawyer before conditions come off."],
+  ["Look up the building", "Free for any Calgary condo, no sign-in: what it's worth, its major work, the tax that comes with it."],
+  ["Add the documents", "The PDFs from your seller or property manager: minutes, reserve study, bylaws."],
+  ["Get the real price", "Every red flag priced per unit and traced to its page, online or as a PDF for your lawyer, before conditions come off."],
+];
+
+/** The three parts of what a condo really costs, each with where to see it. */
+const PRICE_PARTS: { title: string; body: string; href: string; cta: string; preview?: boolean }[] = [
+  {
+    title: "What the documents hide",
+    body: "Special assessments, reserve shortfalls, lawsuits and insurance deductibles, priced per unit and quoted from the page they came from.",
+    href: "/demo",
+    cta: "See a sample report",
+  },
+  {
+    title: "What the public record shows",
+    body: "The building's assessed value against similar buildings and its major roof, envelope and parkade permits, from City of Calgary open data.",
+    href: "/calgary",
+    cta: "Look up a Calgary condo",
+  },
+  {
+    title: "What you'll pay every year",
+    body: "Property tax on a typical unit, and whether the building's owners have appealed their assessments before.",
+    href: "/calgary",
+    cta: "See tax & appeals",
+    preview: true,
+  },
 ];
 
 /** The sample building's record across its two reviews (sample data). */
@@ -110,6 +133,40 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* The real price */}
+      <section className="border-b border-line">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-24">
+          <SectionHead
+            title="The real price has three parts."
+            body="The number on the listing, what the documents say you'll owe, and what you'll keep paying after you move in. ClearCondo shows all three."
+          />
+          <div className="grid grid-cols-[minmax(0,1fr)] md:grid-cols-3 gap-4">
+            {PRICE_PARTS.map((p, i) => (
+              <Reveal key={p.title} delay={i * 100}>
+                <Link
+                  href={p.href}
+                  className="group flex h-full flex-col rounded-[14px] border border-line bg-white p-6 hover:border-ink transition-colors no-underline"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="data-label text-subtle">0{i + 1}</span>
+                    {p.preview && (
+                      <span className="rounded-md bg-ink text-white px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide">
+                        Preview
+                      </span>
+                    )}
+                  </span>
+                  <h3 className="mt-3 text-xl font-bold tracking-[-0.01em] text-ink">{p.title}</h3>
+                  <p className="mt-2 text-muted leading-relaxed flex-1">{p.body}</p>
+                  <span className="mt-5 inline-flex items-center gap-2 font-semibold text-ink">
+                    {p.cta} <Arrow />
+                  </span>
+                </Link>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Verification */}
       <section className="bg-surface border-b border-line">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-24">
@@ -125,7 +182,7 @@ export default function LandingPage() {
       <section className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-24">
         <SectionHead
           title="The building remembers."
-          body="Same corporation number, same building. Each new package is checked against what we already verified, and facts that changed are dated, not overwritten."
+          body="Every building keeps one record of what it really costs. Each new package is checked against what we already verified, and facts that changed are dated, not overwritten."
         />
         <MemoryRecord {...record} />
         <Reveal className="mt-5">
@@ -158,8 +215,13 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-24">
           <SectionHead
             title="Buying is the first bill. Owning is the rest."
-            body="ClearCondo starts with the purchase — what a condo will really cost you before you own it. Next we're building the same check for property tax assessments: if a city overvalues your home, we flag it and build the appeal. One record of what your property actually costs you."
+            body="ClearCondo starts with the purchase: what a condo will really cost you before you own it. What comes after has started too: every Calgary building page already shows its property tax and assessment appeal history. Next, the same check for your own assessment: if the City overvalues your home, we flag it and help you build the appeal. One record of what your property actually costs you."
           />
+          <Reveal>
+            <Link href="/calgary" className={primaryBtn}>
+              See a building&apos;s tax &amp; appeals <Arrow />
+            </Link>
+          </Reveal>
         </div>
       </section>
 
@@ -168,7 +230,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 flex flex-wrap items-end justify-between gap-8">
           <div className="max-w-xl">
             <h2 className="text-3xl sm:text-4xl font-bold tracking-[-0.025em] leading-tight">
-              Know what you&apos;re buying into.
+              See the real price before you sign.
             </h2>
             <p className="mt-3 text-[#c3cad4]">
               PDFs are read in memory and never stored.{" "}
@@ -177,12 +239,20 @@ export default function LandingPage() {
               </Link>
             </p>
           </div>
-          <Link
-            href="/app"
-            className="btn-lift inline-flex items-center gap-2.5 rounded-[10px] bg-white text-ink font-semibold px-6 min-h-12"
-          >
-            Take me to dashboard <Arrow />
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/calgary"
+              className="inline-flex items-center rounded-[10px] border border-white/30 hover:border-white text-white font-semibold px-6 min-h-12 transition-colors"
+            >
+              Look up a Calgary condo
+            </Link>
+            <Link
+              href="/app"
+              className="btn-lift inline-flex items-center gap-2.5 rounded-[10px] bg-white text-ink font-semibold px-6 min-h-12"
+            >
+              Take me to dashboard <Arrow />
+            </Link>
+          </div>
         </div>
       </section>
     </div>
