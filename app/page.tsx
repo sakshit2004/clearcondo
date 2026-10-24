@@ -97,19 +97,35 @@ export default function LandingPage() {
       <section className="landing-hero relative isolate min-h-[max(640px,100svh)] bg-[#070a12] text-white overflow-hidden flex flex-col">
         <HeroScene />
         <div className="relative z-10 mt-auto mx-auto w-full max-w-6xl px-4 sm:px-6 pb-14 sm:pb-20 pt-40">
-          <p className="rise-in text-[15px] text-white/65">For condo buyers</p>
+          <p className="rise-in text-[15px] text-white/65">For condo buyers and owners</p>
           <h1
             className="rise-in mt-4 max-w-3xl font-semibold tracking-[-0.035em] leading-[1.02] text-[44px] sm:text-[64px] lg:text-[80px]"
             style={{ animationDelay: "80ms", textWrap: "balance" }}
           >
-            Don&apos;t overpay for a condo.
+            Stop overpaying for your condo.
           </h1>
-          <p className="rise-in mt-5 max-w-xl text-lg leading-relaxed text-white/70" style={{ animationDelay: "180ms" }}>
-            The list price isn&apos;t the real price. ClearCondo reads the full
-            document package and prices what&apos;s buried in it — special
-            assessments, thin reserves, lawsuits — every claim traced to the
-            page it came from, before your conditions expire.
-          </p>
+          <dl className="rise-in mt-6 max-w-2xl grid gap-4 text-lg leading-relaxed text-white/70" style={{ animationDelay: "180ms" }}>
+            <div className="flex flex-col sm:flex-row gap-1 sm:gap-4">
+              <dt className="flex-none sm:w-32 sm:pt-1 text-[13px] font-semibold uppercase tracking-[0.08em] text-white">
+                Before you buy
+              </dt>
+              <dd>
+                We read the document package and price what&apos;s buried in it:
+                special assessments, thin reserves, lawsuits, every claim traced
+                to its page.
+              </dd>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-1 sm:gap-4">
+              <dt className="flex-none sm:w-32 sm:pt-1 text-[13px] font-semibold uppercase tracking-[0.08em] text-white">
+                After you buy
+              </dt>
+              <dd>
+                We check what the City says your building is worth, the tax that
+                comes with it, and whether owners have appealed. Starting in
+                Calgary.
+              </dd>
+            </div>
+          </dl>
           <div className="rise-in mt-8 flex flex-wrap items-center gap-3" style={{ animationDelay: "280ms" }}>
             <Link
               href="/app"
@@ -230,7 +246,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 flex flex-wrap items-end justify-between gap-8">
           <div className="max-w-xl">
             <h2 className="text-3xl sm:text-4xl font-bold tracking-[-0.025em] leading-tight">
-              See the real price before you sign.
+              Don&apos;t overpay at the offer, or on the tax bill.
             </h2>
             <p className="mt-3 text-[#c3cad4]">
               PDFs are read in memory and never stored.{" "}

@@ -1,7 +1,7 @@
 # ClearCondo
 
-**Don't overpay for a condo.** The list price isn't the real price.
-ClearCondo reads a condo's document stack — reserve fund study, bylaws,
+**Stop overpaying for your condo — before you buy, and after.** Before
+you buy, ClearCondo reads a condo's document stack — reserve fund study, bylaws,
 board/AGM minutes, information statements — and prices what's buried in it:
 severity-grouped red flags, verbatim evidence quotes with source documents,
 dollar exposures, and questions to take to a realtor or lawyer. For Calgary
