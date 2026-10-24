@@ -22,7 +22,7 @@ test("landing page loads with 200 and no console errors", async ({ page }) => {
   // Brand + primary CTAs visible (exact name: the hero also has a
   // "See a sample report" link, so a fuzzy match hits two elements)
   await expect(
-    page.getByRole("link", { name: "Sample report", exact: true })
+    page.getByRole("link", { name: "Sample report", exact: true }).first()
   ).toBeVisible();
   expect(errors).toEqual([]);
 });

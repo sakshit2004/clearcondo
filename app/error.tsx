@@ -42,7 +42,7 @@ export default function Error({
         {tryAgain && (
           <button
             onClick={tryAgain}
-            className="bg-ink px-6 py-2.5 font-semibold text-white hover:bg-signal transition-colors"
+            className="bg-ink px-6 py-2.5 font-semibold text-white hover:bg-accent transition-colors"
           >
             Try again
           </button>

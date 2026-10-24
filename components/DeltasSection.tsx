@@ -3,9 +3,9 @@
 import type { Delta, DeltaEvidence } from "@/lib/deltas";
 
 const KIND_STYLES: Record<Delta["kind"], string> = {
-  new: "bg-signal text-white",
-  changed: "bg-ink text-white",
-  resolved: "bg-white text-stone-500 border border-stone-300",
+  new: "bg-signal-soft text-signal-dark",
+  changed: "bg-warn-soft text-warn-dark",
+  resolved: "bg-accent-soft text-accent-dark",
 };
 
 const KIND_LABELS: Record<Delta["kind"], string> = {
@@ -16,7 +16,7 @@ const KIND_LABELS: Record<Delta["kind"], string> = {
 
 function DeltaEvidenceQuote({ e, label }: { e: DeltaEvidence; label: string }) {
   return (
-    <blockquote className="border-l-2 border-ink pl-4 mt-2.5">
+    <blockquote className="rounded-[10px] bg-surface px-4 py-3 mt-2.5">
       <p className="text-[15px] leading-relaxed text-stone-700">“{e.quote}”</p>
       <cite className="data-label text-stone-400 not-italic block mt-1.5">
         <span className="font-medium">{label}:</span> {e.document_name}
@@ -44,7 +44,7 @@ export default function DeltasSection({ deltas }: { deltas: Delta[] }) {
           <div key={i} className="border-b border-stone-200 pb-5 last:border-0 last:pb-0">
             <div className="flex flex-wrap items-center gap-2.5 mb-1.5">
               <span
-                className={`micro-label px-2 py-1 ${KIND_STYLES[d.kind]}`}
+                className={`rounded-md px-2 py-0.5 text-xs font-semibold ${KIND_STYLES[d.kind]}`}
               >
                 {KIND_LABELS[d.kind]}
               </span>

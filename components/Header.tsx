@@ -2,30 +2,28 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { isClerkConfigured } from "@/lib/auth";
 import { Show, UserButton } from "@clerk/nextjs";
+import Logo from "./Logo";
+
+const navLink =
+  "nav-link hidden sm:inline text-[15px] text-muted hover:text-ink transition-colors";
 
 export default function Header() {
   const configured = isClerkConfigured();
   return (
-    <header className="bg-white sticky top-0 z-40 border-b border-ink">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center justify-between">
-        <Link href="/" className="flex items-baseline gap-2.5">
-          <span className="w-2.5 h-2.5 bg-signal inline-block translate-y-[-1px]" aria-hidden />
-          <span className="font-bold text-[17px] tracking-tight text-ink">
-            ClearCondo
-          </span>
+    <header className="bg-white/90 backdrop-blur sticky top-0 z-40 border-b border-line">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        <Link href="/" aria-label="ClearCondo home">
+          <Logo size={28} animate />
         </Link>
         <nav className="flex items-center gap-5 sm:gap-7">
-          <Link
-            href="/order"
-            className="micro-label hidden sm:inline text-stone-500 hover:text-ink transition-colors"
-          >
-            Order a report
+          <Link href="/#how" className={navLink}>
+            How it works
           </Link>
-          <Link
-            href="/demo"
-            className="micro-label hidden sm:inline text-stone-500 hover:text-ink transition-colors"
-          >
+          <Link href="/demo" className={navLink}>
             Sample report
+          </Link>
+          <Link href="/order" className={navLink}>
+            Order a report
           </Link>
           {configured ? (
             /* Auth state is runtime data: under Cache Components the
@@ -35,13 +33,13 @@ export default function Header() {
               <Show when="signed-out">
                 <Link
                   href="/sign-in"
-                  className="micro-label text-stone-500 hover:text-ink whitespace-nowrap transition-colors"
+                  className="nav-link text-[15px] text-muted hover:text-ink whitespace-nowrap transition-colors"
                 >
                   Sign in
                 </Link>
                 <Link
                   href="/app/new"
-                  className="bg-ink hover:bg-signal text-white micro-label px-4 py-2.5 whitespace-nowrap transition-colors"
+                  className="btn-lift bg-ink hover:bg-accent text-white text-[15px] font-semibold px-4 min-h-11 inline-flex items-center rounded-lg whitespace-nowrap"
                 >
                   Analyze documents
                 </Link>
@@ -49,7 +47,7 @@ export default function Header() {
               <Show when="signed-in">
                 <Link
                   href="/app"
-                  className="micro-label text-stone-500 hover:text-ink whitespace-nowrap transition-colors"
+                  className="nav-link text-[15px] text-muted hover:text-ink whitespace-nowrap transition-colors"
                 >
                   Dashboard
                 </Link>
@@ -57,7 +55,7 @@ export default function Header() {
               </Show>
             </Suspense>
           ) : (
-            <span className="micro-label text-stone-500 border border-stone-300 px-3 py-1.5 whitespace-nowrap">
+            <span className="rounded-md border border-line2 px-2.5 py-1 text-xs font-semibold text-subtle whitespace-nowrap">
               Auth not configured
             </span>
           )}

@@ -44,7 +44,7 @@ export default async function OrderStatusPage({
         </p>
         <Link
           href="/order"
-          className="inline-block mt-7 font-semibold text-ink underline underline-offset-4 decoration-stone-300 hover:decoration-signal"
+          className="inline-block mt-7 font-semibold text-ink underline underline-offset-4 decoration-stone-300 hover:decoration-accent"
         >
           Go to the order desk →
         </Link>
