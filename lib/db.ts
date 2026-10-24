@@ -13,6 +13,9 @@ import type { PageText } from "./extract";
 import type { CityRecords, CityRecordsCache } from "./calgary/check";
 import type { SearchableDoc } from "./calgary/permits";
 import type { PublicRecordFact } from "./calgary/facts";
+import type { OwnerRequest } from "./owner";
+import type { UnitRecord } from "./calgary/unit";
+import { annualTax } from "./calgary/appeals.ts";
 
 /* ------------------------------------------------------------------ */
 /* Connection                                                          */
@@ -766,6 +769,143 @@ export async function listPublicRecordFacts(
      ORDER BY observed_on DESC`,
     { b: buildingId, owner: ownerId }
   );
+}
+
+/* ------------------------------------------------------------------ */
+/* Owner savings-estimate requests                                     */
+/* ------------------------------------------------------------------ */
+
+export interface OwnerPropertyRow {
+  id: string;
+  plan: string;
+  unit: string;
+  address: string;
+  assessed_value?: number;
+  roll_year?: number;
+  prev_value?: number;
+  prev_year?: number;
+  est_tax?: number;
+  complaints_filed?: number;
+  checked_at: string;
+  /** Latest estimate request for this property, if any. */
+  requested_at?: string;
+}
+
+/**
+ * Save (or refresh) the unit an owner looked up, with its assessment as
+ * of this check. Keyed by owner + plan + unit; returns the record id.
+ */
+export async function upsertOwnerProperty(
+  db: Surreal,
+  ownerId: string,
+  u: UnitRecord & { plan: string }
+): Promise<string> {
+  const params = {
+    owner: ownerId,
+    plan: u.plan,
+    unit: u.unit,
+    address: u.address,
+    value: opt(u.assessed_value),
+    year: opt(u.roll_year),
+    prevValue: opt(u.prev_value),
+    prevYear: opt(u.prev_year),
+    tax: u.assessed_value != null ? Math.round(annualTax(u.assessed_value)) : undefined,
+    filed: u.complaints ? u.complaints.reduce((n, y) => n + y.filed, 0) : undefined,
+  };
+  const existing = await q<{ id: unknown }[]>(
+    db,
+    "SELECT id FROM owner_property WHERE owner_id = $owner AND plan = $plan AND unit = $unit LIMIT 1",
+    params
+  );
+  const fields = `address = $address, assessed_value = $value, roll_year = $year,
+       prev_value = $prevValue, prev_year = $prevYear, est_tax = $tax,
+       complaints_filed = $filed, checked_at = time::now()`;
+  if (existing[0]) {
+    await q(db, `UPDATE type::record($id) SET ${fields}`, { ...params, id: rid(existing[0].id) });
+    return rid(existing[0].id);
+  }
+  const created = await q<{ id: unknown }[]>(
+    db,
+    `CREATE owner_property SET owner_id = $owner, plan = $plan, unit = $unit, ${fields} RETURN id`,
+    params
+  );
+  return rid(created[0].id);
+}
+
+/** An owner's saved properties, most recently checked first. */
+export async function listOwnerProperties(db: Surreal, ownerId: string): Promise<OwnerPropertyRow[]> {
+  const rows = await q<(Omit<OwnerPropertyRow, "id"> & { id: unknown })[]>(
+    db,
+    `SELECT *, (SELECT VALUE created_at FROM owner_request
+                WHERE owner_id = $owner AND property = $parent.id
+                ORDER BY created_at DESC LIMIT 1)[0] AS requested_at
+     FROM owner_property WHERE owner_id = $owner ORDER BY checked_at DESC`,
+    { owner: ownerId }
+  );
+  const iso = (v: unknown) => (v instanceof Date ? v.toISOString() : String(v));
+  return rows.map((r) => ({
+    ...r,
+    id: rid(r.id),
+    checked_at: iso(r.checked_at),
+    requested_at: r.requested_at ? iso(r.requested_at) : undefined,
+  }));
+}
+
+/** The owner's saved property for a plan + unit, or null. */
+export async function getOwnerProperty(
+  db: Surreal,
+  ownerId: string,
+  plan: string,
+  unit: string
+): Promise<OwnerPropertyRow | null> {
+  const rows = (await listOwnerProperties(db, ownerId)).filter((r) => r.plan === plan && r.unit === unit);
+  return rows[0] ?? null;
+}
+
+/** Store an owner's savings-estimate request; returns its record id. */
+export async function createOwnerRequest(
+  db: Surreal,
+  ownerId: string,
+  r: OwnerRequest
+): Promise<string> {
+  // Link to the owner's saved property when there is one (only their own).
+  const prop = r.unit
+    ? await q<{ id: unknown }[]>(
+        db,
+        "SELECT id FROM owner_property WHERE owner_id = $owner AND plan = $plan AND unit = $unit LIMIT 1",
+        { owner: ownerId, plan: r.plan, unit: r.unit.toUpperCase() }
+      )
+    : [];
+  const created = await q<{ id: unknown }[]>(
+    db,
+    `CREATE owner_request CONTENT {
+       owner_id: $owner, property: $property, name: $name, email: $email, phone: $phone,
+       plan: $plan, address: $address, unit: $unit,
+       unit_size_sqft: $size, bedrooms: $beds, bathrooms: $baths,
+       parking: $parking, storage: $storage, renovations: $renovations,
+       condition_issues: $condition, past_complaint: $past, notes: $notes
+     } RETURN id`,
+    {
+      owner: ownerId,
+      property: prop[0]?.id ?? undefined,
+      name: r.name,
+      email: r.email,
+      phone: opt(r.phone),
+      plan: r.plan,
+      address: opt(r.address),
+      unit: opt(r.unit),
+      size: opt(r.unit_size_sqft),
+      beds: opt(r.bedrooms),
+      baths: opt(r.bathrooms),
+      parking: opt(r.parking),
+      storage: opt(r.storage),
+      renovations: opt(r.renovations),
+      condition: opt(r.condition_issues),
+      past: opt(r.past_complaint),
+      notes: opt(r.notes),
+    }
+  );
+  return rid(created[0].id);
 }
 
 /* ------------------------------------------------------------------ */
