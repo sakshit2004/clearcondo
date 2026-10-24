@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { estimateSaving, MAX_COMPARABLES, type OwnerEstimate } from "@/lib/owner-estimate";
+import EstimateCard from "./EstimateCard";
 
 const input =
   "w-full rounded-lg border border-line2 bg-white px-3.5 min-h-[46px] text-[15px] text-ink placeholder:text-subtle focus:outline-2 focus:outline-accent focus:outline-offset-1 focus:border-accent";
@@ -19,10 +21,22 @@ function Field({ id, label, optional, children }: { id: string; label: string; o
   );
 }
 
+const COMP_ROWS = 3;
+type Comp = { price: string; sqft: string; date: string };
+const emptyComps = (): Comp[] => Array.from({ length: COMP_ROWS }, () => ({ price: "", sqft: "", date: "" }));
+
+/** "720" -> 720; blank or junk -> undefined. */
+const num = (v: string) => {
+  const n = Number(v.replace(/[$,\s]/g, ""));
+  return v.trim() && Number.isFinite(n) && n > 0 ? n : undefined;
+};
+
 /**
- * "Get my savings estimate": the owner's contact details plus the facts
- * open data can't see (size, condition, parking…), posted to
- * /api/owner-requests. We reply with a savings number by email.
+ * "Get my savings estimate": the owner's contact details, the facts open
+ * data can't see (size, condition, parking…) and any evidence they have
+ * (a purchase, an appraisal, similar sales), posted to /api/owner-requests.
+ * The evidence drives a live instant estimate (lib/owner-estimate.ts); we
+ * confirm a real number by email.
  */
 export default function OwnerRequestForm({
   plan,
@@ -31,6 +45,7 @@ export default function OwnerRequestForm({
   defaultName = "",
   defaultEmail = "",
   alreadyRequested = false,
+  assessedValue = null,
 }: {
   plan: string;
   address: string | null;
@@ -38,9 +53,32 @@ export default function OwnerRequestForm({
   defaultName?: string;
   defaultEmail?: string;
   alreadyRequested?: boolean;
+  /** The unit's City value; without it there's nothing to estimate against. */
+  assessedValue?: number | null;
 }) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [size, setSize] = useState("");
+  const [purchase, setPurchase] = useState({ price: "", date: "" });
+  const [appraisal, setAppraisal] = useState({ value: "", date: "" });
+  const [comps, setComps] = useState<Comp[]>(emptyComps);
+  const [sentEstimate, setSentEstimate] = useState<OwnerEstimate | null>(null);
+
+  const comparables = comps
+    .map((c) => ({ price: num(c.price), sqft: num(c.sqft), date: c.date || undefined }))
+    .filter((c) => c.price || c.sqft)
+    .slice(0, MAX_COMPARABLES);
+  const evidence = {
+    unit_size_sqft: num(size),
+    purchase_price: num(purchase.price),
+    purchase_date: purchase.date || undefined,
+    appraisal_value: num(appraisal.value),
+    appraisal_date: appraisal.date || undefined,
+    comparables,
+  };
+  const estimate = assessedValue ? estimateSaving({ assessed_value: assessedValue, ...evidence }) : null;
+  const setComp = (i: number, k: keyof Comp, v: string) =>
+    setComps((cs) => cs.map((c, j) => (j === i ? { ...c, [k]: v } : c)));
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -59,7 +97,8 @@ export default function OwnerRequestForm({
           name: get("name"),
           email: get("email"),
           phone: get("phone"),
-          unit_size_sqft: get("unit_size_sqft"),
+          ...evidence,
+          assessed_value: assessedValue ?? undefined,
           bedrooms: get("bedrooms"),
           bathrooms: get("bathrooms"),
           parking: get("parking"),
@@ -73,6 +112,7 @@ export default function OwnerRequestForm({
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.error ?? "Couldn't send your request. Please try again.");
+      setSentEstimate(body?.estimate ?? estimate);
       setStatus("sent");
     } catch (err) {
       setError((err as Error).message);
@@ -82,12 +122,15 @@ export default function OwnerRequestForm({
 
   if (status === "sent") {
     return (
-      <div className="rounded-xl bg-accent-soft p-5" role="status">
-        <p className="font-semibold text-accent-dark">Request sent.</p>
-        <p className="text-sm text-stone-700 mt-1 leading-relaxed">
-          We&apos;ll look at your unit against comparable sales and reply by email with your potential saving.
-          Nothing is filed with the City without your go-ahead.
-        </p>
+      <div className="space-y-4">
+        <div className="rounded-xl bg-accent-soft p-5" role="status">
+          <p className="font-semibold text-accent-dark">Request sent.</p>
+          <p className="text-sm text-stone-700 mt-1 leading-relaxed">
+            We&apos;ll check your unit against recent comparable sales and reply by email to confirm your potential
+            saving. Nothing is filed with the City without your go-ahead.
+          </p>
+        </div>
+        {sentEstimate && sentEstimate.status !== "not_enough" && <EstimateCard estimate={sentEstimate} />}
       </div>
     );
   }
@@ -123,7 +166,7 @@ export default function OwnerRequestForm({
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <Field id="or-size" label="Size (sq ft)">
-            <input id="or-size" name="unit_size_sqft" type="number" min={0} max={20000} inputMode="numeric" placeholder="e.g. 720" className={input} />
+            <input id="or-size" name="unit_size_sqft" type="number" min={0} max={20000} inputMode="numeric" placeholder="e.g. 720" value={size} onChange={(e) => setSize(e.target.value)} className={input} />
           </Field>
           <Field id="or-beds" label="Bedrooms">
             <input id="or-beds" name="bedrooms" type="number" min={0} max={20} inputMode="numeric" className={input} />
@@ -156,6 +199,56 @@ export default function OwnerRequestForm({
               <option>Yes, no change</option>
             </select>
           </Field>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend className="text-sm font-semibold">
+          Your evidence <span className={hint}>(optional, for an instant estimate)</span>
+        </legend>
+        <p className="text-[13px] text-subtle mt-1 mb-3">
+          2026 values reflect the market on July 1, 2025, so use prices from around then.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field id="or-pp" label="What you paid">
+            <input id="or-pp" inputMode="numeric" placeholder="e.g. 385000" value={purchase.price} onChange={(e) => setPurchase((p) => ({ ...p, price: e.target.value }))} className={input} />
+          </Field>
+          <Field id="or-pd" label="Month you bought">
+            <input id="or-pd" type="month" placeholder="2025-03" value={purchase.date} onChange={(e) => setPurchase((p) => ({ ...p, date: e.target.value }))} className={input} />
+          </Field>
+          <Field id="or-av" label="Appraised value">
+            <input id="or-av" inputMode="numeric" placeholder="e.g. 390000" value={appraisal.value} onChange={(e) => setAppraisal((a) => ({ ...a, value: e.target.value }))} className={input} />
+          </Field>
+          <Field id="or-ad" label="Month of appraisal">
+            <input id="or-ad" type="month" placeholder="2025-05" value={appraisal.date} onChange={(e) => setAppraisal((a) => ({ ...a, date: e.target.value }))} className={input} />
+          </Field>
+        </div>
+
+        <p className="text-sm font-semibold mt-5">Sales of similar units</p>
+        <p className="text-[13px] text-subtle mt-0.5 mb-2">
+          In your building or nearby, from a listing site or your realtor. Uses your unit size above.
+        </p>
+        <div className="space-y-2">
+          <div className="hidden sm:grid grid-cols-3 gap-3 text-[12px] font-semibold text-stone-500">
+            <span>Sale price</span>
+            <span>Size (sq ft)</span>
+            <span>Month sold (optional)</span>
+          </div>
+          {comps.map((c, i) => (
+            <div key={i} className="grid grid-cols-3 gap-2 sm:gap-3">
+              <input aria-label={`Sale ${i + 1} price`} inputMode="numeric" placeholder="Price" value={c.price} onChange={(e) => setComp(i, "price", e.target.value)} className={`${input} min-w-0 !px-2.5 sm:!px-3.5`} />
+              <input aria-label={`Sale ${i + 1} size in square feet`} inputMode="numeric" placeholder="Sq ft" value={c.sqft} onChange={(e) => setComp(i, "sqft", e.target.value)} className={`${input} min-w-0 !px-2.5 sm:!px-3.5`} />
+              <input aria-label={`Sale ${i + 1} month`} type="month" value={c.date} onChange={(e) => setComp(i, "date", e.target.value)} className={`${input} min-w-0 !px-2.5 sm:!px-3.5`} />
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4">
+          {estimate ? (
+            <EstimateCard estimate={estimate} />
+          ) : (
+            <p className="text-[13px] text-subtle">Pick your unit above to see an instant estimate.</p>
+          )}
         </div>
       </fieldset>
 

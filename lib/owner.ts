@@ -52,6 +52,25 @@ const optNumber = (max: number) =>
       return n;
     });
 
+const optMonth = z
+  .string()
+  .trim()
+  .optional()
+  .transform((v, ctx) => {
+    if (!v) return undefined;
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(v)) {
+      ctx.addIssue({ code: "custom", message: "Use a month, e.g. 2025-06." });
+      return z.NEVER;
+    }
+    return v;
+  });
+
+const ComparableSchema = z.object({
+  price: optNumber(20_000_000),
+  sqft: optNumber(20_000),
+  date: optMonth,
+});
+
 /**
  * What an owner sends for a savings estimate. Only contact details and the
  * building are required; the rest are the facts open data can't see, which
@@ -73,6 +92,14 @@ export const OwnerRequestSchema = z.object({
   condition_issues: optText(1000),
   past_complaint: optText(200),
   notes: optText(2000),
+  // Evidence for the instant estimate (lib/owner-estimate.ts).
+  purchase_price: optNumber(20_000_000),
+  purchase_date: optMonth,
+  appraisal_value: optNumber(20_000_000),
+  appraisal_date: optMonth,
+  comparables: z.array(ComparableSchema).max(5).optional(),
+  /** The City's value shown to the owner; the estimate is set against it. */
+  assessed_value: optNumber(50_000_000),
   consent: z.literal(true, { message: "Please confirm we can contact you." }),
 });
 

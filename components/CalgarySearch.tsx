@@ -18,6 +18,32 @@ function SearchIcon() {
   );
 }
 
+function Spinner() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden className="flex-none text-accent animate-spin">
+      <circle cx="10" cy="10" r="7" stroke="currentColor" strokeOpacity="0.2" strokeWidth="2.2" fill="none" />
+      <path d="M17 10a7 7 0 00-7-7" stroke="currentColor" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Placeholder rows while the first results load. */
+function SkeletonRows() {
+  return (
+    <ul aria-hidden className="py-1.5">
+      {[0, 1, 2].map((i) => (
+        <li key={i} className="flex items-center gap-3 px-5 py-3">
+          <span className="w-[18px] h-[18px] rounded bg-[#eceee9] animate-pulse flex-none" />
+          <span className="flex-1 min-w-0 space-y-1.5">
+            <span className="block h-3.5 rounded bg-[#eceee9] animate-pulse" style={{ width: `${70 - i * 12}%` }} />
+            <span className="block h-3 rounded bg-[#f2f3ef] animate-pulse" style={{ width: `${45 - i * 6}%` }} />
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function BuildingIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden className="flex-none text-accent">
@@ -80,7 +106,10 @@ export default function CalgarySearch({ defaultValue = "" }: { defaultValue?: st
   }, []);
 
   const go = (r: CondoSearchResult) => router.push(ownerBuildingHref(r.plan, unit));
-  const showList = open && q.trim().length >= MIN && status !== "idle";
+  const term = q.trim();
+  const tooShort = term.length > 0 && term.length < MIN;
+  const loading = !tooShort && status === "loading";
+  const showList = open && (tooShort || (term.length >= MIN && status !== "idle"));
 
   return (
     <div ref={boxRef} className="relative">
@@ -96,7 +125,7 @@ export default function CalgarySearch({ defaultValue = "" }: { defaultValue?: st
         }}
         className="flex items-center gap-2 rounded-2xl bg-white border border-line2 shadow-[0_10px_30px_-12px_rgba(21,24,28,0.25)] pl-4 pr-2 py-2 focus-within:border-accent focus-within:ring-4 focus-within:ring-accent/15 transition"
       >
-        <SearchIcon />
+        {loading ? <Spinner /> : <SearchIcon />}
         <label htmlFor="calgary-q" className="sr-only">
           Street address or condo plan number
         </label>
@@ -107,6 +136,8 @@ export default function CalgarySearch({ defaultValue = "" }: { defaultValue?: st
           onChange={(e) => {
             setQ(e.target.value);
             setOpen(true);
+            // Show the loading state on the keystroke, not after the debounce.
+            if (e.target.value.trim().length >= MIN) setStatus("loading");
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={(e) => {
@@ -143,20 +174,35 @@ export default function CalgarySearch({ defaultValue = "" }: { defaultValue?: st
       </form>
 
       {showList && (
-        <div className="absolute z-30 left-0 right-0 mt-2 rounded-2xl bg-white border border-line shadow-[0_18px_40px_-16px_rgba(21,24,28,0.3)] overflow-hidden">
-          {status === "loading" && results.length === 0 && (
-            <p className="px-5 py-4 text-sm text-subtle">Searching the City roll…</p>
+        <div
+          className="absolute z-30 left-0 right-0 mt-2 rounded-2xl bg-white border border-line shadow-[0_18px_40px_-16px_rgba(21,24,28,0.3)] overflow-hidden"
+          aria-busy={loading}
+        >
+          {loading && <div className="loadbar !rounded-none !h-[3px]" aria-hidden />}
+          <p role="status" className="sr-only">
+            {loading ? "Searching the City roll" : status === "done" ? `${results.length} matching buildings` : ""}
+          </p>
+          {tooShort && (
+            <p className="px-5 py-4 text-sm text-subtle">
+              Keep typing: add the street, e.g. &ldquo;1203-1111 6 Ave SW&rdquo;, or a condo plan number.
+            </p>
           )}
-          {status === "error" && (
+          {loading && results.length === 0 && (
+            <>
+              <p className="px-5 pt-3.5 text-[13px] text-subtle">Searching the City roll…</p>
+              <SkeletonRows />
+            </>
+          )}
+          {!tooShort && status === "error" && (
             <p className="px-5 py-4 text-sm text-stone-600">City data unavailable. Press Search to try again.</p>
           )}
-          {status === "done" && results.length === 0 && (
+          {!tooShort && status === "done" && results.length === 0 && (
             <p className="px-5 py-4 text-sm text-stone-600">
               No condo buildings match. Try the street address as it appears on a tax notice, or the plan number.
             </p>
           )}
-          {results.length > 0 && (
-            <>
+          {!tooShort && results.length > 0 && (
+            <div className={loading ? "opacity-60 transition-opacity" : "transition-opacity"}>
               {nearbyStreet && (
                 <p className="px-5 pt-3.5 pb-1 text-[13px] text-subtle">
                   No condos at that number. Nearby on <strong className="text-ink">{nearbyStreet}</strong>:
@@ -191,7 +237,7 @@ export default function CalgarySearch({ defaultValue = "" }: { defaultValue?: st
                   </li>
                 ))}
               </ul>
-            </>
+            </div>
           )}
         </div>
       )}
