@@ -9,7 +9,7 @@ import { CALGARY_DATASETS, DATASET_TITLES, datasetPageUrl } from "@/lib/calgary/
 export const metadata: Metadata = {
   title: "Look up a Calgary condo — ClearCondo",
   description:
-    "Search any Calgary condo building by address or plan number: assessed value trend, similar buildings, and major permits from City of Calgary open data.",
+    "What will this condo really cost you? Search any Calgary condo for its assessed value against similar buildings, property tax, past assessment appeals and major permits, from City of Calgary open data.",
 };
 
 const MATCH_LABEL: Record<MatchQuality, string | null> = {
@@ -21,9 +21,21 @@ const MATCH_LABEL: Record<MatchQuality, string | null> = {
 };
 
 const WHAT_YOU_GET: [string, string, string][] = [
-  ["Building facts", "Plan number, units on the roll, address, community and year built, checked against the City's assessment roll.", "M3 16V3.5A1.5 1.5 0 014.5 2h6A1.5 1.5 0 0112 3.5V16M12 7h1.5A1.5 1.5 0 0115 8.5V16M1.5 16h15"],
-  ["Value over time", "Ten years of assessed values for the building, set against similar condos in the same community.", "M2 15l4.5-5 3 3L16 5M12 5h4v4"],
-  ["Major permits", "Roof, envelope, parkade, balcony and structural permits from the last 5 years, with declared values.", "M3 3h9l3 3v9H3zM6 8h6M6 11h4"],
+  [
+    "What it's worth",
+    "Ten years of City assessments for the building, against similar condos in the same community.",
+    "M2 15l4.5-5 3 3L16 5M12 5h4v4",
+  ],
+  [
+    "Property tax & appeals",
+    "The yearly tax on a typical unit, and whether owners have appealed their assessments before.",
+    "M3 2h12v14l-2-1.5L11 16l-2-1.5L7 16l-2-1.5L3 16zM6 6h6M6 9h6M6 12h3",
+  ],
+  [
+    "Major work on record",
+    "Roof, envelope, parkade, balcony and structural permits from the last 5 years, with declared values.",
+    "M3 3h9l3 3v9H3zM6 8h6M6 11h4",
+  ],
 ];
 
 function MatchBadge({ match }: { match: MatchQuality }) {
@@ -153,14 +165,14 @@ export default function CalgaryLookupPage({
     <div>
       <section className="bg-surface border-b border-line">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 pt-14 pb-12 sm:pt-20 sm:pb-16">
-          <span className="micro-label text-accent-dark">Calgary public records · free · no sign-in</span>
+          <span className="micro-label text-accent-dark">Calgary condos · free · no sign-in</span>
           <h1 className="font-bold text-[34px] sm:text-5xl tracking-[-0.03em] leading-[1.08] text-ink mt-3" style={{ textWrap: "balance" }}>
-            Check any Calgary condo before you read a single page.
+            What will this condo really cost you?
           </h1>
           <p className="text-[17px] text-ink2 mt-4 mb-8 max-w-2xl leading-relaxed">
-            Search by street address or condo plan number. ClearCondo pulls the building&apos;s record from City
-            of Calgary open data: what it&apos;s assessed at, how that compares to similar buildings, and what
-            major work has been permitted.
+            The list price is only the first bill. Search any Calgary condo for what the City says it&apos;s
+            worth, the property tax that comes with it, whether owners have appealed, and the major work on
+            record, before you read a single page.
           </p>
           <Suspense fallback={<CalgarySearch />}>
             <SearchArea searchParams={searchParams} />
@@ -173,7 +185,7 @@ export default function CalgaryLookupPage({
       </section>
 
       <section className="mx-auto max-w-5xl px-4 sm:px-6 py-14 sm:py-16">
-        <h2 className="font-bold text-2xl tracking-tight text-ink">What you&apos;ll see</h2>
+        <h2 className="font-bold text-2xl tracking-tight text-ink">The real price, from public records</h2>
         <div className="grid sm:grid-cols-3 gap-4 mt-6">
           {WHAT_YOU_GET.map(([title, body, icon]) => (
             <div key={title} className="report-paper p-6">
@@ -187,11 +199,11 @@ export default function CalgaryLookupPage({
         </div>
         <div className="mt-4 rounded-[14px] bg-ink text-white p-6 sm:p-7 flex flex-wrap items-center gap-x-8 gap-y-4">
           <div className="flex-1 min-w-64">
-            <h3 className="font-bold text-lg">Then add the documents for the full report</h3>
+            <h3 className="font-bold text-lg">Buying is the first bill. Owning is the rest.</h3>
             <p className="text-sm text-[#c3cad4] mt-1.5 leading-relaxed">
-              Minutes, reserve fund study and bylaws come from the seller or property manager. ClearCondo reads
-              them for special assessments, reserve health and litigation, checks every claim against its page,
-              and flags permits the minutes never mention.
+              Add the condo documents from your seller or property manager and ClearCondo prices what&apos;s buried
+              in them: special assessments, thin reserves, lawsuits, every claim traced to its page, plus any
+              permit the minutes never mention. Next, the same check for your property tax assessment.
             </p>
           </div>
           <Link

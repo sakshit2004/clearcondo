@@ -3,6 +3,7 @@ import type { CheckStatus, PublicRecordCheck, PermitWithMention } from "@/lib/ca
 import { PERMIT_CATEGORY_LABELS } from "@/lib/calgary/permits";
 import { CALGARY_DATASETS, DATASET_TITLES, datasetPageUrl } from "@/lib/calgary/socrata";
 import { cad, formatDate } from "@/lib/format";
+import AssessmentCheck from "./AssessmentCheck";
 
 export const PUBLIC_RECORDS_LABEL = "Public records (City of Calgary).";
 export const PUBLIC_RECORDS_SUBLABEL = "Context, not a verdict.";
@@ -237,6 +238,13 @@ export default function PublicRecordsSection({
       </div>
       </>
       )}
+
+      <AssessmentCheck
+        appeals={records.appeals}
+        currentMedian={records.current_median ?? null}
+        units={records.unit_count}
+        rollYear={records.roll_year}
+      />
 
       {/* b. Value trend */}
       <h3 className="font-bold text-lg text-ink mb-1">Assessed value over time</h3>
