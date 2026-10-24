@@ -91,7 +91,7 @@ export default function LandingPage() {
               href="/app"
               className="btn-lift inline-flex items-center gap-2.5 rounded-full bg-white text-ink font-semibold pl-6 pr-2 min-h-12"
             >
-              Send a document package
+              Take me to dashboard
               <span className="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center">
                 <Arrow />
               </span>
@@ -164,7 +164,7 @@ export default function LandingPage() {
             href="/app"
             className="btn-lift inline-flex items-center gap-2.5 rounded-[10px] bg-white text-ink font-semibold px-6 min-h-12"
           >
-            Send a document package <Arrow />
+            Take me to dashboard <Arrow />
           </Link>
         </div>
       </section>
