@@ -5,6 +5,7 @@ import { getUserId } from "@/lib/auth";
 import { isDbConfigured, listOwnerProperties, withDb, type OwnerPropertyRow } from "@/lib/db";
 import { cad, formatDate } from "@/lib/format";
 import { ownerBuildingHref } from "@/lib/owner-links";
+import { OWNER_BILLS } from "@/lib/owner-bills";
 import CalgarySearch from "@/components/CalgarySearch";
 import OwnerSearchResults from "@/components/owner/OwnerSearchResults";
 import OwnerPricing from "@/components/owner/OwnerPricing";
@@ -14,8 +15,6 @@ export const metadata: Metadata = {
   description: "Check your Calgary condo's property tax assessment, see the tax it means, and get a savings estimate.",
 };
 
-/** The other owner bills, in the order ClearCondo is taking them on. */
-const COMING = ["Home & condo insurance", "Energy & electricity", "Mortgage & refinancing"];
 
 const STEPS: [string, string][] = [
   ["Find your unit", "Search the address on your tax notice, with your unit number."],
@@ -135,12 +134,14 @@ export default async function OwnPage({ searchParams }: { searchParams: Promise<
             <h2 className="text-lg font-bold">Coming next</h2>
             <p className="text-sm text-subtle mt-1 mb-3">The other bills that come with owning a condo.</p>
             <ul className="space-y-2">
-              {COMING.map((c) => (
-                <li key={c} className="flex items-center justify-between gap-3 text-sm">
-                  <span className="text-ink">{c}</span>
+              {OWNER_BILLS.map((b) => (
+                <li key={b.slug}>
+                  <Link href={`/app/own/${b.slug}`} className="flex items-center justify-between gap-3 text-sm group no-underline">
+                  <span className="text-ink group-hover:underline underline-offset-2">{b.title}</span>
                   <span className="rounded-md bg-info-soft text-info-dark px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">
                     Soon
                   </span>
+                  </Link>
                 </li>
               ))}
             </ul>
