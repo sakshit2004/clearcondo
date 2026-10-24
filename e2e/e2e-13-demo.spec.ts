@@ -22,13 +22,13 @@ test("/demo renders the sample report with zero keys", async ({ page }) => {
   expect(resp?.status()).toBe(200);
 
   // Sample-data notice
-  await expect(page.getByText("Sample data")).toBeVisible();
+  await expect(page.getByText("Sample data").first()).toBeVisible();
 
   // Building header (2026 report)
   await expect(page.getByRole("heading", { name: "North Hill Terrace" })).toBeVisible();
 
   // "X of Y verified" stat
-  await expect(page.getByText(/claims verified against source documents/)).toBeVisible();
+  await expect(page.getByText(/claims verified against the source pages/)).toBeVisible();
   // "X of Y verified" stat — the count renders inside "13 of 13", not
   // as a standalone text node, so match the full phrase. It appears twice
   // by design: the cover stat and the verification-audit summary.

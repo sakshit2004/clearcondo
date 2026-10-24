@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { VerifiedAnalysisSchema } from "@/lib/report-schema";
 import { computeDeltas } from "@/lib/deltas";
-import ReportView from "@/components/ReportView";
+import ReportView, { ReportToolbar } from "@/components/ReportView";
 import { pointFromFacts } from "@/lib/timeline";
 
 function loadReport(file: string) {
@@ -43,40 +43,43 @@ export default function DemoPage() {
     .join(" · ");
 
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 py-10">
-      <div className="border border-stone-300 border-l-2 border-l-signal bg-white px-5 py-4 text-sm mb-8 flex flex-wrap items-center gap-x-3 gap-y-2">
-        <span className="micro-label bg-signal text-white px-2 py-1">
-          Sample data
-        </span>
-        <span className="text-stone-600">
-          Two fictional reviews of the same demo building — September 2024 and
-          October 2026 — showing how building memory tracks change over time.
-          Upload your own documents to analyze a real building.
-        </span>
-      </div>
-      <ReportView
-        report={{
-          buildingName: b.name || "Sample building",
-          buildingMeta: meta,
-          isSample: true,
-          analysis: newer,
-          deltas,
-          timeline,
-        }}
-      />
-      <div className="mt-10 text-center">
-        <Link
-          href="/app/new"
-          className="inline-block bg-ink text-white hover:bg-signal px-8 py-4 font-semibold text-lg transition-colors"
-        >
-          Analyze your own documents
-        </Link>
-        <div className="mt-4">
+    <div className="bg-surface min-h-full">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
+        <div className="rise-in rounded-[14px] border border-line bg-white px-5 py-4 text-sm mb-6 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span className="rounded-md bg-accent-soft text-accent-dark text-xs font-semibold px-2 py-1">
+            Sample data
+          </span>
+          <span className="text-muted">
+            Two fictional reviews of the same demo building — September 2024
+            and October 2026 — showing how building memory tracks change over
+            time. Open any flag to see the quote it came from.
+          </span>
+        </div>
+        <ReportToolbar backHref="/" backLabel="Home" pdfHref="/demo/print?download=1" />
+        <ReportView
+          report={{
+            buildingName: b.name || "Sample building",
+            buildingMeta: meta,
+            isSample: true,
+            analysis: newer,
+            deltas,
+            timeline,
+          }}
+          pdfHref="/demo/print?download=1"
+          storageKey="demo"
+        />
+        <div className="mt-12 flex flex-wrap items-center justify-center gap-3">
           <Link
-            href="/demo/print"
-            className="micro-label text-ink underline underline-offset-4 decoration-stone-300 hover:decoration-signal"
+            href="/order"
+            className="btn-lift inline-flex items-center rounded-[10px] bg-accent hover:bg-accent-dark text-white font-semibold px-7 min-h-12"
           >
-            See the client-ready print view — the report as delivered →
+            Send your own document package
+          </Link>
+          <Link
+            href="/app/new"
+            className="inline-flex items-center rounded-[10px] border border-line2 bg-white hover:border-ink font-semibold px-7 min-h-12 transition-colors"
+          >
+            Analyze documents yourself
           </Link>
         </div>
       </div>

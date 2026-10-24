@@ -44,7 +44,7 @@ export default async function DashboardPage() {
         </div>
         <Link
           href="/app/new"
-          className="bg-ink text-white hover:bg-signal px-5 py-2.5 font-semibold text-sm transition-colors"
+          className="bg-ink text-white hover:bg-accent px-5 py-2.5 font-semibold text-sm transition-colors"
         >
           New analysis
         </Link>
@@ -61,7 +61,7 @@ export default async function DashboardPage() {
           </p>
           <Link
             href="/app/new"
-            className="inline-block bg-ink text-white hover:bg-signal px-6 py-3 font-semibold text-sm transition-colors"
+            className="inline-block bg-ink text-white hover:bg-accent px-6 py-3 font-semibold text-sm transition-colors"
           >
             Analyze your first building
           </Link>

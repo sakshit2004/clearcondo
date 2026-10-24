@@ -100,7 +100,7 @@ export default function PrivacyPage() {
       <div className="mt-12">
         <Link
           href="/app/new"
-          className="inline-block bg-ink text-white hover:bg-signal px-7 py-3 font-semibold transition-colors"
+          className="inline-block bg-ink text-white hover:bg-accent px-7 py-3 font-semibold transition-colors"
         >
           Analyze your documents
         </Link>

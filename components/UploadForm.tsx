@@ -242,7 +242,7 @@ export default function UploadForm({
             setEphemeral(null);
             setFiles([]);
           }}
-          className="micro-label text-ink underline underline-offset-4 decoration-stone-300 hover:decoration-signal mb-6 inline-block"
+          className="micro-label text-ink underline underline-offset-4 decoration-stone-300 hover:decoration-accent mb-6 inline-block"
         >
           ← Analyze another building
         </button>
@@ -295,7 +295,7 @@ export default function UploadForm({
               name="building"
               checked={buildingId === null}
               onChange={() => setBuildingId(null)}
-              className="accent-signal"
+              className="accent-accent"
             />
             New building
           </label>
@@ -309,7 +309,7 @@ export default function UploadForm({
                 name="building"
                 checked={buildingId === c.id}
                 onChange={() => setBuildingId(c.id)}
-                className="accent-signal"
+                className="accent-accent"
               />
               <span className="font-medium">{c.name}</span>
               <span className="text-stone-500">
@@ -535,7 +535,7 @@ export default function UploadForm({
               <p className="text-sm text-red-800 mb-3">{error.error}</p>
               <a
                 href={error.checkoutUrl}
-                className="inline-block bg-ink text-white hover:bg-signal px-5 py-2.5 font-semibold text-sm transition-colors"
+                className="inline-block bg-ink text-white hover:bg-accent px-5 py-2.5 font-semibold text-sm transition-colors"
               >
                 Buy a report credit
               </a>
@@ -582,7 +582,7 @@ export default function UploadForm({
           checked={consent}
           onChange={(e) => setConsent(e.target.checked)}
           disabled={busy}
-          className="mt-1 w-4 h-4 flex-none accent-signal"
+          className="mt-1 w-4 h-4 flex-none accent-accent"
         />
         <span className="text-sm text-stone-600">
           I confirm I have the right to upload these documents and I
@@ -605,7 +605,7 @@ export default function UploadForm({
       <button
         onClick={run}
         disabled={busy || files.length === 0 || !consent}
-        className="mt-5 w-full bg-ink text-white hover:bg-signal disabled:bg-stone-300 disabled:text-stone-500 disabled:cursor-not-allowed px-6 py-4 font-semibold text-base transition-colors"
+        className="mt-5 w-full bg-ink text-white hover:bg-accent disabled:bg-stone-300 disabled:text-stone-500 disabled:cursor-not-allowed px-6 py-4 font-semibold text-base transition-colors"
       >
         {stage === "extracting"
           ? "Reading PDFs…"

@@ -14,7 +14,7 @@ test("order page renders the service form with no sign-in", async ({ page }) => 
   const res = await page.goto(`${BASE}/order`);
   expect(res?.status()).toBe(200);
   await expect(
-    page.getByRole("heading", { name: /Send the package\. Get the verdict\./ })
+    page.getByRole("heading", { name: "Send a document package" })
   ).toBeVisible();
   await expect(page.getByLabel(/Your name/)).toBeVisible();
   await expect(page.getByLabel(/Email for the finished report/)).toBeVisible();
@@ -23,7 +23,7 @@ test("order page renders the service form with no sign-in", async ({ page }) => 
   await expect(
     page.getByRole("button", { name: "Send the package" })
   ).toBeVisible();
-  await expect(page.getByText("The service promise")).toBeVisible();
+  await expect(page.getByText("Verified, or flagged")).toBeVisible();
 });
 
 test("order form refuses to send without the package attached", async ({
@@ -80,7 +80,7 @@ test("print view renders the client-ready report with a prepared-for cover", asy
     page.getByRole("heading", { name: "Risk over time" })
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Print or save as PDF" })
+    page.getByRole("button", { name: "Download PDF" })
   ).toBeVisible();
 });
 
@@ -89,7 +89,7 @@ test("landing leads with the service framing and links the order desk", async ({
 }) => {
   await page.goto(`${BASE}/`);
   await expect(
-    page.getByRole("heading", { name: /Send the package\. Get the verdict\./ })
+    page.getByRole("heading", { name: /traced to the page/ })
   ).toBeVisible();
   const cta = page
     .getByRole("link", { name: "Send a document package" })

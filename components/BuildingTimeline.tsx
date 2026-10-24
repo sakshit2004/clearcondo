@@ -4,7 +4,7 @@ import { fundedDelta, sortPoints, type TimelinePoint } from "@/lib/timeline";
 /**
  * Building risk timeline — reserve health, exposure, and deductible
  * across every review of the same building. The compounding memory,
- * drawn as one strip. Bars are black; red appears only below the 70%
+ * drawn as one strip. Bars are blue; orange appears only below the 70%
  * funded threshold the reserve studies themselves call "good".
  */
 export default function BuildingTimeline({
@@ -32,7 +32,7 @@ export default function BuildingTimeline({
           const below =
             p.fundedPct != null && p.fundedPct < 70;
           return (
-            <div key={i} className="border-t-2 border-ink pt-4 min-w-0">
+            <div key={i} className="border-t-2 border-line pt-4 min-w-0">
               <div className="data-label text-stone-500 mb-3">{p.label}</div>
               {p.fundedPct != null ? (
                 <>
@@ -44,9 +44,9 @@ export default function BuildingTimeline({
                       reserve funded
                     </span>
                   </div>
-                  <div className="h-[6px] bg-stone-100 mt-3 mb-2">
+                  <div className="h-[6px] rounded-full overflow-hidden bg-stone-100 mt-3 mb-2">
                     <div
-                      className={`h-full ${below ? "bg-signal" : "bg-ink"}`}
+                      className={`grow-x h-full rounded-full ${below ? "bg-signal" : "bg-accent"}`}
                       style={{
                         width: `${Math.min(100, Math.max(0, p.fundedPct))}%`,
                       }}

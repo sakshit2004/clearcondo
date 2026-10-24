@@ -149,7 +149,7 @@ export default async function BuildingHistoryPage({
       <div className="mt-8">
         <Link
           href="/app/new"
-          className="inline-block bg-ink text-white hover:bg-signal px-6 py-3 font-semibold text-sm transition-colors"
+          className="inline-block bg-ink text-white hover:bg-accent px-6 py-3 font-semibold text-sm transition-colors"
         >
           Upload fresh documents for this building
         </Link>
