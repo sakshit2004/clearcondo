@@ -4,6 +4,7 @@ import { isDbConfigured } from "@/lib/db";
 import { loadReportVM } from "@/lib/report-loader";
 import SetupNotice from "@/components/SetupNotice";
 import ReportPrint from "@/components/ReportPrint";
+import PublicRecords from "@/components/PublicRecords";
 
 /**
  * The PDF version of one of the user's reports. ?for= and ?brokerage=
@@ -41,6 +42,7 @@ export default async function ReportPrintPage({
       backHref={`/app/reports/${id}`}
       backLabel="Back to the interactive report"
       autoPrint={sp.download === "1"}
+      publicRecords={<PublicRecords userId={userId} reportId={id} />}
     />
   );
 }
