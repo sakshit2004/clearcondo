@@ -741,9 +741,8 @@ export async function recordPublicRecordFacts(
         sourceUrl: f.source_url,
         key: f.fact_key,
         categories: f.categories,
-        // undefined -> NONE for option<> fields
-        observed: f.observed_on ?? undefined,
-        value: f.declared_value_cad ?? undefined,
+        observed: opt(f.observed_on),
+        value: opt(f.declared_value_cad),
         text: f.text,
       }
     );
