@@ -108,17 +108,28 @@ describe("runRetentionCleanup", () => {
   it("deletes only documents older than the cutoff", async () => {
     const db = fakeDb([{ id: "document:1" }, { id: "document:2" }]);
     const result = await runRetentionCleanup(db, NOW);
-    assert.equal(db.calls.length, 1);
-    assert.match(db.calls[0].sql, /DELETE document WHERE created_at < \$cutoff/);
+    assert.equal(db.calls.length, 2);
+    // <datetime> cast: v3 never matches a string against a datetime field.
+    assert.match(db.calls[0].sql, /DELETE document WHERE created_at < <datetime>\$cutoff/);
     assert.equal(db.calls[0].params?.cutoff, "2026-09-18T12:00:00.000Z");
     assert.equal(result.documentsDeleted, 2);
     assert.equal(result.retentionDays, 30);
     assert.equal(result.cutoff, "2026-09-18T12:00:00.000Z");
   });
+  it("empties old service-order page text but keeps the order row", async () => {
+    const db = fakeDb();
+    await runRetentionCleanup(db, NOW);
+    const sql = db.calls[1].sql;
+    assert.match(sql, /^UPDATE service_order/);
+    assert.match(sql, /path: '\/pages', value: \[\]/);
+    assert.match(sql, /created_at < <datetime>\$cutoff/);
+    assert.ok(!/DELETE/.test(sql), "orders are never deleted");
+    assert.equal(db.calls[1].params?.cutoff, "2026-09-18T12:00:00.000Z");
+  });
   it("never touches report, flag, or building tables", async () => {
     const db = fakeDb();
     await runRetentionCleanup(db, NOW);
-    const sql = db.calls[0].sql.toLowerCase();
+    const sql = db.calls.map((c) => c.sql).join("\n").toLowerCase();
     assert.ok(!sql.includes("report"));
     assert.ok(!sql.includes("flag"));
     assert.ok(!sql.includes("building"));

@@ -16,6 +16,8 @@
  * | Building row                            | Kept until its last report is deleted  | Dedupe anchor and memory shell; removed when empty.      |
  * | Agent Memory beliefs (hosted service)   | Best-effort delete on report delete;   | The service exposes semantic forget per query, but no     |
  * |                                         | no auto-delete                         | bulk age-based purge — documented limitation.             |
+ * | Service-order page text                 | Emptied after RETENTION_DAYS; contact, | Same bulk text as documents; the order row stays so the   |
+ * | (`service_order.documents[*].pages`)    | property and file names kept           | ref-code status page keeps working.                      |
  * | Credit rows (Stripe test mode)          | Kept (billing record)                  | Out of scope for retention.                              |
  *
  * Auto-deletion runs as a daily Vercel Cron hitting
@@ -95,14 +97,21 @@ export function isCronAuthorized(
 
 export interface CleanupResult {
   documentsDeleted: number;
+  /** Service orders whose extracted page text was emptied this run. */
+  serviceOrdersPurged: number;
   cutoff: string;
   retentionDays: number;
 }
 
 /**
  * Delete document rows (metadata + embedded page text) older than the
- * retention window. Report shells, flags, facts, and buildings are never
- * touched here — see the policy table above.
+ * retention window, and empty the page text of service orders older than
+ * it. Report shells, flags, facts, and buildings are never touched here —
+ * see the policy table above.
+ *
+ * The cutoff is cast with <datetime>: SurrealDB v3 never matches a string
+ * against a datetime field, so a bare `created_at < $cutoff` (string)
+ * silently deletes nothing.
  */
 export async function runRetentionCleanup(
   db: CleanupDb,
@@ -110,9 +119,24 @@ export async function runRetentionCleanup(
 ): Promise<CleanupResult> {
   const retentionDays = getRetentionDays();
   const cutoff = retentionCutoff(now, retentionDays).toISOString();
-  const res = await db.query("DELETE document WHERE created_at < $cutoff RETURN id", {
-    cutoff,
-  });
+  const res = await db.query(
+    "DELETE document WHERE created_at < <datetime>$cutoff RETURN id",
+    { cutoff }
+  );
   const deleted = (res[0] ?? []) as { id: unknown }[];
-  return { documentsDeleted: deleted.length, cutoff, retentionDays };
+  const orders = await db.query(
+    `UPDATE service_order
+     SET documents = documents.map(|$d| $d.patch([{ op: 'replace', path: '/pages', value: [] }]))
+     WHERE created_at < <datetime>$cutoff
+       AND array::len(array::flatten(documents.pages)) > 0
+     RETURN id`,
+    { cutoff }
+  );
+  const purged = (orders[0] ?? []) as { id: unknown }[];
+  return {
+    documentsDeleted: deleted.length,
+    serviceOrdersPurged: purged.length,
+    cutoff,
+    retentionDays,
+  };
 }
