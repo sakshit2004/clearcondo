@@ -12,7 +12,7 @@ import Reveal from "@/components/Reveal";
 const STEPS = [
   ["Add the documents", "Buying? Upload the PDFs from your seller or property manager: minutes, reserve study, bylaws."],
   ["Get the real price", "Every red flag priced per unit and traced to its page, online or as a PDF for your lawyer, before conditions come off."],
-  ["Keep it lower", "Own it? Check your property tax, free for any Calgary condo. Insurance, energy and your mortgage are next."],
+  ["Keep it lower", "Own it? Check your unit's property tax and get a savings estimate. You only pay if you save."],
 ];
 
 /** Where the two checks go after condos. Only "Now" is live. */
@@ -21,7 +21,7 @@ const ROADMAP: { when: "Now" | "Next" | "Later"; what: string; before: string; o
     when: "Now",
     what: "Condos",
     before: "the document package, every red flag priced and traced to its page.",
-    own: "property tax, live in Calgary; insurance, energy and your mortgage next.",
+    own: "property tax and a savings estimate, live in Calgary; insurance, energy and your mortgage next.",
   },
   {
     when: "Next",
@@ -37,26 +37,46 @@ const ROADMAP: { when: "Now" | "Next" | "Later"; what: string; before: string; o
   },
 ];
 
-/** Three ways in: see a report, check your own documents, check the tax side. */
-const PRICE_PARTS: { title: string; body: string; href: string; cta: string; preview?: boolean }[] = [
+/** The two jobs, kept apart: buying and owning. */
+const TRACKS: {
+  key: "buy" | "own";
+  label: string;
+  title: string;
+  body: string;
+  points: string[];
+  href: string;
+  cta: string;
+  secondary?: { href: string; label: string };
+  pricing: string;
+}[] = [
   {
-    title: "See what the documents hide",
-    body: "A full sample report: special assessments, reserve shortfalls, lawsuits and insurance deductibles, priced per unit and quoted from the page they came from.",
-    href: "/demo",
-    cta: "See a sample report",
-  },
-  {
-    title: "Check your condo before you buy",
-    body: "Upload the document package from your seller or property manager. ClearCondo prices every red flag per unit and traces each claim to its page, before your conditions come off.",
+    key: "buy",
+    label: "Buying a condo",
+    title: "Know the real price before your conditions come off.",
+    body: "Upload the document package from the seller or property manager. ClearCondo reads every page and prices what's buried in it.",
+    points: [
+      "Special assessments, reserve shortfalls and lawsuits, priced per unit",
+      "Every claim traced to the page it came from",
+      "City records for Calgary buildings: value trend, permits, appeals",
+    ],
     href: "/app",
-    cta: "Analyze your documents",
+    cta: "Check a condo before you buy",
+    secondary: { href: "/demo", label: "See a sample report" },
+    pricing: "Free during beta.",
   },
   {
-    title: "Save on owning it",
-    body: "Starting with property tax: what the City says your building is worth, the tax on a typical unit, and whether owners have appealed. Insurance, energy and refinancing are next.",
-    href: "/own",
-    cta: "See how owners save",
-    preview: true,
+    key: "own",
+    label: "Owning a condo",
+    title: "Find out if you're paying too much property tax.",
+    body: "Enter your address and unit. See what the City says it's worth, the tax that comes with it, and your potential saving.",
+    points: [
+      "Your unit's assessment, change since last year and est. tax",
+      "How it sits against the rest of the building",
+      "A savings estimate from comparable sales, on request",
+    ],
+    href: "/app/own",
+    cta: "Check my property tax",
+    pricing: "You only pay if you save: 30% of the saving, plus $10/month for the software. Free during beta.",
   },
 ];
 
@@ -107,9 +127,6 @@ function SectionHead({ title, body }: { title: string; body: string }) {
   );
 }
 
-const primaryBtn =
-  "btn-lift inline-flex items-center gap-2.5 rounded-[10px] bg-ink hover:bg-accent text-white font-semibold px-6 min-h-12";
-
 export default function LandingPage() {
   const record = getSampleRecord();
 
@@ -142,8 +159,8 @@ export default function LandingPage() {
                 After you buy
               </dt>
               <dd>
-                We cut what it costs to own, starting with your property tax.
-                Insurance, energy and your mortgage are next.
+                We check whether you&apos;re paying too much property tax and
+                what you could save. Insurance, energy and your mortgage are next.
               </dd>
             </div>
           </dl>
@@ -158,7 +175,7 @@ export default function LandingPage() {
               </span>
             </Link>
             <Link
-              href="/own"
+              href="/app/own"
               className="inline-flex items-center gap-2.5 rounded-full border border-white/30 hover:border-white text-white font-semibold pl-6 pr-2 min-h-12 transition-colors"
             >
               I own a condo
@@ -173,36 +190,66 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* The real price */}
+      {/* Buying vs owning */}
       <section className="border-b border-line">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-24">
           <SectionHead
-            title="Three ways to stop overpaying."
-            body="See what a report finds, check your own condo's documents before you buy, then check the tax side once you own."
+            title="Two ways to stop overpaying."
+            body="One before you buy, one for every year after. Pick the one you need."
           />
-          <div className="grid grid-cols-[minmax(0,1fr)] md:grid-cols-3 gap-4">
-            {PRICE_PARTS.map((p, i) => (
-              <Reveal key={p.title} delay={i * 100}>
-                <Link
-                  href={p.href}
-                  className="group flex h-full flex-col rounded-[14px] border border-line bg-white p-6 hover:border-ink transition-colors no-underline"
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="data-label text-subtle">0{i + 1}</span>
-                    {p.preview && (
-                      <span className="rounded-md bg-ink text-white px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide">
-                        Preview
-                      </span>
-                    )}
-                  </span>
-                  <h3 className="mt-3 text-xl font-bold tracking-[-0.01em] text-ink">{p.title}</h3>
-                  <p className="mt-2 text-muted leading-relaxed flex-1">{p.body}</p>
-                  <span className="mt-5 inline-flex items-center gap-2 font-semibold text-ink">
-                    {p.cta} <Arrow />
-                  </span>
-                </Link>
-              </Reveal>
-            ))}
+          <div className="grid grid-cols-[minmax(0,1fr)] md:grid-cols-2 gap-5">
+            {TRACKS.map((t, i) => {
+              const dark = t.key === "own";
+              return (
+                <Reveal key={t.key} delay={i * 100}>
+                  <div
+                    className={`flex h-full flex-col rounded-[18px] p-7 sm:p-8 ${
+                      dark ? "bg-ink text-white" : "bg-white border border-line"
+                    }`}
+                  >
+                    <span
+                      className={`self-start rounded-full px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.08em] ${
+                        dark ? "bg-white/10 text-white" : "bg-accent-soft text-accent-dark"
+                      }`}
+                    >
+                      {t.label}
+                    </span>
+                    <h3 className={`mt-5 text-2xl sm:text-[28px] font-bold tracking-[-0.02em] leading-tight ${dark ? "" : "text-ink"}`}>
+                      {t.title}
+                    </h3>
+                    <p className={`mt-3 leading-relaxed ${dark ? "text-[#c3cad4]" : "text-muted"}`}>{t.body}</p>
+                    <ul className="mt-5 space-y-2.5 flex-1">
+                      {t.points.map((pt) => (
+                        <li key={pt} className={`flex gap-3 text-[15px] ${dark ? "text-white/85" : "text-ink2"}`}>
+                          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden className={`flex-none mt-0.5 ${dark ? "text-white" : "text-accent"}`}>
+                            <path d="M4 9.5l3 3 7-7" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          {pt}
+                        </li>
+                      ))}
+                    </ul>
+                    <p className={`mt-6 pt-5 text-sm border-t ${dark ? "border-white/15 text-[#c3cad4]" : "border-line text-subtle"}`}>
+                      {t.pricing}
+                    </p>
+                    <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3">
+                      <Link
+                        href={t.href}
+                        className={`btn-lift inline-flex items-center gap-2.5 rounded-[10px] font-semibold px-6 min-h-12 ${
+                          dark ? "bg-white text-ink" : "bg-ink hover:bg-accent text-white"
+                        }`}
+                      >
+                        {t.cta} <Arrow />
+                      </Link>
+                      {t.secondary && (
+                        <Link href={t.secondary.href} className="font-semibold text-ink underline underline-offset-4 decoration-line2 hover:decoration-ink">
+                          {t.secondary.label}
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                </Reveal>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -253,72 +300,93 @@ export default function LandingPage() {
       {/* The vision */}
       <section className="border-t border-line bg-surface">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-24">
-          <SectionHead
-            title="Buying is the first bill. Owning is the rest."
-            body="ClearCondo starts with the purchase: what a condo will really cost you before you own it. Then it keeps the cost of owning down, starting with property tax: every Calgary building page already shows its assessment, the tax that comes with it and its appeal history. Insurance, energy and your mortgage are next. We're starting with condos; the same two checks, before you buy and once you own, work for any home."
-          />
-          <ol className="grid grid-cols-[minmax(0,1fr)] md:grid-cols-3 gap-4 mb-10" aria-label="Where ClearCondo goes next">
-            {ROADMAP.map((r, i) => (
-              <Reveal key={r.what} delay={i * 100}>
-                <li
-                  className={`list-none h-full rounded-[14px] p-6 ${
-                    r.when === "Now" ? "bg-white border border-ink" : "bg-white/60 border border-dashed border-line2"
-                  }`}
-                >
-                  <span
-                    className={`rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
-                      r.when === "Now" ? "bg-ink text-white" : "bg-info-soft text-info-dark"
+          <div className="grid grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-10 lg:gap-14 items-start">
+            <Reveal>
+              <span className="micro-label text-accent-dark">Where this goes</span>
+              <h2 className="mt-3 text-3xl sm:text-[40px] font-bold tracking-[-0.025em] leading-[1.1]">
+                Buying is the first bill. Owning is the rest.
+              </h2>
+              <p className="mt-4 text-lg text-muted leading-relaxed">
+                We&apos;re starting with condos in Calgary. The same two checks, before you buy and once you own,
+                work for any home: houses next, then land.
+              </p>
+            </Reveal>
+            <ol className="grid gap-3" aria-label="Where ClearCondo goes next">
+              <li className="hidden sm:grid grid-cols-[96px_minmax(0,1fr)_minmax(0,1fr)] gap-5 px-6 list-none">
+                <span />
+                <span className="micro-label text-stone-500">Before you buy</span>
+                <span className="micro-label text-stone-500">Once you own</span>
+              </li>
+              {ROADMAP.map((r, i) => (
+                <Reveal key={r.what} delay={i * 100}>
+                  <li
+                    className={`list-none rounded-[14px] p-5 sm:px-6 grid grid-cols-[minmax(0,1fr)] sm:grid-cols-[96px_minmax(0,1fr)_minmax(0,1fr)] gap-3 sm:gap-5 ${
+                      r.when === "Now" ? "bg-white border border-ink" : "bg-white/60 border border-dashed border-line2"
                     }`}
                   >
-                    {r.when}
-                  </span>
-                  <h3 className="mt-3 text-xl font-bold tracking-[-0.01em] text-ink">{r.what}</h3>
-                  <p className="mt-2 text-sm text-muted leading-relaxed">
-                    <strong className="text-ink font-semibold">Before you buy:</strong> {r.before}
-                  </p>
-                  <p className="mt-1.5 text-sm text-muted leading-relaxed">
-                    <strong className="text-ink font-semibold">Once you own:</strong> {r.own}
-                  </p>
-                </li>
-              </Reveal>
-            ))}
-          </ol>
-          <Reveal>
-            <Link href="/own" className={primaryBtn}>
-              See how owners save <Arrow />
-            </Link>
-          </Reveal>
+                    <div>
+                      <span
+                        className={`rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
+                          r.when === "Now" ? "bg-ink text-white" : "bg-info-soft text-info-dark"
+                        }`}
+                      >
+                        {r.when}
+                      </span>
+                      <h3 className="mt-2 text-lg font-bold tracking-[-0.01em] text-ink">{r.what}</h3>
+                    </div>
+                    <p className="text-sm text-muted leading-relaxed">
+                      <span className="sm:hidden font-semibold text-ink">Before you buy: </span>
+                      {r.before}
+                    </p>
+                    <p className="text-sm text-muted leading-relaxed">
+                      <span className="sm:hidden font-semibold text-ink">Once you own: </span>
+                      {r.own}
+                    </p>
+                  </li>
+                </Reveal>
+              ))}
+            </ol>
+          </div>
         </div>
       </section>
 
       {/* Close */}
       <section className="bg-ink text-white">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 flex flex-wrap items-end justify-between gap-8">
-          <div className="max-w-xl">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-[-0.025em] leading-tight">
-              Don&apos;t overpay at the offer, or on the tax bill.
-            </h2>
-            <p className="mt-3 text-[#c3cad4]">
-              PDFs are read in memory and never stored.{" "}
-              <Link href="/privacy" className="text-white underline underline-offset-4 decoration-[#5b6168] hover:decoration-white">
-                Privacy
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-[-0.025em] leading-tight max-w-2xl">
+            Don&apos;t overpay at the offer, or on the tax bill.
+          </h2>
+          <div className="mt-8 grid grid-cols-[minmax(0,1fr)] md:grid-cols-2 gap-4">
+            <div className="rounded-[14px] border border-white/15 p-6 flex flex-col">
+              <span className="micro-label text-white/60">Buying</span>
+              <p className="mt-2 text-[#c3cad4] leading-relaxed flex-1">
+                Upload the document package. PDFs are read in memory and never stored.
+              </p>
+              <Link
+                href="/app"
+                className="btn-lift mt-5 self-start inline-flex items-center gap-2.5 rounded-[10px] bg-white text-ink font-semibold px-6 min-h-12"
+              >
+                I&apos;m buying a condo <Arrow />
               </Link>
-            </p>
+            </div>
+            <div className="rounded-[14px] bg-white/[0.06] border border-white/15 p-6 flex flex-col">
+              <span className="micro-label text-white/60">Owning</span>
+              <p className="mt-2 text-[#c3cad4] leading-relaxed flex-1">
+                Check your unit&apos;s property tax. You only pay if you save.
+              </p>
+              <Link
+                href="/app/own"
+                className="btn-lift mt-5 self-start inline-flex items-center gap-2.5 rounded-[10px] bg-white text-ink font-semibold px-6 min-h-12"
+              >
+                I own a condo <Arrow />
+              </Link>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/own"
-              className="inline-flex items-center rounded-[10px] border border-white/30 hover:border-white text-white font-semibold px-6 min-h-12 transition-colors"
-            >
-              I own a condo
+          <p className="mt-6 text-sm text-[#c3cad4]">
+            <Link href="/privacy" className="text-white underline underline-offset-4 decoration-[#5b6168] hover:decoration-white">
+              Privacy
             </Link>
-            <Link
-              href="/app"
-              className="btn-lift inline-flex items-center gap-2.5 rounded-[10px] bg-white text-ink font-semibold px-6 min-h-12"
-            >
-              I&apos;m buying a condo <Arrow />
-            </Link>
-          </div>
+          </p>
         </div>
       </section>
     </div>

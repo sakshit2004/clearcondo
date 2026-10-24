@@ -188,6 +188,17 @@ body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-
 body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .header-chip {
   padding: 8px 14px;
 }
+body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .header-cta-alt {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .header-cta-alt:hover {
+  border-color: #ffffff;
+}
 
 /* Landing hero flag card: rises in once the window is flagged */
 .hero-card {

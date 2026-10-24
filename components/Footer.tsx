@@ -14,11 +14,11 @@ export default function Footer() {
             </p>
           </div>
           <div className="flex flex-col gap-2 text-sm sm:items-end">
-            <Link href="/own" className="text-muted hover:text-ink transition-colors">
-              For owners
+            <Link href="/app/new" className="text-muted hover:text-ink transition-colors">
+              For buyers
             </Link>
-            <Link href="/calgary" className="text-muted hover:text-ink transition-colors">
-              Property tax check
+            <Link href="/app/own" className="text-muted hover:text-ink transition-colors">
+              For owners: property tax
             </Link>
             <Link href="/demo" className="text-muted hover:text-ink transition-colors">
               Sample report
