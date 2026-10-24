@@ -129,6 +129,75 @@ body {
   transform: scaleX(1);
 }
 
+/* Header floating over the landing hero: white ink, glassy pills.
+   Keyed off the hero's presence, so no client-side routing check. */
+body:has(.landing-hero) .site-header {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  background: transparent;
+  backdrop-filter: none;
+  border-bottom-color: transparent;
+}
+body:has(.landing-hero) .site-header {
+  color: #ffffff;
+  --logo-accent: #8fb0ff;
+}
+body:has(.landing-hero) .site-header .header-row {
+  height: 80px;
+}
+body:has(.landing-hero) .site-header .header-logo,
+body:has(.landing-hero) .site-header .nav-link,
+body:has(.landing-hero) .site-header .header-chip {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.88);
+}
+body:has(.landing-hero) .site-header .header-logo {
+  padding: 6px 16px 6px 8px;
+}
+body:has(.landing-hero) .site-header .nav-link {
+  padding: 9px 16px;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+body:has(.landing-hero) .site-header .nav-link:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+body:has(.landing-hero) .site-header .nav-link::after {
+  display: none;
+}
+body:has(.landing-hero) .site-header .header-cta {
+  background: #ffffff;
+  color: #15181c;
+  border-radius: 999px;
+}
+body:has(.landing-hero) .site-header .header-chip {
+  padding: 8px 14px;
+}
+
+/* Landing hero flag card: rises in once the window is flagged */
+.hero-card {
+  display: none;
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+  transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.hero-card.hero-card-on {
+  opacity: 1;
+  transform: none;
+}
+/* Only where there's room above the headline for it. */
+@media (min-width: 1024px) and (min-height: 820px) {
+  .hero-card {
+    display: block;
+  }
+}
+
 /* ---------- Motion ---------- */
 
 @keyframes cc-up {
@@ -269,6 +338,7 @@ body {
     background-size: 100% 100%;
   }
   .evidence-late,
+  .hero-card,
   .memory-record .record-row {
     opacity: 1;
     transform: none;

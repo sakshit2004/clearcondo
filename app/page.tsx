@@ -5,6 +5,7 @@ import { VerifiedAnalysisSchema } from "@/lib/report-schema";
 import { computeDeltas } from "@/lib/deltas";
 import { pointFromFacts } from "@/lib/timeline";
 import EvidenceDemo from "@/components/EvidenceDemo";
+import HeroScene from "@/components/HeroScene";
 import MemoryRecord, { recordRows } from "@/components/MemoryRecord";
 import Reveal from "@/components/Reveal";
 
@@ -69,35 +70,47 @@ export default function LandingPage() {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 pt-20 sm:pt-28 pb-20">
-        <p className="rise-in text-[15px] text-subtle">For Calgary realtors and their buyers</p>
-        <h1
-          className="rise-in mt-4 max-w-4xl font-bold tracking-[-0.035em] leading-[1.02] text-[44px] sm:text-[64px] lg:text-[76px]"
-          style={{ animationDelay: "80ms", textWrap: "balance" }}
-        >
-          Every red flag in the condo documents, traced to the page.
-        </h1>
-        <p className="rise-in mt-6 max-w-2xl text-lg sm:text-xl leading-relaxed text-muted" style={{ animationDelay: "180ms" }}>
-          Special assessments, thin reserves, lawsuits — quoted from the page
-          they came from. And every building keeps its record, so the next
-          deal there starts with what we already know.
-        </p>
-        <div className="rise-in mt-9 flex flex-wrap items-center gap-x-7 gap-y-4" style={{ animationDelay: "280ms" }}>
-          <Link href="/order" className={primaryBtn}>
-            Send a document package <Arrow />
-          </Link>
-          <Link href="/demo" className="font-semibold text-ink underline underline-offset-4 decoration-line2 hover:decoration-accent">
-            See a sample report
-          </Link>
+      {/* Hero: full-bleed night scene, headline over it */}
+      <section className="landing-hero relative isolate min-h-[max(640px,100svh)] bg-[#070a12] text-white overflow-hidden flex flex-col">
+        <HeroScene />
+        <div className="relative z-10 mt-auto mx-auto w-full max-w-6xl px-4 sm:px-6 pb-14 sm:pb-20 pt-40">
+          <p className="rise-in text-[15px] text-white/65">For Calgary realtors and their buyers</p>
+          <h1
+            className="rise-in mt-4 max-w-3xl font-semibold tracking-[-0.035em] leading-[1.02] text-[44px] sm:text-[64px] lg:text-[80px]"
+            style={{ animationDelay: "80ms", textWrap: "balance" }}
+          >
+            Every red flag, traced to the page.
+          </h1>
+          <p className="rise-in mt-5 max-w-xl text-lg leading-relaxed text-white/70" style={{ animationDelay: "180ms" }}>
+            Special assessments, thin reserves, lawsuits — quoted from the
+            condo documents they came from. And every building keeps its
+            record, so the next deal there starts with what we already know.
+          </p>
+          <div className="rise-in mt-8 flex flex-wrap items-center gap-3" style={{ animationDelay: "280ms" }}>
+            <Link
+              href="/order"
+              className="btn-lift inline-flex items-center gap-2.5 rounded-full bg-white text-ink font-semibold pl-6 pr-2 min-h-12"
+            >
+              Send a document package
+              <span className="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center">
+                <Arrow />
+              </span>
+            </Link>
+            <Link
+              href="/demo"
+              className="inline-flex items-center rounded-full border border-white/25 bg-white/[0.06] backdrop-blur px-6 min-h-12 font-semibold text-white hover:bg-white/15 transition-colors"
+            >
+              See a sample report
+            </Link>
+          </div>
+          <p className="rise-in mt-5 text-sm text-white/50" style={{ animationDelay: "380ms" }}>
+            Free during beta
+          </p>
         </div>
-        <p className="rise-in mt-5 text-sm text-subtle" style={{ animationDelay: "380ms" }}>
-          Free during beta
-        </p>
       </section>
 
       {/* Verification */}
-      <section className="bg-surface border-y border-line">
+      <section className="bg-surface border-b border-line">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-24">
           <SectionHead
             title="Checked against the page."

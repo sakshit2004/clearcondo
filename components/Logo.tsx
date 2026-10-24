@@ -2,6 +2,9 @@
  * The ClearCondo CC monogram: two nested Cs that read as a lens, with a
  * focal dot. Ink outer C, accent inner C. `animate` draws it in on load.
  * Below ~24px the dot is dropped and strokes thicken so it stays legible.
+ * The ink takes the surrounding text colour, and the accent reads
+ * --logo-accent, so the mark works on dark backgrounds (the landing hero)
+ * without a separate variant.
  */
 export function LogoMark({
   size = 28,
@@ -14,8 +17,8 @@ export function LogoMark({
   inverse?: boolean;
   className?: string;
 }) {
-  const ink = inverse ? "#ffffff" : "#15181c";
-  const accent = inverse ? "#7aa2ff" : "#1d4ed8";
+  const ink = inverse ? "#ffffff" : "currentColor";
+  const accent = inverse ? "#7aa2ff" : "var(--logo-accent, #1d4ed8)";
   const small = size < 24;
   const stroke = small ? 5.4 : 4.4;
   return (
@@ -38,7 +41,7 @@ export function LogoMark({
         className="arc-i"
         d="M30.4 17.6A9 9 0 1 0 30.4 30.4"
         fill="none"
-        stroke={accent}
+        style={{ stroke: accent }}
         strokeWidth={stroke}
         strokeLinecap="round"
       />
@@ -60,7 +63,7 @@ export default function Logo({
     <span className="inline-flex items-center gap-2.5">
       <LogoMark size={size} animate={animate} inverse={inverse} />
       <span
-        className={`font-semibold tracking-[-0.03em] ${inverse ? "text-white" : "text-ink"}`}
+        className={`font-semibold tracking-[-0.03em] ${inverse ? "text-white" : ""}`}
         style={{ fontSize: Math.round(size * 0.66) }}
       >
         ClearCondo
