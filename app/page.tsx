@@ -4,28 +4,14 @@ import Reveal from "@/components/Reveal";
 import { Arrow, SectionHead } from "@/components/landing/parts";
 import { RoadmapIcon, ScanDoc, Skyline, TaxDrop } from "@/components/landing/Motion";
 
-/** Where the two checks go after condos. Only "Now" is live. */
-const ROADMAP: { when: "Now" | "Next" | "Later"; what: string; icon: "condo" | "house" | "land"; before: string; own: string }[] = [
+/** What ClearCondo covers today: condos, before you buy and once you own. */
+const ROADMAP: { when: "Now"; what: string; icon: "condo"; before: string; own: string }[] = [
   {
     when: "Now",
     icon: "condo",
     what: "Condos",
     before: "the document package, every red flag priced and traced to its page.",
     own: "property tax and a savings estimate, live in Calgary; insurance, energy and your mortgage next.",
-  },
-  {
-    when: "Next",
-    icon: "house",
-    what: "Houses",
-    before: "the home inspection, title and survey.",
-    own: "property tax first: the same assessment check, for detached and semi-detached homes.",
-  },
-  {
-    when: "Later",
-    icon: "land",
-    what: "Land",
-    before: "zoning, land-use applications and title.",
-    own: "property tax and land-use changes nearby.",
   },
 ];
 
@@ -197,8 +183,8 @@ export default function LandingPage() {
                 Buying is the first bill. Owning is the rest.
               </h2>
               <p className="mt-4 text-lg text-muted leading-relaxed">
-                We&apos;re starting with condos in Calgary. The same two checks, before you buy and once you own,
-                work for any home: houses next, then land.
+                We&apos;re starting with condos in Calgary: the document package before you buy, then the bills that
+                come every year once you own.
               </p>
             </Reveal>
             <ol className="grid gap-3" aria-label="Where ClearCondo goes next">
@@ -210,18 +196,12 @@ export default function LandingPage() {
               {ROADMAP.map((r, i) => (
                 <Reveal key={r.what} delay={i * 100}>
                   <li
-                    className={`list-none rounded-[14px] p-5 sm:px-6 grid grid-cols-[minmax(0,1fr)] sm:grid-cols-[96px_minmax(0,1fr)_minmax(0,1fr)] gap-3 sm:gap-5 ${
-                      r.when === "Now" ? "bg-white border border-ink" : "bg-white/60 border border-dashed border-line2"
-                    }`}
+                    className="list-none rounded-[14px] p-5 sm:px-6 grid grid-cols-[minmax(0,1fr)] sm:grid-cols-[96px_minmax(0,1fr)_minmax(0,1fr)] gap-3 sm:gap-5 bg-white border border-ink"
                   >
                     <div>
                       <div className="flex items-center gap-2.5">
-                        <RoadmapIcon kind={r.icon} live={r.when === "Now"} />
-                        <span
-                          className={`rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
-                            r.when === "Now" ? "bg-ink text-white" : "bg-info-soft text-info-dark"
-                          }`}
-                        >
+                        <RoadmapIcon kind={r.icon} live />
+                        <span className="rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide bg-ink text-white">
                           {r.when}
                         </span>
                       </div>
