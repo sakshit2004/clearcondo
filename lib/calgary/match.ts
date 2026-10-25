@@ -251,15 +251,16 @@ export const MIN_DWELLING_VALUE = 50_000;
 
 /**
  * Roll entries that are homes: residential class, not a titled parking
- * stall ("12V …") or storage locker ("12S …"), and valued like a home.
- * A condo plan's roll includes every titled stall and locker, so a median
- * over all its entries can land far below any real unit's value.
+ * stall ("12V …"), and valued like a home. A condo plan's roll includes
+ * every titled stall and storage unit, so a median over all its entries can
+ * land far below any real unit's value. Storage units have no fixed suffix
+ * ("40S" is a home), so the value floor catches them.
  */
 export function dwellingUnits(units: RollUnit[]): RollUnit[] {
   return units.filter((u) => {
     if (!(u.assessment_class ?? "").toUpperCase().startsWith("RE")) return false;
     const unitToken = (u.address ?? "").trim().toUpperCase().split(/\s+/)[0] ?? "";
-    if (/^\d+[VS]$/.test(unitToken)) return false;
+    if (/^\d+V$/.test(unitToken)) return false;
     return u.assessed_value != null && u.assessed_value >= MIN_DWELLING_VALUE;
   });
 }

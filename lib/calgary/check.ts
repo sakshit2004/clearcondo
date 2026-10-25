@@ -107,8 +107,8 @@ export type CityRecords = { identity_key: string; fetched_at: string } & (
     }
 );
 
-/** v2: current_median counts dwellings only (not parking stalls or lockers). */
-const RECORDS_VERSION = "v2";
+/** v3: current_median counts dwellings only (not parking stalls or storage; "40S" is a home). */
+const RECORDS_VERSION = "v3";
 
 /** Cache identity: a corrected plan or address must not hit a stale entry. */
 export function identityKey(input: CityRecordsInput): string {
