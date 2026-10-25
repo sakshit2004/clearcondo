@@ -111,13 +111,11 @@ export function TaxDrop({ className = "" }: { className?: string }) {
   );
 }
 
-/** Roadmap: a condo, a house, a plot of land, drawn in. The live one has its lights on. */
-export function RoadmapIcon({ kind, live = false }: { kind: "condo" | "house" | "land"; live?: boolean }) {
+/** The condo icon in "Where this goes", drawn in with its lights on. */
+export function RoadmapIcon({ kind, live = false }: { kind: "condo"; live?: boolean }) {
   const stroke = live ? "#15181c" : "#8a9099";
   const paths = {
     condo: ["M11 37V7h18v30", "M6 37h28"],
-    house: ["M9 37V19L20 10l11 9v18", "M5 21L20 8l15 13", "M17 37v-8h6v8", "M5 37h30"],
-    land: ["M4 33l10-5 12 4 10-5", "M4 37h32", "M18 30V9", "M18 9l9 3.5-9 3.5"],
   }[kind];
   return (
     <svg width="34" height="34" viewBox="0 0 40 40" aria-hidden className="flex-none">

@@ -104,8 +104,8 @@ test("landing is generic and splits into buyers and owners", async ({ page }) =>
   await expect(header.getByRole("link", { name: /own/i })).toHaveAttribute("href", "/app/own");
   const roadmap = page.getByRole("list", { name: "Where ClearCondo goes next" });
   await expect(roadmap.getByRole("heading", { name: "Condos" })).toBeVisible();
-  await expect(roadmap.getByRole("heading", { name: "Houses" })).toBeVisible();
-  await expect(roadmap.getByRole("heading", { name: "Land" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Houses" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Land" })).toHaveCount(0);
   await expect(page.getByText(/realtors/i)).toHaveCount(0);
 });
 
