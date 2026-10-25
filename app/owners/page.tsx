@@ -8,7 +8,7 @@ import { TaxDrop } from "@/components/landing/Motion";
 export const metadata: Metadata = {
   title: "For condo owners — ClearCondo",
   description:
-    "Find out if you're paying too much property tax on your Calgary condo: your unit's assessment, the tax it means, and a savings estimate. You only pay if you save.",
+    "Find out if you're paying too much property tax on your Calgary condo: your unit's assessment, the tax it means, and a savings estimate. 30% of the saving, only if you save, plus $20 per filing.",
 };
 
 const SEE: [string, string, string][] = [
@@ -38,7 +38,7 @@ const STEPS: [string, string][] = [
 
 /** Everything for owners, on one page. The owner dashboard is /app/own. */
 export default function OwnersPage() {
-  const { feeShare, softwareMonthly } = OWNER_PRICING;
+  const { feeShare, filingFee } = OWNER_PRICING;
   return (
     <div>
       <AudienceHero
@@ -47,7 +47,7 @@ export default function OwnersPage() {
         body="Enter your address and unit. See what the City says your condo is worth, the tax that comes with it, and what you could save. Live for Calgary condos."
         cta={{ href: "/app/own", label: "Open the owner dashboard" }}
         sample={{ href: "/demo/own", label: "See a sample report" }}
-        note="You only pay if you save. Free during beta."
+        note={`${Math.round(feeShare * 100)}% only if you save, plus $${filingFee} per filing. Free during beta.`}
         art={
           <div className="rounded-[14px] bg-ink p-3">
             <TaxDrop />
@@ -93,9 +93,10 @@ export default function OwnersPage() {
       <section className="border-b border-line">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 sm:py-24 grid grid-cols-[minmax(0,1fr)] lg:grid-cols-2 gap-10 items-start">
           <Reveal>
-            <h2 className="text-3xl sm:text-[40px] font-bold tracking-[-0.025em] leading-[1.1]">You only pay if you save.</h2>
+            <h2 className="text-3xl sm:text-[40px] font-bold tracking-[-0.025em] leading-[1.1]">The {Math.round(feeShare * 100)}% only if you save.</h2>
             <p className="mt-3 text-lg text-muted leading-relaxed">
-              If your assessment doesn&apos;t come down, you pay nothing. Free while ClearCondo is in beta.
+              If your assessment doesn&apos;t come down, there&apos;s no {Math.round(feeShare * 100)}% fee. Filing is ${filingFee}, and
+              nothing is filed without your go-ahead. Free while ClearCondo is in beta.
             </p>
           </Reveal>
           <Reveal delay={100}>
@@ -107,9 +108,9 @@ export default function OwnersPage() {
                   <dd className="text-[#c3cad4] leading-relaxed">of the tax you save, once your assessment comes down.</dd>
                 </div>
                 <div className="flex gap-5">
-                  <dt className="text-3xl font-bold tabular-nums w-28 flex-none">${softwareMonthly}/mo</dt>
+                  <dt className="text-3xl font-bold tabular-nums w-28 flex-none">${filingFee}</dt>
                   <dd className="text-[#c3cad4] leading-relaxed">
-                    for the software: your assessment checked every year, and a reminder before the complaint deadline.
+                    per filing: our fee to file your complaint, charged when we file.
                   </dd>
                 </div>
               </dl>

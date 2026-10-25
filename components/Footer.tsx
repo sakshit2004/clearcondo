@@ -35,10 +35,6 @@ export default function Footer() {
           <div className="col-span-2 sm:col-span-1 max-w-sm">
             <Logo size={24} />
             <p className="text-[15px] text-ink2 leading-relaxed mt-3">Before you buy, and after.</p>
-            <p className="text-sm text-subtle leading-relaxed mt-2">
-              ClearCondo summarizes condominium documents and public records. It is not legal, financial, or
-              real-estate advice.
-            </p>
           </div>
           {COLUMNS.map((c) => (
             <nav key={c.title} aria-label={c.title}>

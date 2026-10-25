@@ -6,6 +6,9 @@ import { computeDeltas } from "@/lib/deltas";
 import ReportView, { ReportToolbar } from "@/components/ReportView";
 import { pointFromFacts } from "@/lib/timeline";
 import BuyerPricing from "@/components/BuyerPricing";
+import PublicRecordsSection from "@/components/PublicRecordsSection";
+import { SharedRecordSection } from "@/components/SharedRecord";
+import { sampleMissingDocs, samplePublicRecordCheck, sampleSharedRecord } from "@/lib/sample-extras";
 
 function loadReport(file: string) {
   const json = JSON.parse(
@@ -18,12 +21,15 @@ function loadReport(file: string) {
  * Sample demo: TWO reports for the same fictional building ("North Hill
  * Terrace") — an older 2024 review and a newer 2026 review — so the
  * "what changed since the last review" memory diff renders with zero API keys.
- * All documents and both reports are clearly-labeled sample data.
+ * It also shows every other section a real report has: the shared building
+ * record, the City of Calgary check and the missing-documents list.
+ * All documents, reports and records are clearly-labeled sample data.
  */
 export default function DemoPage() {
   const older = loadReport("sample-report-2024.json");
   const newer = loadReport("sample-report-2026.json");
   const deltas = computeDeltas(older.structured_facts, newer.structured_facts);
+  const shared = sampleSharedRecord(older, newer);
 
   const b = newer.building;
   const timeline = [older, newer].map((r, i) =>
@@ -51,9 +57,10 @@ export default function DemoPage() {
             Sample data
           </span>
           <span className="text-muted">
-            Two fictional reviews of the same demo building — September 2024
-            and October 2026 — showing how building memory tracks change over
-            time. Open any flag to see the quote it came from.
+            Two fictional reviews of the same demo building, September 2024
+            and October 2026: every flag priced and traced to its page, what
+            changed since the last review, the shared building record, and
+            the City&apos;s records. Open any flag to see the quote it came from.
           </span>
         </div>
         <ReportToolbar backHref="/" backLabel="Home" pdfHref="/demo/print?download=1" />
@@ -65,9 +72,12 @@ export default function DemoPage() {
             analysis: newer,
             deltas,
             timeline,
+            missing: sampleMissingDocs(newer),
           }}
           pdfHref="/demo/print?download=1"
           storageKey="demo"
+          buildingRecord={<SharedRecordSection items={shared.items} rows={shared.rows} />}
+          publicRecords={<PublicRecordsSection check={samplePublicRecordCheck(newer)} />}
         />
         <div className="mt-12">
           <BuyerPricing />
