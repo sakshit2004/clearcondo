@@ -272,18 +272,19 @@ describe("dwellingUnits", () => {
     property_type: null, sub_property_use: null, comm_code: null, comm_name: null,
     year_of_construction: null, roll_year: 2026,
   });
-  it("keeps homes and drops stalls, lockers, non-residential and implausibly low values", async () => {
+  it("keeps homes and drops stalls, storage, non-residential and implausibly low values", async () => {
     const { dwellingUnits } = await import("../calgary/match.ts");
     const units = [
       unit("1203 500 SAMPLE ST SW", 412000),
       unit("4B 500 SAMPLE ST SW", 289000),
       unit("12V 500 SAMPLE ST SW", 45500), // titled parking stall
-      unit("7S 500 SAMPLE ST SW", 9000), // storage locker
+      unit("40S 500 SAMPLE ST SW", 367000), // a home: S is not a storage marker
+      unit("7 500 SAMPLE ST SW", 9000), // storage unit
       unit("CRU1 500 SAMPLE ST SW", 900000, "NR"), // commercial unit
       unit("99 500 SAMPLE ST SW", 20000), // not a home's value
       unit("101 500 SAMPLE ST SW", null),
     ];
-    assert.deepEqual(dwellingUnits(units).map((u) => u.address), ["1203 500 SAMPLE ST SW", "4B 500 SAMPLE ST SW"]);
+    assert.deepEqual(dwellingUnits(units).map((u) => u.address), ["1203 500 SAMPLE ST SW", "4B 500 SAMPLE ST SW", "40S 500 SAMPLE ST SW"]);
   });
   it("a building with many stalls no longer drags the median down", async () => {
     const { dwellingUnits } = await import("../calgary/match.ts");
