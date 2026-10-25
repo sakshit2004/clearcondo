@@ -180,15 +180,10 @@ body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-
 body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .nav-link::after {
   display: none;
 }
-body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .header-cta {
-  background: #ffffff;
-  color: #15181c;
-  border-radius: 999px;
-}
 body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .header-chip {
   padding: 8px 14px;
 }
-body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .header-cta-alt {
+body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .header-door {
   color: #ffffff;
   border-color: rgba(255, 255, 255, 0.35);
   border-radius: 999px;
@@ -196,7 +191,7 @@ body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
-body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .header-cta-alt:hover {
+body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-header .header-door:hover {
   border-color: #ffffff;
 }
 
