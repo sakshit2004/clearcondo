@@ -258,7 +258,9 @@ export default function ServiceOrderForm({ emailHint }: { emailHint?: string }) 
           <span>
             I&apos;m authorized to share these documents for review. ClearCondo
             reads them to prepare the report; the extracted text is deleted
-            after 30 days and the PDFs themselves are never stored.
+            after 30 days and the PDFs themselves are never stored. Verified
+            facts (figures and dates, never the documents or who sent them)
+            are added to the building&apos;s shared record.
           </span>
         </label>
 

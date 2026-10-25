@@ -4,7 +4,17 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { currentUser } from "@clerk/nextjs/server";
 import { getUserId } from "@/lib/auth";
-import { getOwnerProperty, isDbConfigured, upsertOwnerProperty, withDb } from "@/lib/db";
+import {
+  addSharedFacts,
+  getOwnerProperty,
+  getSharedRecord,
+  isDbConfigured,
+  upsertOwnerProperty,
+  upsertSharedBuilding,
+  withDb,
+} from "@/lib/db";
+import { planIdentity, type SharedFact } from "@/lib/shared-record";
+import { OwnerBuildingRecord } from "@/components/SharedRecord";
 import { normalizePlanNumber } from "@/lib/calgary/match";
 import { assessReport, getCityRecords } from "@/lib/calgary/check";
 import { CALGARY_DATASETS, datasetPageUrl } from "@/lib/calgary/socrata";
@@ -53,6 +63,53 @@ function UnitPicker({ plan, unit, notFoundUnit }: { plan: string; unit: string; 
       </form>
     </section>
   );
+}
+
+/**
+ * The building's shared record for owners. Each visit also adds the City's
+ * current median home assessment, dated to the roll's valuation day, so the
+ * record builds a year-by-year history. Renders nothing without a database.
+ */
+async function OwnerRecord({
+  plan,
+  address,
+  yearBuilt,
+  rollYear,
+  median,
+}: {
+  plan: string;
+  address: string | null;
+  yearBuilt: number | null;
+  rollYear: number | null;
+  median: number | null;
+}) {
+  if (!isDbConfigured()) return null;
+  const city: SharedFact[] =
+    rollYear && median
+      ? [
+          {
+            fact_key: "city_median_assessment",
+            kind: "money",
+            label: "Median home assessment (City of Calgary)",
+            value_num: median,
+            value_text: null,
+            // Alberta assesses at July 1 of the year before the roll year.
+            as_of: `${rollYear - 1}-07`,
+            doc_type: null,
+            page: null,
+            source: "public_record",
+          },
+        ]
+      : [];
+  const rows = await withDb(async (db) => {
+    if (city.length > 0) {
+      const id = await upsertSharedBuilding(db, planIdentity(plan, address, yearBuilt));
+      await addSharedFacts(db, id, city);
+    }
+    return (await getSharedRecord(db, `plan:${plan}`))?.facts ?? [];
+  }).catch(() => null);
+  if (!rows) return null;
+  return <OwnerBuildingRecord rows={rows} />;
 }
 
 async function OwnerUnit({ params, searchParams }: { params: Params; searchParams: Search }) {
@@ -145,6 +202,16 @@ async function OwnerUnit({ params, searchParams }: { params: Params; searchParam
               assessedValue={unit?.assessed_value ?? null}
             />
           </section>
+
+          <Suspense fallback={null}>
+            <OwnerRecord
+              plan={plan}
+              address={buildingAddress}
+              yearBuilt={matched?.year_of_construction ?? null}
+              rollYear={matched?.roll_year ?? null}
+              median={matched?.current_median ?? null}
+            />
+          </Suspense>
 
           <div className="pt-4">
             <h2 className="font-bold text-xl tracking-tight text-ink mb-3">Your building</h2>

@@ -1,10 +1,12 @@
 /**
  * The BUILDING MEMORY block given to Claude on a building's next analysis.
- * Two sources, both from SurrealDB:
- *   - prior verified flags from the deterministic `flag` table (auditable)
+ * Three sources, all from SurrealDB:
+ *   - prior verified flags from this user's own reports (`flag` table)
+ *   - the shared building record: verified, dated facts from every user's
+ *     packages for this building (lib/shared-record.ts)
  *   - reconciled beliefs recalled from SurrealDB Agent Memory (compounding:
  *     the service end-dates superseded beliefs instead of overwriting them)
- * Either may be empty; returns null when both are.
+ * Any may be empty; returns null when all are.
  */
 export interface PriorFlagLine {
   severity: string;
@@ -15,12 +17,18 @@ export interface PriorFlagLine {
 const MAX_BELIEFS = 6;
 const MAX_BELIEF_CHARS = 400;
 
-export function buildMemoryContext(prior: PriorFlagLine[], beliefs: string[]): string | null {
+export function buildMemoryContext(prior: PriorFlagLine[], beliefs: string[], record: string[] = []): string | null {
   const parts: string[] = [];
   if (prior.length > 0) {
     parts.push(
       "Verified flags from previous analyses of this building:\n" +
         prior.map((f) => `- [${f.severity}] ${f.title}: ${f.explanation}`).join("\n")
+    );
+  }
+  if (record.length > 0) {
+    parts.push(
+      "Shared building record (verified facts from earlier document packages for this building, from all ClearCondo users, each with its document date). Use it to say what changed, and to point out anything earlier packages reported that these documents don't mention; it is not evidence for this report's flags:\n" +
+        record.map((l) => `- ${l}`).join("\n")
     );
   }
   const clean = beliefs

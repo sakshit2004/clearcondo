@@ -12,6 +12,11 @@ import {
   persistAnalysis,
   getPriorFlags,
   getPreviousFactsSnapshot,
+  addSharedFacts,
+  findSharedKeyByHint,
+  getSharedRecord,
+  saveSharedCheck,
+  upsertSharedBuilding,
   isDbConfigured,
   isStripeEnabled,
   getCreditBalance,
@@ -25,7 +30,8 @@ import {
 } from "@/lib/extract";
 import { verifyAnalysis, type VerifiableDoc } from "@/lib/verify";
 import { redactAnalysis, toPublicAnalysis } from "@/lib/redact";
-import { recallBuildingMemory, rememberBuildingFacts } from "@/lib/agent-memory";
+import { recallBuildingMemory, recallSharedMemory, rememberBuildingFacts } from "@/lib/agent-memory";
+import { checkAgainstRecord, extractSharedFacts, recordPromptLines, sharedBuildingKey, sharedIdentity } from "@/lib/shared-record";
 import { buildMemoryContext } from "@/lib/memory-context";
 import { hasUploadConsent } from "@/lib/retention";
 import type { DocType } from "@/lib/report-schema";
@@ -161,23 +167,41 @@ export async function POST(req: Request) {
         );
         if (rows.length > 0) bid = String(rows[0].id);
       }
-      if (!bid) return null;
-      const prior = await getPriorFlags(db, userId, bid, 12);
-      return { bid, prior };
-    });
+      // The shared building record: from the user's own building's identity
+      // when there is one, otherwise from the typed hint.
+      let sharedKey: string | null = null;
+      if (bid) {
+        const b = await dbQuery<{ name?: string; corp_number?: string; address?: string }[]>(
+          db,
+          "SELECT name, corp_number, address FROM building WHERE id = type::record($id) LIMIT 1",
+          { id: bid }
+        );
+        if (b[0]) sharedKey = sharedBuildingKey({ name: b[0].name ?? null, corp_number: b[0].corp_number ?? null, address: b[0].address ?? null });
+      }
+      if (!sharedKey && buildingNameHint) sharedKey = await findSharedKeyByHint(db, buildingNameHint);
+      const record = sharedKey ? await getSharedRecord(db, sharedKey) : null;
+      const prior = bid ? await getPriorFlags(db, userId, bid, 12) : [];
+      if (!bid && !record) return null;
+      return { bid, prior, sharedKey: record ? sharedKey : null, record };
+    }).catch(() => null);
     if (mem) {
       matchedBuildingId = mem.bid;
-      // Agent Memory recall: the building's reconciled beliefs join the
-      // prior verified flags as context. Capped so a slow memory service
-      // never eats the analysis budget; null when unconfigured.
+      // Agent Memory recall: the building's reconciled beliefs (shared when
+      // the building has a shared record) join the prior verified flags as
+      // context. Capped so a slow memory service never eats the analysis
+      // budget; null when unconfigured.
       let timer: ReturnType<typeof setTimeout> | undefined;
       const recall = await Promise.race([
-        recallBuildingMemory(userId, mem.bid),
+        mem.sharedKey ? recallSharedMemory(mem.sharedKey) : mem.bid ? recallBuildingMemory(userId, mem.bid) : Promise.resolve(null),
         new Promise<null>((resolve) => {
           timer = setTimeout(() => resolve(null), RECALL_BUDGET_MS);
         }),
       ]).finally(() => clearTimeout(timer));
-      memoryContext = buildMemoryContext(mem.prior, recall?.hits.map((h) => h.text) ?? []);
+      memoryContext = buildMemoryContext(
+        mem.prior,
+        recall?.hits.map((h) => h.text) ?? [],
+        mem.record ? recordPromptLines(mem.record.facts) : []
+      );
     }
   }
 
@@ -272,12 +296,32 @@ export async function POST(req: Request) {
           );
         }
         if (stripeOn) await spendCredit(db, userId);
+        // The shared building record: check this package against what earlier
+        // packages (any user's) established, keep that check on the report,
+        // then add this package's verified facts. Best-effort — never fails
+        // the request; the report stands on its own without it.
+        const identity = sharedIdentity(verified.building, buildingNameHint);
+        if (identity) {
+          try {
+            const shared = extractSharedFacts(verified, docs);
+            if (shared.length > 0) {
+              const before = await getSharedRecord(db, identity.key);
+              await saveSharedCheck(db, userId, rid, checkAgainstRecord(shared, before?.facts ?? []));
+              const sbid = await upsertSharedBuilding(db, identity);
+              await addSharedFacts(db, sbid, shared);
+            }
+          } catch {
+            // Never log document contents; the shared record is optional.
+          }
+        }
         // Dual-write to SurrealDB Agent Memory: the verified facts are
         // remembered as beliefs the service extracts, reconciles, and
-        // end-dates over time. Best-effort — never fails the request.
+        // end-dates over time — under the shared record when the building
+        // has one. Best-effort — never fails the request.
         await rememberBuildingFacts({
           ownerId: userId,
           buildingRecordId: buildingId,
+          sharedKey: identity?.key ?? null,
           building: verified.building,
           facts: verified.structured_facts,
         });
