@@ -358,6 +358,73 @@ body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-
 
 .reveal:not(.in) [class*="mo-"] { animation-play-state: paused; }
 
+/* ---------- Dashboard interactions ----------
+   .hover-card: a card that lifts on hover/focus, with an accent edge that
+   grows in and a "go" arrow that slides. .hover-row: the same for list rows.
+   .stagger: rises in on load; set animation-delay inline per item. */
+.hover-card {
+  position: relative;
+  transition: transform 0.22s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.22s, border-color 0.22s;
+}
+.hover-card::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 14px;
+  bottom: 14px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: #1d4ed8;
+  transform: scaleY(0);
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.hover-card:hover,
+.hover-card:focus-visible {
+  transform: translateY(-3px);
+  border-color: #15181c;
+  box-shadow: 0 14px 34px -12px rgba(21, 24, 28, 0.22);
+}
+.hover-card:hover::before,
+.hover-card:focus-visible::before { transform: scaleY(1); }
+.go-arrow {
+  display: inline-block;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.hover-card:hover .go-arrow,
+.hover-card:focus-visible .go-arrow,
+.hover-row:hover .go-arrow,
+.hover-row:focus-visible .go-arrow { opacity: 1; transform: none; }
+.hover-row {
+  position: relative;
+  border-radius: 10px;
+  transition: background-color 0.18s, padding 0.18s;
+}
+.hover-row:hover,
+.hover-row:focus-visible { background: #f5f6f3; }
+.hover-row::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 3px;
+  background: #1d4ed8;
+  transform: scaleY(0);
+  transition: transform 0.2s;
+}
+.hover-row:hover::before,
+.hover-row:focus-visible::before { transform: scaleY(1); }
+.stagger { animation: cc-up 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+/* A bar that grows from the left once, e.g. severity mix and exposure. */
+.bar-in { transform-origin: left; animation: cc-grow 0.9s 0.25s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.step-card { transition: transform 0.2s, background-color 0.2s; border-radius: 12px; }
+.step-card:hover { transform: translateY(-2px); background: #f5f6f3; }
+.step-card .step-num { transition: background-color 0.2s, color 0.2s; }
+.step-card:hover .step-num { background: #1d4ed8; color: #fff; }
+
 /* Thin indeterminate bar (analysis progress) */
 .loadbar {
   position: relative;
@@ -405,6 +472,11 @@ body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-
   }
   .record-old {
     background-size: 100% 1.5px;
+  }
+  .hover-card:hover,
+  .hover-card:focus-visible,
+  .step-card:hover {
+    transform: none;
   }
   html {
     scroll-behavior: auto;

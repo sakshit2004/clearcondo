@@ -55,11 +55,12 @@ export default async function BuildingsPage() {
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {buildings.map((b) => (
+          {buildings.map((b, i) => (
             <Link
               key={String(b.id)}
               href={`/app/buildings/${shortId(b.id)}`}
-              className="report-paper p-5 hover:border-ink transition-colors"
+              className="hover-card stagger report-paper p-5 no-underline"
+              style={{ animationDelay: `${i * 60}ms` }}
             >
               <div className="font-bold text-ink mb-1">{b.name}</div>
               <div className="micro-label !text-[10px] text-stone-500 mb-3">
@@ -73,6 +74,9 @@ export default async function BuildingsPage() {
                   · updated {timeAgo(String(b.updated_at))}
                 </span>
               </div>
+              <span className="mt-4 pt-3 border-t border-[#eceee9] text-sm font-semibold text-ink flex items-center justify-between">
+                Open building memory <span className="go-arrow" aria-hidden>→</span>
+              </span>
             </Link>
           ))}
         </div>

@@ -22,18 +22,37 @@ const STEPS: [string, string][] = [
   ["Get your number", "Tell us about the unit and we reply with your potential saving."],
 ];
 
+/** Change in the unit's assessment since the previous roll: up is more tax. */
+function ChangeChip({ value, prev }: { value?: number; prev?: number }) {
+  if (value == null || !prev) return null;
+  const pct = (value / prev - 1) * 100;
+  if (Math.abs(pct) < 0.05) return null;
+  const up = pct > 0;
+  return (
+    <span
+      className={`flex-none rounded-md px-1.5 py-px text-[11px] font-semibold tabular-nums ${up ? "bg-warn-soft text-warn-dark" : "bg-accent-soft text-accent-dark"}`}
+      title="Change in the City's assessment since last year"
+    >
+      {up ? "▲" : "▼"} {Math.abs(pct).toFixed(1)}%
+    </span>
+  );
+}
+
 function Properties({ rows }: { rows: OwnerPropertyRow[] }) {
   if (rows.length === 0) return null;
   return (
     <section className="report-paper rounded-2xl p-6 sm:p-8" aria-labelledby="my-props">
       <h2 id="my-props" className="text-lg font-bold">Your properties</h2>
       <p className="text-sm text-subtle mt-1 mb-4">Saved when you check a unit. Checked again each time you open it.</p>
-      <ul className="divide-y divide-[#eceee9]">
-        {rows.map((p) => (
-          <li key={p.id}>
-            <Link href={ownerBuildingHref(p.plan, p.unit)} className="group flex items-center gap-4 py-3.5 no-underline">
+      <ul className="divide-y divide-[#eceee9] -mx-3">
+        {rows.map((p, i) => (
+          <li key={p.id} className="stagger" style={{ animationDelay: `${i * 60}ms` }}>
+            <Link href={ownerBuildingHref(p.plan, p.unit)} className="hover-row group flex items-center gap-4 py-3.5 px-3 no-underline">
               <span className="flex-1 min-w-0">
-                <span className="block font-semibold text-ink truncate">{p.address}</span>
+                <span className="flex items-center gap-2 min-w-0">
+                  <span className="font-semibold text-ink truncate">{p.address}</span>
+                  <ChangeChip value={p.assessed_value} prev={p.prev_value} />
+                </span>
                 <span className="block text-[13px] text-subtle">
                   Plan {p.plan} · checked {formatDate(p.checked_at)}
                   {p.requested_at && " · estimate requested"}
@@ -45,7 +64,7 @@ function Properties({ rows }: { rows: OwnerPropertyRow[] }) {
                   {p.est_tax != null ? `${cad(p.est_tax)}/yr tax` : "—"}
                 </span>
               </span>
-              <span aria-hidden className="text-subtle group-hover:text-ink transition">→</span>
+              <span aria-hidden className="go-arrow text-ink">→</span>
             </Link>
           </li>
         ))}
@@ -116,8 +135,8 @@ export default async function OwnPage({ searchParams }: { searchParams: Promise<
             <h2 className="text-lg font-bold mb-4">How it works</h2>
             <ol className="grid sm:grid-cols-3 gap-5">
               {STEPS.map(([title, body], i) => (
-                <li key={title}>
-                  <span className="inline-flex w-7 h-7 items-center justify-center rounded-full bg-accent-soft text-accent-dark text-sm font-bold">
+                <li key={title} className="step-card p-3 -m-3">
+                  <span className="step-num inline-flex w-7 h-7 items-center justify-center rounded-full bg-accent-soft text-accent-dark text-sm font-bold">
                     {i + 1}
                   </span>
                   <h3 className="font-semibold text-ink mt-2">{title}</h3>
@@ -136,7 +155,7 @@ export default async function OwnPage({ searchParams }: { searchParams: Promise<
             <ul className="space-y-2">
               {OWNER_BILLS.map((b) => (
                 <li key={b.slug}>
-                  <Link href={`/app/own/${b.slug}`} className="flex items-center justify-between gap-3 text-sm group no-underline">
+                  <Link href={`/app/own/${b.slug}`} className="hover-row flex items-center justify-between gap-3 text-sm group no-underline px-3 py-2 -mx-3">
                   <span className="text-ink group-hover:underline underline-offset-2">{b.title}</span>
                   <span className="rounded-md bg-info-soft text-info-dark px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">
                     Soon

@@ -56,11 +56,11 @@ function ResultList({ q, out, unit }: { q: string; out: CondoSearchResponse; uni
         )}
       </p>
       <ul className="grid gap-3">
-        {results.map((b) => (
-          <li key={b.plan}>
+        {results.map((b, i) => (
+          <li key={b.plan} className="stagger" style={{ animationDelay: `${i * 50}ms` }}>
             <Link
               href={ownerBuildingHref(b.plan, unit)}
-              className="group report-paper rounded-2xl px-5 py-4 flex items-center gap-4 hover:border-ink transition-colors no-underline"
+              className="group hover-card report-paper rounded-2xl px-5 py-4 flex items-center gap-4 no-underline"
             >
               <span className="flex-1 min-w-0">
                 <span className="flex flex-wrap items-center gap-2">

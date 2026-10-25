@@ -5,6 +5,7 @@ import { getUserId, isClerkConfigured } from "@/lib/auth";
 import { withDb, listReports, dbQuery, isDbConfigured } from "@/lib/db";
 import { cad, formatDate, timeAgo } from "@/lib/format";
 import SetupNotice from "@/components/SetupNotice";
+import SeverityBar, { type SeverityMix } from "@/components/SeverityBar";
 
 
 export default async function DashboardPage() {
@@ -20,18 +21,31 @@ export default async function DashboardPage() {
 
   const data = await withDb(async (db) => {
     const reports = await listReports(db, userId);
-    const counts = await dbQuery<{ id: string; n: number }[]>(
+    const counts = await dbQuery<{ id: string; severity: string; n: number }[]>(
       db,
-      `SELECT report AS id, count() AS n FROM flag WHERE owner_id = $owner GROUP BY report`,
+      `SELECT report AS id, severity, count() AS n FROM flag WHERE owner_id = $owner GROUP BY report, severity`,
       { owner: userId }
     );
-    const countById = new Map(
-      (counts ?? []).map((c) => [String(c.id), c.n])
-    );
-    return reports.map((r) => ({ ...r, flagCount: countById.get(String(r.id)) ?? 0 }));
+    const mix = new Map<string, SeverityMix>();
+    for (const c of counts ?? []) {
+      const m = mix.get(String(c.id)) ?? { critical: 0, warning: 0, info: 0 };
+      if (c.severity === "critical" || c.severity === "warning" || c.severity === "info") m[c.severity] += c.n;
+      mix.set(String(c.id), m);
+    }
+    return reports.map((r) => {
+      const m = mix.get(String(r.id)) ?? { critical: 0, warning: 0, info: 0 };
+      return { ...r, mix: m, flagCount: m.critical + m.warning + m.info };
+    });
   });
 
   const reports = data ?? [];
+  const maxExposure = Math.max(0, ...reports.map((r) => r.money_exposure_total_cad ?? 0));
+  const stats: [string, string][] = [
+    [String(reports.length), reports.length === 1 ? "report" : "reports"],
+    [String(new Set(reports.map((r) => String(r.building))).size), "buildings"],
+    [String(reports.reduce((n, r) => n + r.mix.critical, 0)), "critical flags"],
+    [cad(reports.reduce((n, r) => n + (r.money_exposure_total_cad ?? 0), 0)), "money flagged"],
+  ];
 
   return (
     <div>
@@ -67,35 +81,51 @@ export default async function DashboardPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {reports.map((r) => (
-            <Link
-              key={String(r.id)}
-              href={`/app/reports/${encodeURIComponent(String(r.id).split(":")[1] ?? String(r.id))}`}
-              className="report-paper p-5 hover:border-ink transition-colors"
-            >
-              <div className="font-bold text-ink mb-1">
-                {r.building_name || "Unnamed building"}
+        <>
+          <dl className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+            {stats.map(([v, l], i) => (
+              <div key={l} className="stagger rounded-[14px] border border-line bg-white px-5 py-4" style={{ animationDelay: `${i * 70}ms` }}>
+                <dt className="sr-only">{l}</dt>
+                <dd className="text-2xl font-bold tracking-tight text-ink tabular-nums">{v}</dd>
+                <dd className="text-[13px] text-subtle mt-0.5">{l}</dd>
               </div>
-              <div className="micro-label !text-[10px] text-stone-500 mb-3">
-                {formatDate(String(r.created_at))} · {timeAgo(String(r.created_at))}
-              </div>
-              <p className="text-sm text-stone-600 line-clamp-3 mb-4">
-                {r.summary}
-              </p>
-              <div className="flex items-center justify-between text-sm">
-                <span className="micro-label text-stone-500">
-                  {r.flagCount} flag{r.flagCount === 1 ? "" : "s"}
-                </span>
-                {r.money_exposure_total_cad != null && (
-                  <span className="font-bold text-xl text-ink tabular-nums">
-                    {cad(r.money_exposure_total_cad)}
-                  </span>
+            ))}
+          </dl>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {reports.map((r, i) => (
+              <Link
+                key={String(r.id)}
+                href={`/app/reports/${encodeURIComponent(String(r.id).split(":")[1] ?? String(r.id))}`}
+                className="hover-card stagger report-paper p-5 flex flex-col no-underline"
+                style={{ animationDelay: `${120 + i * 60}ms` }}
+              >
+                <div className="font-bold text-ink mb-1">{r.building_name || "Unnamed building"}</div>
+                <div className="micro-label !text-[10px] text-stone-500 mb-3">
+                  {formatDate(String(r.created_at))} · {timeAgo(String(r.created_at))}
+                </div>
+                <p className="text-sm text-stone-600 line-clamp-3 mb-4 flex-1">{r.summary}</p>
+                <SeverityBar mix={r.mix} />
+                {r.money_exposure_total_cad != null && maxExposure > 0 && (
+                  <div className="mt-4">
+                    <div className="flex items-baseline justify-between text-sm">
+                      <span className="text-subtle">Money at stake</span>
+                      <span className="font-bold text-xl text-ink tabular-nums">{cad(r.money_exposure_total_cad)}</span>
+                    </div>
+                    <div className="mt-1.5 h-1.5 rounded-full bg-[#eceee9] overflow-hidden" aria-hidden>
+                      <div
+                        className="bar-in h-full rounded-full bg-ink"
+                        style={{ width: r.money_exposure_total_cad > 0 ? `${Math.max(4, (r.money_exposure_total_cad / maxExposure) * 100)}%` : 0 }}
+                      />
+                    </div>
+                  </div>
                 )}
-              </div>
-            </Link>
-          ))}
-        </div>
+                <span className="mt-4 pt-3 border-t border-[#eceee9] text-sm font-semibold text-ink flex items-center justify-between">
+                  Open report <span className="go-arrow" aria-hidden>→</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
