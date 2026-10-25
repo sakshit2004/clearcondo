@@ -23,6 +23,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
+import { analysisModel, speedParams } from "./model-config.ts";
 import { z } from "zod";
 import type { PageText } from "./extract";
 
@@ -144,7 +145,8 @@ async function transcribeChunk(
   try {
     message = await client.messages.create(
       {
-        model,
+        // Transcription needs no reasoning: thinking off, low effort.
+        ...speedParams(model),
         max_tokens: 8000,
         messages: [
           {
@@ -227,7 +229,7 @@ export async function transcribeScannedPdf(
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) throw new Error("ANTHROPIC_API_KEY is not set");
   const client = new Anthropic({ apiKey: key });
-  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
+  const model = analysisModel();
 
   const ranges = pageRanges(pageCount, ocrChunkPages());
   const chunks = await mapWithConcurrency(ranges, ocrMaxConcurrency(), ([s, e]) =>

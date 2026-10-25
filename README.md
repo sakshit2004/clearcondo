@@ -117,8 +117,10 @@ npm run build                # must pass before deploy
 
 ### 2. Anthropic (AI analysis) — required for real analyses
 1. https://console.anthropic.com → API Keys → create key → `ANTHROPIC_API_KEY`.
-2. Optional: `ANTHROPIC_MODEL` (default `claude-sonnet-5-5`; adaptive
-   thinking on by default, billed as output).
+2. Optional: `ANTHROPIC_MODEL` (default `claude-sonnet-5-5`). Analysis and
+   OCR run for speed: thinking off and low effort (`lib/model-config.ts`).
+   `ANTHROPIC_EFFORT` (low…max) and `ANTHROPIC_THINKING=on` trade speed back
+   for depth.
 3. The user holds their own key (incl. the $100 hackathon credit) — paste it
    into the deploy environment, never into chat or code.
 
@@ -182,7 +184,7 @@ Measured on the demo stack (`node --experimental-strip-types scripts/measure-pip
 |---|---|---|
 | PDF text extraction | 24 ms/page | ~2.4s |
 | Evidence verification | 0.2 ms/quote | <0.1s |
-| Claude analysis (~42k in-tokens, ≤8k out incl. thinking) | — | ~30–90s (estimate) |
+| Claude analysis (~42k in-tokens, report JSON out, thinking off) | — | less than the ~30–90s estimated with thinking on (not yet measured) |
 | DB persist | — | <2s (assumed) |
 | **Total, sync** | — | **well under the 300s budget** |
 
