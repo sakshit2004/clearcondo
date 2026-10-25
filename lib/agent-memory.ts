@@ -226,12 +226,11 @@ export async function rememberBuildingFacts(
   const text = factsToMemoryText(opts.building, opts.facts);
   if (!text.trim()) return { ok: false, skipped: "empty" };
   try {
-    await client.remember(text, {
-      infer: "full",
-      labels: opts.sharedKey
-        ? sharedLabels(opts.sharedKey, opts.facts.doc_date)
-        : buildingLabels(opts.ownerId, opts.buildingRecordId, opts.facts.doc_date),
-    });
+    const labels = opts.sharedKey
+      ? sharedLabels(opts.sharedKey, opts.facts.doc_date)
+      : buildingLabels(opts.ownerId, opts.buildingRecordId, opts.facts.doc_date);
+    await client.remember(text, { infer: "full", labels });
+    invalidateRecall(labels);
     return { ok: true };
   } catch (err) {
     if (process.env.NODE_ENV !== "production") {
@@ -343,17 +342,51 @@ export interface RecallResult {
 export async function recallBuildingMemory(
   ownerId: string,
   buildingRecordId: string,
-  fetchImpl?: typeof fetch
+  fetchImpl?: typeof fetch,
+  budgetMs?: number
 ): Promise<RecallResult | null> {
-  return recallWithLabels(buildingLabels(ownerId, buildingRecordId), fetchImpl);
+  return recallWithLabels(buildingLabels(ownerId, buildingRecordId), fetchImpl, budgetMs);
 }
 
 /** Recall a building's shared beliefs: what every user's packages established. */
-export async function recallSharedMemory(sharedKey: string, fetchImpl?: typeof fetch): Promise<RecallResult | null> {
-  return recallWithLabels(sharedLabels(sharedKey), fetchImpl);
+export async function recallSharedMemory(
+  sharedKey: string,
+  fetchImpl?: typeof fetch,
+  budgetMs?: number
+): Promise<RecallResult | null> {
+  return recallWithLabels(sharedLabels(sharedKey), fetchImpl, budgetMs);
 }
 
-async function recallWithLabels(labels: string[], fetchImpl?: typeof fetch): Promise<RecallResult | null> {
+/**
+ * Recent recall results, per label set, on this server instance. Recall is
+ * an external call that can take seconds; beliefs only change when a new
+ * analysis is remembered, so a short cache makes repeat page views instant.
+ */
+const RECALL_TTL_MS = 10 * 60 * 1000;
+const recallCache = new Map<string, { at: number; res: RecallResult }>();
+
+/** Forget cached recalls for a building after new facts are remembered. */
+function invalidateRecall(labels: string[]): void {
+  recallCache.delete(labels.filter((l) => !l.startsWith("doc_date=")).join("|"));
+}
+
+async function recallWithLabels(labels: string[], fetchImpl?: typeof fetch, budgetMs?: number): Promise<RecallResult | null> {
+  const cacheKey = labels.join("|");
+  const hit = recallCache.get(cacheKey);
+  if (hit && Date.now() - hit.at < RECALL_TTL_MS) return hit.res;
+  if (!budgetMs) return recallUncached(labels, cacheKey, fetchImpl);
+  // A caller with a budget (a page render) gives up after it; the call keeps
+  // running and fills the cache for the next view.
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  return Promise.race([
+    recallUncached(labels, cacheKey, fetchImpl),
+    new Promise<null>((resolve) => {
+      timer = setTimeout(() => resolve(null), budgetMs);
+    }),
+  ]).finally(() => clearTimeout(timer));
+}
+
+async function recallUncached(labels: string[], cacheKey: string, fetchImpl?: typeof fetch): Promise<RecallResult | null> {
   const client = createClient(fetchImpl);
   if (!client) return null;
   try {
@@ -367,7 +400,9 @@ async function recallWithLabels(labels: string[], fetchImpl?: typeof fetch): Pro
         score: Number((h as { score?: unknown }).score ?? 0),
       }))
       .filter((h) => h.text.length > 0);
-    return { hits, tier: String(res.tier ?? "unknown") };
+    const out = { hits, tier: String(res.tier ?? "unknown") };
+    recallCache.set(cacheKey, { at: Date.now(), res: out });
+    return out;
   } catch {
     return null;
   }

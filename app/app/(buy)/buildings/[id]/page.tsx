@@ -7,7 +7,8 @@ import { cad, formatDate } from "@/lib/format";
 import { FLAG_TYPE_LABELS } from "@/lib/report-schema";
 import SetupNotice from "@/components/SetupNotice";
 import SeverityBadge from "@/components/SeverityBadge";
-import AgentMemoryPanel from "@/components/AgentMemoryPanel";
+import AgentMemoryPanel, { AgentMemoryPending } from "@/components/AgentMemoryPanel";
+import { sharedBuildingKey } from "@/lib/shared-record";
 import BuildingTimeline from "@/components/BuildingTimeline";
 import { pointFromFacts } from "@/lib/timeline";
 import type { Severity } from "@/lib/report-schema";
@@ -66,6 +67,7 @@ export default async function BuildingHistoryPage({
 
   const { building, reports, flags } = data;
   const accumulated = accumulateFlags(flags);
+  const sharedKey = sharedBuildingKey(building);
 
   return (
     <div className="max-w-4xl">
@@ -156,11 +158,11 @@ export default async function BuildingHistoryPage({
       )}
 
       {/* Agent Memory recall — reconciled beliefs, when configured.
-          Behind Suspense: the recall is an external service call (up to
-          a 15s timeout in lib/agent-memory.ts) and must never block the
-          page shell — it streams in when it answers. */}
-      <Suspense fallback={null}>
-        <AgentMemoryPanel ownerId={userId} buildingRecordId={fullId} />
+          Behind Suspense with a placeholder: the recall is an external
+          service call, capped at 4s for the page and cached for repeat
+          views (lib/agent-memory.ts); it never blocks the page shell. */}
+      <Suspense fallback={<AgentMemoryPending />}>
+        <AgentMemoryPanel ownerId={userId} buildingRecordId={fullId} sharedKey={sharedKey} />
       </Suspense>
 
       {/* Report timeline */}
