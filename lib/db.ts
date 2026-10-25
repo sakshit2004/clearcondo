@@ -92,20 +92,68 @@ async function connect(): Promise<Surreal | null> {
   }
 }
 
+/*
+ * One connection per server instance, reused across requests. Opening a
+ * socket, signing in and selecting the database on every request made each
+ * dashboard click wait on a fresh handshake. Queries are independent RPCs
+ * with their own params, so sharing is safe. A connection idle for a while
+ * (e.g. a frozen serverless instance) is pinged first and replaced if dead.
+ */
+let shared: { db: Surreal; lastUsed: number } | null = null;
+let connecting: Promise<Surreal | null> | null = null;
+const PING_AFTER_MS = 30_000;
+const PING_TIMEOUT_MS = 2_000;
+
+async function alive(db: Surreal): Promise<boolean> {
+  if (!db.isConnected) return false;
+  try {
+    await Promise.race([
+      db.query("RETURN 1"),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("ping timeout")), PING_TIMEOUT_MS)),
+    ]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function drop(db: Surreal) {
+  if (shared?.db === db) shared = null;
+  db.close().catch(() => {});
+}
+
+async function sharedDb(): Promise<Surreal | null> {
+  if (shared) {
+    const fresh = Date.now() - shared.lastUsed < PING_AFTER_MS && shared.db.isConnected;
+    if (fresh || (await alive(shared.db))) {
+      shared.lastUsed = Date.now();
+      return shared.db;
+    }
+    drop(shared.db);
+  }
+  connecting ??= connect()
+    .then((db) => {
+      if (db) shared = { db, lastUsed: Date.now() };
+      return db;
+    })
+    .finally(() => {
+      connecting = null;
+    });
+  return connecting;
+}
+
 /** Run a callback with a connected db; null when SurrealDB is not configured. */
 export async function withDb<T>(
   fn: (db: Surreal) => Promise<T>
 ): Promise<T | null> {
-  const db = await connect();
+  const db = await sharedDb();
   if (!db) return null;
   try {
     return await fn(db);
-  } finally {
-    try {
-      await db.close();
-    } catch {
-      /* ignore */
-    }
+  } catch (err) {
+    // A broken socket shouldn't poison later requests.
+    if (!db.isConnected) drop(db);
+    throw err;
   }
 }
 

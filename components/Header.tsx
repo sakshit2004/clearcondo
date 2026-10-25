@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { isClerkConfigured } from "@/lib/auth";
 import { Show, UserButton } from "@clerk/nextjs";
 import Logo from "./Logo";
+import HeaderDoors, { HeaderDoorsStatic } from "./HeaderDoors";
 
 export default function Header() {
   const configured = isClerkConfigured();
@@ -16,22 +17,9 @@ export default function Header() {
         </Link>
         <nav className="flex items-center gap-2 sm:gap-6" aria-label="Main">
           {/* The two doors, always visible: buying and owning. */}
-          <div className="flex items-center gap-2">
-            <Link
-              href="/app"
-              className="header-cta btn-lift bg-ink hover:bg-accent text-white text-[14px] sm:text-[15px] font-semibold px-3 sm:px-4 min-h-10 sm:min-h-11 inline-flex items-center rounded-lg whitespace-nowrap"
-            >
-              <span className="sm:hidden">Buying</span>
-              <span className="hidden sm:inline">For buyers</span>
-            </Link>
-            <Link
-              href="/app/own"
-              className="header-cta-alt btn-lift border border-line2 hover:border-ink text-ink text-[14px] sm:text-[15px] font-semibold px-3 sm:px-4 min-h-10 sm:min-h-11 inline-flex items-center rounded-lg whitespace-nowrap transition-colors"
-            >
-              <span className="sm:hidden">Owning</span>
-              <span className="hidden sm:inline">For owners</span>
-            </Link>
-          </div>
+          <Suspense fallback={<HeaderDoorsStatic />}>
+            <HeaderDoors />
+          </Suspense>
           {configured ? (
             /* Auth state is runtime data: under Cache Components the
                static shell (including /_not-found) can only prerender

@@ -8,7 +8,16 @@ import { cad } from "@/lib/format";
 type Scenario = { pct: number; lowerBy: number; saving: number; fee: number };
 
 /** What a lower assessment would be worth, when the owner's numbers don't give a tailored estimate. */
-function ScenarioCard({ scenarios, reason }: { scenarios: Scenario[]; reason: string | null }) {
+function ScenarioCard({
+  scenarios,
+  reason,
+  medianBasis,
+}: {
+  scenarios: Scenario[];
+  reason: string | null;
+  /** Set when the unit wasn't found and the building's median unit was used. */
+  medianBasis: number | null;
+}) {
   return (
     <section className="rounded-xl border border-ink bg-white p-5" aria-labelledby="scenario-heading">
       <div className="flex flex-wrap items-center gap-2">
@@ -18,6 +27,12 @@ function ScenarioCard({ scenarios, reason }: { scenarios: Scenario[]; reason: st
       <p className="text-sm text-stone-600 mt-1">
         {reason ?? "What a lower assessment would save you each year:"}
       </p>
+      {medianBasis != null && (
+        <p className="text-[12px] text-warn-dark mt-1">
+          We couldn&apos;t find your unit on the City roll, so this uses the building&apos;s median unit (
+          {cad(medianBasis)}). Your unit&apos;s own value may differ.
+        </p>
+      )}
       <div className="mt-4 grid grid-cols-3 gap-3">
         {scenarios.map((sc) => (
           <div key={sc.pct} className={`rounded-lg p-3 ${sc.pct === 5 ? "bg-ink text-white" : "border border-line"}`}>
@@ -94,6 +109,7 @@ export default function OwnerRequestForm({
   const [comps, setComps] = useState<Comp[]>(emptyComps);
   const [sentEstimate, setSentEstimate] = useState<OwnerEstimate | null>(null);
   const [scenarios, setScenarios] = useState<Scenario[] | null>(null);
+  const [medianBasis, setMedianBasis] = useState<number | null>(null);
 
   const comparables = comps
     .map((c) => ({ price: num(c.price), sqft: num(c.sqft), date: c.date || undefined }))
@@ -143,6 +159,7 @@ export default function OwnerRequestForm({
       if (!res.ok) throw new Error(body?.error ?? "Couldn't send your request. Please try again.");
       setSentEstimate(body?.estimate ?? estimate);
       setScenarios(body?.scenarios ?? null);
+      setMedianBasis(body?.basis === "median" ? body.basis_value : null);
       setStatus("sent");
     } catch (err) {
       setError((err as Error).message);
@@ -161,10 +178,10 @@ export default function OwnerRequestForm({
         {tailored ? (
           <EstimateCard estimate={tailored} />
         ) : scenarios ? (
-          <ScenarioCard scenarios={scenarios} reason={reason} />
+          <ScenarioCard scenarios={scenarios} reason={reason} medianBasis={medianBasis} />
         ) : (
           <p className="rounded-xl border border-line p-5 text-sm text-stone-600">
-            We couldn&apos;t reach the City&apos;s records just now, so we&apos;ll send your estimate by email.
+            We couldn&apos;t load this building&apos;s City values just now, so we&apos;ll send your estimate by email.
           </p>
         )}
         <div className="rounded-xl bg-accent-soft p-4" role="status">
@@ -179,12 +196,6 @@ export default function OwnerRequestForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-5" aria-label="Get my savings estimate">
-      <p className="rounded-lg bg-info-soft text-info-dark text-sm px-4 py-3 leading-relaxed">
-        <span className="rounded bg-info-dark text-white px-1.5 py-px text-[11px] font-semibold uppercase tracking-wide mr-2">
-          Beta
-        </span>
-        Estimates are free while we test this. Treat the number as a starting point: we check it by hand.
-      </p>
       {alreadyRequested && (
         <p className="rounded-lg bg-stone-100 text-stone-700 text-sm px-4 py-3">
           You&apos;ve already asked about this unit. Send again to add or correct details.

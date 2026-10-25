@@ -4,6 +4,7 @@ import { createOwnerRequest, isDbConfigured, withDb } from "@/lib/db";
 import { OwnerRequestSchema } from "@/lib/owner";
 import { estimateSaving, savingIfLowered } from "@/lib/owner-estimate";
 import { fetchUnitRecord } from "@/lib/calgary/unit";
+import { getCityRecords } from "@/lib/calgary/check";
 
 /** Reductions shown when the owner's numbers don't give a tailored estimate. */
 const SCENARIOS = [1, 5, 10];
@@ -56,11 +57,22 @@ export async function POST(req: Request) {
         comparables: r.comparables,
       })
     : null;
-  const scenarios = assessed ? SCENARIOS.map((pct) => ({ pct, ...savingIfLowered(assessed, pct) })) : null;
+  // No unit value at all: fall back to the building's median unit (same 24h
+  // cache as the building page) so the owner still sees what a cut is worth.
+  let basis: "unit" | "median" | null = assessed ? "unit" : null;
+  let median: number | null = null;
+  if (!assessed) {
+    median = await getCityRecords({ planCandidates: [r.plan], address: null }, { cacheKey: `plan:${r.plan}` })
+      .then(({ records }) => (records.status === "matched" ? records.current_median : null))
+      .catch(() => null);
+    if (median) basis = "median";
+  }
+  const base = assessed ?? median;
+  const scenarios = base ? SCENARIOS.map((pct) => ({ pct, ...savingIfLowered(base, pct) })) : null;
 
   try {
     const id = await withDb((db) => createOwnerRequest(db, userId, r, estimate ?? undefined));
-    return NextResponse.json({ ok: true, id, estimate, scenarios });
+    return NextResponse.json({ ok: true, id, estimate, scenarios, basis, basis_value: base ?? null });
   } catch {
     return NextResponse.json({ error: "Couldn't save your request. Please try again." }, { status: 500 });
   }

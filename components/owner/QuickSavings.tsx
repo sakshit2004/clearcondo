@@ -19,21 +19,32 @@ const num = (v: string) => {
  * optional "what you paid" for a tailored number. Plain calculations from
  * the City value and the residential tax rate, labelled as such.
  */
-export default function QuickSavings({ assessedValue }: { assessedValue: number }) {
+export default function QuickSavings({
+  assessedValue,
+  medianBasis = false,
+}: {
+  assessedValue: number;
+  /** The unit wasn't found: `assessedValue` is the building's median unit. */
+  medianBasis?: boolean;
+}) {
   const [pct, setPct] = useState(5);
   const [paid, setPaid] = useState("");
   const [month, setMonth] = useState("");
   const perPercent = savingIfLowered(assessedValue, 1).saving;
   const at = savingIfLowered(assessedValue, pct);
   const price = num(paid);
-  const tailored = price
+  const tailored = price && !medianBasis
     ? estimateSaving({ assessed_value: assessedValue, purchase_price: price, purchase_date: month || undefined })
     : null;
 
   return (
     <div className="mt-4 space-y-5">
       <p className="text-[15px] text-white/85 leading-relaxed">
-        Each 1% off your {cad(assessedValue)} assessment saves about{" "}
+        {medianBasis ? (
+          <>Based on this building&apos;s median unit ({cad(assessedValue)}), each 1% off saves about </>
+        ) : (
+          <>Each 1% off your {cad(assessedValue)} assessment saves about </>
+        )}
         <strong className="text-white tabular-nums">{cad(perPercent)} a year</strong>.
       </p>
 
@@ -63,6 +74,7 @@ export default function QuickSavings({ assessedValue }: { assessedValue: number 
         </p>
       </div>
 
+      {!medianBasis && (
       <div>
         <p className="text-sm font-semibold text-white">Know what you paid? Get a closer number.</p>
         <div className="mt-2 grid grid-cols-2 gap-2 max-w-md">
@@ -84,6 +96,7 @@ export default function QuickSavings({ assessedValue }: { assessedValue: number 
           </p>
         )}
       </div>
+      )}
     </div>
   );
 }

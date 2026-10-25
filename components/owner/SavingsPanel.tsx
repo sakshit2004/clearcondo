@@ -8,11 +8,14 @@ export default function SavingsPanel({
   saving,
   ctaHref = "#estimate",
   ctaLabel = "Get my savings estimate",
+  medianValue = null,
 }: {
   unit: Pick<UnitRecord, "unit" | "assessed_value"> | null;
   saving: number | null;
   ctaHref?: string;
   ctaLabel?: string;
+  /** The building's median unit value, used when the unit's own value is missing. */
+  medianValue?: number | null;
 }) {
   return (
     <section className="rounded-2xl bg-ink text-white p-6 sm:p-8" aria-labelledby="savings-heading">
@@ -41,7 +44,11 @@ export default function SavingsPanel({
           unit size, condition or sales. Here&apos;s what a lower assessment would be worth.
         </p>
       )}
-      {unit?.assessed_value != null && <QuickSavings assessedValue={unit.assessed_value} />}
+      {unit?.assessed_value != null ? (
+        <QuickSavings assessedValue={unit.assessed_value} />
+      ) : medianValue != null ? (
+        <QuickSavings assessedValue={medianValue} medianBasis />
+      ) : null}
       <a
         href={ctaHref}
         className="btn-lift mt-5 inline-flex items-center justify-center rounded-lg bg-white text-ink font-semibold text-[15px] px-5 min-h-11"
