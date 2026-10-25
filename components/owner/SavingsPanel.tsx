@@ -1,5 +1,6 @@
 import type { UnitRecord } from "@/lib/calgary/unit";
 import { cad } from "@/lib/format";
+import QuickSavings from "./QuickSavings";
 
 /** "Could you be paying less?": an approximate saving when one is configured, otherwise the ask for details. */
 export default function SavingsPanel({
@@ -8,7 +9,7 @@ export default function SavingsPanel({
   ctaHref = "#estimate",
   ctaLabel = "Get my savings estimate",
 }: {
-  unit: Pick<UnitRecord, "unit"> | null;
+  unit: Pick<UnitRecord, "unit" | "assessed_value"> | null;
   saving: number | null;
   ctaHref?: string;
   ctaLabel?: string;
@@ -37,10 +38,10 @@ export default function SavingsPanel({
       ) : (
         <p className="text-sm text-[#c3cad4] mt-2 max-w-2xl leading-relaxed">
           Open data can&apos;t say whether {unit ? `unit ${unit.unit}` : "your unit"} is over-assessed: it has no
-          unit size, condition or sales. Tell us about the unit and we&apos;ll check it against comparable sales and
-          come back with your potential saving.
+          unit size, condition or sales. Here&apos;s what a lower assessment would be worth.
         </p>
       )}
+      {unit?.assessed_value != null && <QuickSavings assessedValue={unit.assessed_value} />}
       <a
         href={ctaHref}
         className="btn-lift mt-5 inline-flex items-center justify-center rounded-lg bg-white text-ink font-semibold text-[15px] px-5 min-h-11"

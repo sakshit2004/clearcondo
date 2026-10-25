@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { dateProblem, estimateSaving, median, monthsBetween } from "../owner-estimate.ts";
+import { dateProblem, estimateSaving, median, monthsBetween, savingIfLowered } from "../owner-estimate.ts";
 import { CALGARY_RES_TAX_RATE_2026 } from "../calgary/appeals.ts";
 import { OwnerRequestSchema } from "../owner.ts";
 
@@ -118,5 +118,14 @@ describe("OwnerRequestSchema evidence", () => {
   it("rejects a bad month and too many comparables", () => {
     assert.equal(OwnerRequestSchema.safeParse({ ...base, purchase_date: "March" }).success, false);
     assert.equal(OwnerRequestSchema.safeParse({ ...base, comparables: Array(6).fill({}) }).success, false);
+  });
+});
+
+describe("savingIfLowered", () => {
+  it("prices a percentage cut with no other input", () => {
+    assert.deepEqual(savingIfLowered(412_000, 1), { lowerBy: 4120, saving: 27, fee: 8 });
+    const five = savingIfLowered(412_000, 5);
+    assert.equal(five.lowerBy, 20_600);
+    assert.equal(five.saving, Math.round(20_600 * CALGARY_RES_TAX_RATE_2026)); // 137
   });
 });

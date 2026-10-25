@@ -3,6 +3,36 @@
 import { useState } from "react";
 import { estimateSaving, MAX_COMPARABLES, type OwnerEstimate } from "@/lib/owner-estimate";
 import EstimateCard from "./EstimateCard";
+import { cad } from "@/lib/format";
+
+type Scenario = { pct: number; lowerBy: number; saving: number; fee: number };
+
+/** What a lower assessment would be worth, when the owner's numbers don't give a tailored estimate. */
+function ScenarioCard({ scenarios, reason }: { scenarios: Scenario[]; reason: string | null }) {
+  return (
+    <section className="rounded-xl border border-ink bg-white p-5" aria-labelledby="scenario-heading">
+      <div className="flex flex-wrap items-center gap-2">
+        <h3 id="scenario-heading" className="font-bold text-ink">Your estimated saving</h3>
+        <span className="rounded bg-info-soft text-info-dark px-1.5 py-px text-[11px] font-semibold">Calculation</span>
+      </div>
+      <p className="text-sm text-stone-600 mt-1">
+        {reason ?? "What a lower assessment would save you each year:"}
+      </p>
+      <div className="mt-4 grid grid-cols-3 gap-3">
+        {scenarios.map((sc) => (
+          <div key={sc.pct} className={`rounded-lg p-3 ${sc.pct === 5 ? "bg-ink text-white" : "border border-line"}`}>
+            <div className="text-xl font-bold tracking-tight tabular-nums">~{cad(sc.saving)}/yr</div>
+            <div className={`text-[12px] mt-0.5 ${sc.pct === 5 ? "text-white/75" : "text-ink2"}`}>if {sc.pct}% lower</div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-[12px] text-stone-500 leading-relaxed">
+        At the 2026 Calgary residential rate. We check your unit against recent sales and confirm the real number by
+        email.
+      </p>
+    </section>
+  );
+}
 
 const input =
   "w-full rounded-lg border border-line2 bg-white px-3.5 min-h-[46px] text-[15px] text-ink placeholder:text-subtle focus:outline-2 focus:outline-accent focus:outline-offset-1 focus:border-accent";
@@ -63,6 +93,7 @@ export default function OwnerRequestForm({
   const [appraisal, setAppraisal] = useState({ value: "", date: "" });
   const [comps, setComps] = useState<Comp[]>(emptyComps);
   const [sentEstimate, setSentEstimate] = useState<OwnerEstimate | null>(null);
+  const [scenarios, setScenarios] = useState<Scenario[] | null>(null);
 
   const comparables = comps
     .map((c) => ({ price: num(c.price), sqft: num(c.sqft), date: c.date || undefined }))
@@ -111,6 +142,7 @@ export default function OwnerRequestForm({
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.error ?? "Couldn't send your request. Please try again.");
       setSentEstimate(body?.estimate ?? estimate);
+      setScenarios(body?.scenarios ?? null);
       setStatus("sent");
     } catch (err) {
       setError((err as Error).message);
@@ -119,16 +151,28 @@ export default function OwnerRequestForm({
   }
 
   if (status === "sent") {
+    const tailored = sentEstimate && sentEstimate.status === "saving" ? sentEstimate : null;
+    const reason =
+      sentEstimate?.status === "no_saving"
+        ? "Your numbers don't point below the City's value on their own. Here's what a lower assessment would save:"
+        : null;
     return (
       <div className="space-y-4">
-        <div className="rounded-xl bg-accent-soft p-5" role="status">
-          <p className="font-semibold text-accent-dark">Request sent.</p>
-          <p className="text-sm text-stone-700 mt-1 leading-relaxed">
-            We&apos;ll check your unit against recent comparable sales and reply by email to confirm your potential
-            saving. Nothing is filed with the City without your go-ahead.
+        {tailored ? (
+          <EstimateCard estimate={tailored} />
+        ) : scenarios ? (
+          <ScenarioCard scenarios={scenarios} reason={reason} />
+        ) : (
+          <p className="rounded-xl border border-line p-5 text-sm text-stone-600">
+            We couldn&apos;t reach the City&apos;s records just now, so we&apos;ll send your estimate by email.
+          </p>
+        )}
+        <div className="rounded-xl bg-accent-soft p-4" role="status">
+          <p className="text-sm text-stone-700 leading-relaxed">
+            <strong className="text-accent-dark">Request sent.</strong> We&apos;ll check your unit against recent
+            comparable sales and confirm by email. Nothing is filed with the City without your go-ahead.
           </p>
         </div>
-        {sentEstimate && sentEstimate.status !== "not_enough" && <EstimateCard estimate={sentEstimate} />}
       </div>
     );
   }
@@ -180,7 +224,7 @@ export default function OwnerRequestForm({
       {estimate ? (
         <EstimateCard estimate={estimate} />
       ) : (
-        <p className="text-[13px] text-subtle">Pick your unit above to see an instant estimate.</p>
+        <p className="text-[13px] text-subtle">Your estimate appears when you send this.</p>
       )}
 
       <details className="group rounded-xl border border-line">

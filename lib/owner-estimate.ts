@@ -148,3 +148,10 @@ export function estimateSaving(input: EstimateInput): OwnerEstimate {
     fee: Math.round(saving * OWNER_PRICING.feeShare),
   };
 }
+
+/** Yearly tax saved if the assessment came down by `pct` percent (no evidence needed). */
+export function savingIfLowered(assessed: number, pct: number) {
+  const lowerBy = Math.round(assessed * (pct / 100));
+  const saving = Math.round(lowerBy * CALGARY_RES_TAX_RATE_2026);
+  return { lowerBy, saving, fee: Math.round(saving * OWNER_PRICING.feeShare) };
+}
