@@ -313,6 +313,51 @@ body:has(.landing-hero):not(:has([style*="display: none"] .landing-hero)) .site-
   transform: none;
 }
 
+/* ---------- Landing motion (components/landing/Motion.tsx) ----------
+   Each element's resting style is the finished frame; the animation plays
+   from the start state, and waits (paused) until its Reveal scrolls in. */
+@keyframes mo-scan {
+  0% { transform: translateY(16px); opacity: 0; }
+  6% { opacity: 1; }
+  55% { transform: translateY(144px); opacity: 1; }
+  62%, 100% { transform: translateY(144px); opacity: 0; }
+}
+@keyframes mo-mark { from { transform: scaleX(0); } }
+@keyframes mo-tint { from { fill: #cfd3cd; } }
+@keyframes mo-draw { from { stroke-dashoffset: 1; } }
+@keyframes mo-pop {
+  0% { transform: scale(0.85); opacity: 0; }
+  70% { transform: scale(1.03); opacity: 1; }
+}
+@keyframes mo-grow { from { transform: scaleY(0); } }
+@keyframes mo-fade { from { opacity: 0; } }
+@keyframes mo-win { from { fill: #2c333d; } }
+@keyframes mo-pulse { 50% { opacity: 0.45; } }
+@keyframes mo-twinkle { 0%, 100% { opacity: 0.85; } 45% { opacity: 0.85; } 55% { opacity: 0.08; } 80% { opacity: 0.08; } }
+
+.mo-scan { opacity: 0; animation: mo-scan 4.8s 0.2s cubic-bezier(0.45, 0, 0.3, 1) infinite; }
+.mo-mark { transform-box: fill-box; transform-origin: left; animation: mo-mark 0.5s 1.75s ease-out both; }
+.mo-tint { animation: mo-tint 0.4s 1.75s both; }
+.mo-draw { stroke-dasharray: 1; animation: mo-draw 0.7s cubic-bezier(0.6, 0, 0.2, 1) both; }
+.mo-pop { transform-box: fill-box; transform-origin: left center; animation: mo-pop 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.mo-grow { transform-box: fill-box; transform-origin: bottom; animation: mo-grow 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.mo-fade { animation: mo-fade 0.6s ease-out both; }
+.mo-win { animation: mo-win 0.35s ease-out both; }
+.mo-yours { animation: mo-win 0.35s ease-out both, mo-pulse 2.4s 2.6s ease-in-out infinite; }
+.mo-twinkle { opacity: 0.85; animation: mo-twinkle 6s linear infinite; }
+.mo-twinkle-soft { animation: mo-win 0.35s ease-out both, mo-pulse 3s 1.6s ease-in-out infinite; }
+
+/* Step delays (ScanDoc and TaxDrop share them). */
+.mo-d0 { animation-delay: 0.3s; }
+.mo-d1 { animation-delay: 1s; }
+.mo-d2 { animation-delay: 1.9s; }
+.mo-d3 { animation-delay: 2.3s; }
+.mo-scan ~ .mo-d1 { animation-delay: 2s; }
+.mo-scan ~ .mo-d2 { animation-delay: 2.5s; }
+.mo-scan ~ .mo-d3 { animation-delay: 2.9s; }
+
+.reveal:not(.in) [class*="mo-"] { animation-play-state: paused; }
+
 /* Thin indeterminate bar (analysis progress) */
 .loadbar {
   position: relative;

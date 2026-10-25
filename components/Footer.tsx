@@ -58,7 +58,7 @@ export default function Footer() {
 
         <div className="mt-12 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-5 text-[13px] text-subtle">
           <span>© 2026 ClearCondo</span>
-          <span>Calgary, Alberta</span>
+          <span>Made in Canada</span>
         </div>
       </div>
 

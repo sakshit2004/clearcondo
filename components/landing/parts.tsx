@@ -32,6 +32,7 @@ export function AudienceHero({
   cta,
   sample,
   note,
+  art,
 }: {
   audience: "buyers" | "owners";
   title: string;
@@ -39,38 +40,47 @@ export function AudienceHero({
   cta: { href: string; label: string };
   sample: { href: string; label: string };
   note: string;
+  /** An animated scene beside the copy, on wide screens. */
+  art?: ReactNode;
 }) {
   const own = audience === "owners";
   return (
     <section className="bg-surface border-b border-line">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-14 pb-14 sm:pt-20 sm:pb-20">
-        <span
-          className={`rise-in inline-block rounded-full px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.08em] ${
-            own ? "bg-ink text-white" : "bg-accent-soft text-accent-dark"
-          }`}
-        >
-          For condo {audience}
-        </span>
-        <h1
-          className="rise-in mt-5 max-w-3xl font-bold text-[38px] sm:text-[56px] tracking-[-0.03em] leading-[1.05] text-ink"
-          style={{ animationDelay: "80ms", textWrap: "balance" }}
-        >
-          {title}
-        </h1>
-        <p className="rise-in mt-5 max-w-2xl text-lg text-ink2 leading-relaxed" style={{ animationDelay: "160ms" }}>
-          {body}
-        </p>
-        <div className="rise-in mt-8 flex flex-wrap items-center gap-3" style={{ animationDelay: "240ms" }}>
-          <Link href={cta.href} className={primaryBtn}>
-            {cta.label} <Arrow />
-          </Link>
-          <Link href={sample.href} className={secondaryBtn}>
-            {sample.label}
-          </Link>
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-14 pb-14 sm:pt-20 sm:pb-20 lg:grid lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12 lg:items-center">
+        <div>
+          <span
+            className={`rise-in inline-block rounded-full px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.08em] ${
+              own ? "bg-ink text-white" : "bg-accent-soft text-accent-dark"
+            }`}
+          >
+            For condo {audience}
+          </span>
+          <h1
+            className="rise-in mt-5 max-w-3xl font-bold text-[38px] sm:text-[56px] tracking-[-0.03em] leading-[1.05] text-ink"
+            style={{ animationDelay: "80ms", textWrap: "balance" }}
+          >
+            {title}
+          </h1>
+          <p className="rise-in mt-5 max-w-2xl text-lg text-ink2 leading-relaxed" style={{ animationDelay: "160ms" }}>
+            {body}
+          </p>
+          <div className="rise-in mt-8 flex flex-wrap items-center gap-3" style={{ animationDelay: "240ms" }}>
+            <Link href={cta.href} className={primaryBtn}>
+              {cta.label} <Arrow />
+            </Link>
+            <Link href={sample.href} className={secondaryBtn}>
+              {sample.label}
+            </Link>
+          </div>
+          <p className="rise-in mt-4 text-sm text-subtle" style={{ animationDelay: "320ms" }}>
+            {note}
+          </p>
         </div>
-        <p className="rise-in mt-4 text-sm text-subtle" style={{ animationDelay: "320ms" }}>
-          {note}
-        </p>
+        {art && (
+          <Reveal delay={200} className="hidden lg:block">
+            {art}
+          </Reveal>
+        )}
       </div>
     </section>
   );
