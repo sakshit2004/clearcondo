@@ -39,10 +39,6 @@ const STATUS: Record<CheckItem["status"], { label: string; cls: string }> = {
 };
 const STATUS_ORDER: CheckItem["status"][] = ["conflict", "not_mentioned", "older", "changed", "corroborated", "unchanged", "new"];
 
-function uploads(n: number) {
-  return n === 1 ? "1 earlier upload" : `${n} earlier uploads`;
-}
-
 function checkDetail(c: CheckItem): string {
   const r = c.record;
   const v = formatValue(c);
@@ -50,7 +46,7 @@ function checkDetail(c: CheckItem): string {
   const rv = formatValue({ kind: c.kind, value_num: r.value_num, value_text: r.value_text });
   switch (c.status) {
     case "corroborated":
-      return `${v}, the same figure for the same date in ${uploads(r.seen_count)}.`;
+      return `${v}, the same as an earlier package said for ${formatAsOf(r.as_of)}.`;
     case "unchanged":
       return `${v}, the same as the record had for ${formatAsOf(r.as_of)}.`;
     case "changed":
@@ -58,7 +54,7 @@ function checkDetail(c: CheckItem): string {
     case "older":
       return `${v} here, but the record has a newer figure: ${rv} as of ${formatAsOf(r.as_of)}. Ask for the current documents.`;
     case "conflict":
-      return `${v} here, but ${uploads(r.seen_count)} dated ${formatAsOf(r.as_of)} said ${rv}. Check both documents.`;
+      return `${v} here, but an earlier package dated ${formatAsOf(r.as_of)} said ${rv}. Check both documents.`;
     case "not_mentioned":
       return `A package dated ${formatAsOf(r.as_of)} reported it${rv ? ` (${rv})` : ""}. These documents don't mention it: ask whether it's resolved.`;
     default:
@@ -86,8 +82,7 @@ function Timeline({ timelines }: { timelines: FactTimeline[] }) {
           </div>
           <p className="data-label text-stone-400 mt-1">
             {source(t.current[0])} ✓ verified
-            {t.current[0].source === "document" && t.current[0].seen_count > 1 ? ` · seen in ${t.current[0].seen_count} uploads` : ""}
-            {t.current.length > 1 ? " · uploads disagree for this date" : ""}
+            {t.current.length > 1 ? " · packages disagree for this date" : ""}
           </p>
           {t.history.length > 0 && (
             <p className="text-sm text-muted mt-1.5">
@@ -105,14 +100,13 @@ function Timeline({ timelines }: { timelines: FactTimeline[] }) {
 }
 
 const ABOUT =
-  "Verified facts from document packages ClearCondo users uploaded for this building, each with its document date and page. Documents, quotes and who uploaded them are never shared.";
+  "Verified facts from document packages checked for this building, each with its document date and page. Documents, quotes and who uploaded them are never shared. It gets better with every package checked.";
 
 /** On a report: this package against the shared record, then the record itself. */
 export function SharedRecordSection({ items, rows }: { items: CheckItem[] | null; rows: SharedFactRow[] }) {
   const checked = (items ?? []).filter((c) => c.status !== "new").sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status));
   const timelines = buildTimelines(rows);
   if (checked.length === 0 && timelines.length === 0) return null;
-  const firstOnRecord = (items ?? []).length > 0 && checked.length === 0;
   return (
     <section className="report-paper p-6 sm:p-8">
       <div className="micro-label text-stone-400 mb-2">Shared building record</div>
@@ -120,7 +114,6 @@ export function SharedRecordSection({ items, rows }: { items: CheckItem[] | null
         {checked.length > 0 ? "Checked against earlier packages" : "What this building's record holds"}
       </h2>
       <p className="text-sm text-stone-500 mb-6 max-w-2xl">
-        {firstOnRecord ? "This package is the first for this building, so there was nothing earlier to check it against. " : ""}
         {ABOUT}
       </p>
       {checked.length > 0 && (
@@ -170,7 +163,7 @@ export function OwnerBuildingRecord({ rows }: { rows: SharedFactRow[] }) {
       <p className="text-sm text-subtle mt-1 mb-5 max-w-2xl">
         {fromDocs.length > 0
           ? ABOUT
-          : "Nobody has added this building's documents yet. Reserve fund, fees, special assessments and lawsuits appear here, dated, as packages are checked."}
+          : "Reserve fund, fees, special assessments and lawsuits appear here, dated, as this building's packages are checked. It gets better with every package."}
       </p>
       {timelines.length > 0 && <Timeline timelines={timelines} />}
       <div className="mt-5 pt-5 border-t border-line flex flex-wrap items-center gap-x-4 gap-y-2">
