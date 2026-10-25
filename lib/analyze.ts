@@ -145,7 +145,7 @@ export async function analyzeDocuments(input: {
   }
 ${
   input.memoryContext
-    ? `\nBUILDING MEMORY — flags raised by previous analyses of this same building (use for continuity: note what is new, what persists, and what appears resolved; do not repeat stale facts as new findings):\n${input.memoryContext}\n`
+    ? `\nBUILDING MEMORY — what earlier analyses of this same building established (verified flags, and beliefs SurrealDB Agent Memory has reconciled over time). Use it for continuity: note what is new, what persists, and what appears resolved; do not repeat stale facts as new findings, and cite only the documents below as evidence:\n${input.memoryContext}\n`
     : ""
 }
 Analyze the following condominium document stack and return ONLY the JSON report.

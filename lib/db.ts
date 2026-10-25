@@ -670,7 +670,12 @@ export async function matchBuildings(
   );
 }
 
-/** Prior flags for a building, newest first — fed back into the analysis prompt as building memory. */
+/**
+ * Prior verified flags for a building, newest first: fed back into the
+ * analysis prompt as building memory. Downgraded flags (evidence that
+ * couldn't be found on the page) are left out, so memory only carries
+ * what was verified.
+ */
 export async function getPriorFlags(
   db: Surreal,
   ownerId: string,
@@ -680,7 +685,7 @@ export async function getPriorFlags(
   const rows = await q<FlagRow[]>(
     db,
     `SELECT flag_type, severity, title, explanation, created_at FROM flag
-     WHERE building = type::record($id) AND owner_id = $owner
+     WHERE building = type::record($id) AND owner_id = $owner AND downgraded != true
      ORDER BY created_at DESC LIMIT $limit`,
     { id: buildingId, owner: ownerId, limit }
   );
