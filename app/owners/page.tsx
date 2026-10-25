@@ -3,6 +3,7 @@ import Reveal from "@/components/Reveal";
 import { OWNER_PRICING } from "@/lib/owner";
 import { OWNER_BILLS } from "@/lib/owner-bills";
 import { AudienceHero, SectionHead } from "@/components/landing/parts";
+import { TaxDrop } from "@/components/landing/Motion";
 
 export const metadata: Metadata = {
   title: "For condo owners — ClearCondo",
@@ -47,6 +48,11 @@ export default function OwnersPage() {
         cta={{ href: "/app/own", label: "Open the owner dashboard" }}
         sample={{ href: "/demo/own", label: "See a sample report" }}
         note="You only pay if you save. Free during beta."
+        art={
+          <div className="rounded-[14px] bg-ink p-3">
+            <TaxDrop />
+          </div>
+        }
       />
 
       <section className="border-b border-line">

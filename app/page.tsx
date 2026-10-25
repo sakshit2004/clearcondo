@@ -2,23 +2,27 @@ import Link from "next/link";
 import HeroScene from "@/components/HeroScene";
 import Reveal from "@/components/Reveal";
 import { Arrow, SectionHead } from "@/components/landing/parts";
+import { RoadmapIcon, ScanDoc, Skyline, TaxDrop } from "@/components/landing/Motion";
 
 /** Where the two checks go after condos. Only "Now" is live. */
-const ROADMAP: { when: "Now" | "Next" | "Later"; what: string; before: string; own: string }[] = [
+const ROADMAP: { when: "Now" | "Next" | "Later"; what: string; icon: "condo" | "house" | "land"; before: string; own: string }[] = [
   {
     when: "Now",
+    icon: "condo",
     what: "Condos",
     before: "the document package, every red flag priced and traced to its page.",
     own: "property tax and a savings estimate, live in Calgary; insurance, energy and your mortgage next.",
   },
   {
     when: "Next",
+    icon: "house",
     what: "Houses",
     before: "the home inspection, title and survey.",
     own: "property tax first: the same assessment check, for detached and semi-detached homes.",
   },
   {
     when: "Later",
+    icon: "land",
     what: "Land",
     before: "zoning, land-use applications and title.",
     own: "property tax and land-use changes nearby.",
@@ -130,6 +134,7 @@ export default function LandingPage() {
                       dark ? "bg-ink text-white" : "bg-white border border-line"
                     }`}
                   >
+                    {dark ? <TaxDrop className="mb-6" /> : <ScanDoc className="mb-6" />}
                     <span
                       className={`self-start rounded-full px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.08em] ${
                         dark ? "bg-white/10 text-white" : "bg-accent-soft text-accent-dark"
@@ -210,13 +215,16 @@ export default function LandingPage() {
                     }`}
                   >
                     <div>
-                      <span
-                        className={`rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
-                          r.when === "Now" ? "bg-ink text-white" : "bg-info-soft text-info-dark"
-                        }`}
-                      >
-                        {r.when}
-                      </span>
+                      <div className="flex items-center gap-2.5">
+                        <RoadmapIcon kind={r.icon} live={r.when === "Now"} />
+                        <span
+                          className={`rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
+                            r.when === "Now" ? "bg-ink text-white" : "bg-info-soft text-info-dark"
+                          }`}
+                        >
+                          {r.when}
+                        </span>
+                      </div>
                       <h3 className="mt-2 text-lg font-bold tracking-[-0.01em] text-ink">{r.what}</h3>
                     </div>
                     <p className="text-sm text-muted leading-relaxed">
@@ -236,7 +244,7 @@ export default function LandingPage() {
       </section>
 
       {/* Close */}
-      <section className="bg-ink text-white">
+      <section className="bg-ink text-white overflow-hidden">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
           <h2 className="text-3xl sm:text-4xl font-bold tracking-[-0.025em] leading-tight max-w-2xl">
             Don&apos;t overpay at the offer, or on the tax bill.
@@ -273,6 +281,7 @@ export default function LandingPage() {
             </Link>
           </p>
         </div>
+        <Skyline />
       </section>
     </div>
   );

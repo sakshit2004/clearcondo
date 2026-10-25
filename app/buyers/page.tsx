@@ -8,6 +8,7 @@ import EvidenceDemo from "@/components/EvidenceDemo";
 import MemoryRecord, { recordRows } from "@/components/MemoryRecord";
 import Reveal from "@/components/Reveal";
 import { AudienceHero, SectionHead } from "@/components/landing/parts";
+import { ScanDoc } from "@/components/landing/Motion";
 
 export const metadata: Metadata = {
   title: "For condo buyers — ClearCondo",
@@ -58,6 +59,7 @@ export default function BuyersPage() {
         cta={{ href: "/app", label: "Open the buyer dashboard" }}
         sample={{ href: "/demo", label: "See a sample report" }}
         note="Free during beta."
+        art={<ScanDoc />}
       />
 
       <section className="border-b border-line">
