@@ -4,6 +4,7 @@ import {
   type Analysis,
 } from "./report-schema";
 import { repairPrompt } from "./repair";
+import { analysisModel, speedParams } from "./model-config.ts";
 
 export function isAnthropicConfigured(): boolean {
   return Boolean(process.env.ANTHROPIC_API_KEY);
@@ -124,7 +125,7 @@ export async function analyzeDocuments(input: {
   memoryContext?: string | null;
 }): Promise<{ analysis: Analysis; model: string }> {
   const client = getClient();
-  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
+  const model = analysisModel();
 
   const fileList = input.docs
     .map((d) => `- ${d.fileId}: "${d.filename}" (type: ${d.docType})`)
@@ -192,15 +193,15 @@ async function callClaude(
   try {
     message = await client.messages.create(
       {
-        model,
-        // Thinking is billed as output and shares this budget with the
-        // JSON report itself. At 8000 the first live runs truncated
-        // mid-JSON on multi-document stacks (stop_reason=max_tokens)
-        // and failed validation; 16000 leaves room for the thinking
-        // plus the full report. No temperature/top_p: the 5.5 API
-        // rejects them when thinking is on, and we never set them.
+        // Speed: thinking off and low effort by default (lib/model-config.ts).
+        // The report is extraction with machine-checked quotes, so it
+        // doesn't need long reasoning. 16000 still leaves room for the
+        // full JSON on multi-document stacks (8000 truncated, before).
+        ...speedParams(model),
         max_tokens: 16000,
-        system: SYSTEM_PROMPT,
+        // The system prompt is identical on every run: cache it so later
+        // runs skip re-reading it.
+        system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
         messages: [{ role: "user", content: userPrompt }],
       },
       { signal: AbortSignal.timeout(analysisTimeoutMs()) }
