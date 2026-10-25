@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { annualTax } from "@/lib/calgary/appeals";
-import { cad } from "@/lib/format";
 import type { UnitRecord } from "@/lib/calgary/unit";
+import { estimateSaving } from "@/lib/owner-estimate";
+import type { SharedFactRow } from "@/lib/shared-record";
+import EstimateCard from "@/components/owner/EstimateCard";
+import { OwnerBuildingRecord } from "@/components/SharedRecord";
 import UnitTaxCard from "@/components/owner/UnitTaxCard";
 import SavingsPanel from "@/components/owner/SavingsPanel";
 import OwnerPricing from "@/components/owner/OwnerPricing";
 
 export const metadata: Metadata = {
   title: "Sample owner report — ClearCondo",
-  description: "What an owner sees: a condo unit's assessment, the property tax it means, and a savings estimate. Sample data.",
+  description: "What an owner sees: a condo unit's assessment, the property tax it means, a savings estimate, and the building's money over time. Sample data.",
 };
 
 /** A fictional unit. Every number on this page is sample data. */
@@ -24,15 +26,43 @@ const UNIT: UnitRecord = {
   complaints: [],
 };
 const BUILDING_MEDIAN = 365_000;
-const SUGGESTED_VALUE = 392_000;
-const SAMPLE_SAVING = Math.round(annualTax(UNIT.assessed_value!) - annualTax(SUGGESTED_VALUE));
 
-/** The facts an owner sent with their request (sample). */
-const SENT: [string, string][] = [
-  ["Size", "690 sq ft"],
-  ["Layout", "1 bed, 1 bath"],
-  ["Parking", "Assigned stall"],
-  ["Condition", "Original 2008 kitchen and bath"],
+/** What the owner entered (sample): their purchase, an appraisal, and sales of similar units. */
+const ESTIMATE = estimateSaving({
+  assessed_value: UNIT.assessed_value!,
+  unit_size_sqft: 690,
+  purchase_price: 389_000,
+  purchase_date: "2025-04",
+  appraisal_value: 392_000,
+  appraisal_date: "2025-08",
+  comparables: [
+    { price: 372_000, sqft: 680, date: "2025-06" },
+    { price: 401_000, sqft: 720, date: "2025-03" },
+    { price: 384_500, sqft: 700, date: "2025-09" },
+  ],
+});
+const SAMPLE_SAVING = ESTIMATE.annual_saving;
+
+/** The building's shared record (sample): dated facts from earlier packages and the City. */
+const r = (o: Partial<SharedFactRow> & Pick<SharedFactRow, "fact_key" | "label" | "as_of">): SharedFactRow => ({
+  kind: "money",
+  value_num: null,
+  value_text: null,
+  doc_type: null,
+  page: null,
+  source: "document",
+  seen_count: 1,
+  first_seen: "",
+  ...o,
+});
+const RECORD: SharedFactRow[] = [
+  r({ fact_key: "reserve_balance", label: "Reserve fund balance", value_num: 1_180_000, as_of: "2026-03", doc_type: "reserve_study", page: 4 }),
+  r({ fact_key: "reserve_balance", label: "Reserve fund balance", value_num: 1_420_000, as_of: "2025-03", doc_type: "financials", page: 6 }),
+  r({ fact_key: "contribution_monthly", label: "Average monthly condo fee", value_num: 512, as_of: "2026-03", doc_type: "budget", page: 2 }),
+  r({ fact_key: "contribution_monthly", label: "Average monthly condo fee", value_num: 468, as_of: "2025-03", doc_type: "budget", page: 2 }),
+  r({ fact_key: "special_assessment:balcony-repairs", label: "Special assessment: Balcony repairs (per unit)", value_num: 3_400, value_text: "proposed", as_of: "2026-03", doc_type: "minutes_agm", page: 3 }),
+  r({ fact_key: "city_median_assessment", label: "Median home assessment (City of Calgary)", value_num: 365_000, as_of: "2025-07", source: "public_record" }),
+  r({ fact_key: "city_median_assessment", label: "Median home assessment (City of Calgary)", value_num: 347_500, as_of: "2024-07", source: "public_record" }),
 ];
 
 /**
@@ -46,8 +76,8 @@ export default function OwnerDemoPage() {
         <div className="rise-in rounded-[14px] border border-line bg-white px-5 py-4 text-sm mb-8 flex flex-wrap items-center gap-x-3 gap-y-2">
           <span className="rounded-md bg-accent-soft text-accent-dark text-xs font-semibold px-2 py-1">Sample data</span>
           <span className="text-muted">
-            A fictional Calgary condo unit, showing what an owner sees after searching their address, and what a
-            savings estimate looks like.
+            A fictional Calgary condo unit: its assessment and tax, how it sits against the building, an instant
+            savings estimate, and the building&apos;s money over time.
           </span>
         </div>
 
@@ -70,33 +100,17 @@ export default function OwnerDemoPage() {
                 <span className="rounded-md bg-warn-soft text-warn-dark px-2 py-0.5 text-xs font-semibold">Sample</span>
               </div>
               <p className="text-sm text-subtle mt-1 mb-5 max-w-2xl">
-                What comes back after the owner sends the details open data can&apos;t see.
+                The owner entered three things: what they paid in April 2025, an appraisal, and three sales of similar
+                units. The estimate is worked out in the open, then we check it by hand.
               </p>
-              <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3 text-sm">
-                {SENT.map(([k, v]) => (
-                  <div key={k} className="min-w-0">
-                    <dt className="micro-label text-stone-400">{k}</dt>
-                    <dd className="text-ink font-semibold mt-0.5">{v}</dd>
-                  </div>
-                ))}
-              </dl>
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {[
-                  [cad(UNIT.assessed_value), "City's 2026 value"],
-                  [cad(SUGGESTED_VALUE), "Value comparable sales support"],
-                  [`~${cad(SAMPLE_SAVING)}/yr`, "Potential tax saving"],
-                ].map(([v, l], i) => (
-                  <div key={l} className={`rounded-xl border p-4 ${i === 2 ? "border-ink" : "border-line bg-white"}`}>
-                    <div className="text-2xl font-bold tracking-tight text-ink tabular-nums">{v}</div>
-                    <div className="text-[13px] text-ink2 mt-0.5">{l}</div>
-                  </div>
-                ))}
-              </div>
+              <EstimateCard estimate={ESTIMATE} />
               <p className="text-[13px] text-stone-500 mt-4 leading-relaxed max-w-2xl">
-                Sample only: a real estimate compares your unit with recent sales of similar units, and nothing is filed
-                with the City without your go-ahead. A complaint can lower the value, keep it, or occasionally raise it.
+                Sample only. Nothing is filed with the City without your go-ahead. A complaint can lower the value, keep
+                it, or occasionally raise it.
               </p>
             </section>
+
+            <OwnerBuildingRecord rows={RECORD} />
           </div>
 
           <aside className="flex-[1_1_300px] space-y-4" aria-label="Pricing">
