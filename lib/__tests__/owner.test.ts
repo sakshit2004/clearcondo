@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { extractUnit, fetchUnitRecord } from "../calgary/unit.ts";
+import { extractUnit, fetchUnitRecord, findUnit } from "../calgary/unit.ts";
+import { toRollUnits } from "../calgary/match.ts";
 import { CityDataError } from "../calgary/socrata.ts";
 import { OWNER_PRICING, OwnerRequestSchema, annualSaving, ownerSavingsCut } from "../owner.ts";
 import { ownerBuildingHref } from "../owner-links.ts";
@@ -89,7 +90,8 @@ describe("fetchUnitRecord", () => {
     const id = u.match(/resource\/([a-z0-9-]+)\.json/)?.[1] ?? "";
     if (fail && id === fail) return new Response("err", { status: 500 });
     const where = new URL(u).searchParams.get("$where") ?? "";
-    const body = id === "4bsw-nn7w" ? roll.filter(() => where.includes("'1203 %'")) : id === "4ur7-wsgc" ? hist : arb;
+    assert.equal(id !== "4bsw-nn7w" || where === "short_legal like '0812345;%'", true);
+    const body = id === "4bsw-nn7w" ? roll : id === "4ur7-wsgc" ? hist : arb;
     return new Response(JSON.stringify(body), { status: 200 });
   }) as typeof fetch;
 
@@ -113,5 +115,23 @@ describe("fetchUnitRecord", () => {
     const r = await fetchUnitRecord("0812345", "1203", { fetchImpl: fake("myiv-ju9n") });
     assert.equal(r?.complaints, null);
     await assert.rejects(fetchUnitRecord("0812345", "1203", { fetchImpl: fake("4bsw-nn7w") }), CityDataError);
+  });
+});
+
+describe("findUnit", () => {
+  const units = toRollUnits([
+    { roll_number: "1", address: "303 500 SAMPLE ST SW", short_legal: "0812345;3" },
+    { roll_number: "2", address: "3030 500 SAMPLE ST SW", short_legal: "0812345;4" },
+    { roll_number: "3", address: "12V 500 SAMPLE ST SW", short_legal: "0812345;5" },
+  ]);
+  it("matches the unit at the start of the roll address", () => {
+    assert.equal(findUnit(units, "303")?.roll_number, "000000001");
+    assert.equal(findUnit(units, "3030")?.roll_number, "000000002");
+  });
+  it("treats leading zeros as the same unit", () => {
+    assert.equal(findUnit(units, "0303")?.roll_number, "000000001");
+  });
+  it("returns null when the unit isn't there", () => {
+    assert.equal(findUnit(units, "999"), null);
   });
 });

@@ -4,16 +4,15 @@
  * no judgement about whether the unit is over- or under-assessed (open
  * data has no unit size, condition or sales).
  */
+import { CALGARY_DATASETS, soql, type SocrataOptions } from "./socrata.ts";
 import {
-  CALGARY_DATASETS,
-  normalizeRollNumber,
-  parseMoney,
-  soql,
-  soqlString,
-  str,
-  type SocrataOptions,
-} from "./socrata.ts";
-import { normalizeStreetAddress, stripUnitFromRollAddress } from "./match.ts";
+  normalizeStreetAddress,
+  planWhere,
+  stripUnitFromRollAddress,
+  toRollUnits,
+  unitsForPlan,
+  type RollUnit,
+} from "./match.ts";
 import { fetchHistory } from "./values.ts";
 import { fetchBuildingAppeals, type ComplaintYear } from "./appeals.ts";
 
@@ -49,13 +48,31 @@ export interface UnitRecord {
   complaints: ComplaintYear[] | null;
 }
 
-/** Only digits/letters reach the query; anything else means "no unit". */
+/** Only digits/letters count as a unit number. */
 const SAFE_UNIT = /^[0-9]+[A-Z]?$/;
 
+/** "0303" and "303" are the same unit. */
+const sameUnit = (a: string, b: string) => a.replace(/^0+(?=\d)/, "") === b.replace(/^0+(?=\d)/, "");
+
 /**
- * The unit's record on the current roll, matched within its condo plan by
- * the unit number at the start of the roll address. Throws CityDataError
- * if the roll query fails; history and complaints degrade to null.
+ * The unit's row among a plan's roll units: the one whose roll address
+ * starts with the unit number. Exported for tests.
+ */
+export function findUnit(units: RollUnit[], unit: string): RollUnit | null {
+  const u = unit.toUpperCase();
+  for (const r of units) {
+    const addr = (r.address ?? "").toUpperCase().replace(/\s+/g, " ").trim();
+    const first = addr.split(" ")[0] ?? "";
+    if (first && sameUnit(first, u) && stripUnitFromRollAddress(addr) !== addr) return r;
+  }
+  return null;
+}
+
+/**
+ * The unit's record on the current roll. Uses the same plan query as the
+ * building check (no column list, no address filter in SoQL) and finds the
+ * unit in code. Throws CityDataError if the roll query fails; history and
+ * complaints degrade to null.
  */
 export async function fetchUnitRecord(
   plan: string,
@@ -64,24 +81,13 @@ export async function fetchUnitRecord(
 ): Promise<UnitRecord | null> {
   const u = unit.toUpperCase();
   if (!SAFE_UNIT.test(u)) return null;
-  const rows = await soql(
-    CALGARY_DATASETS.currentRoll,
-    {
-      $select: "roll_number, address, assessed_value, roll_year, short_legal",
-      $where: `short_legal like ${soqlString(`${plan};%`)} AND upper(address) like ${soqlString(`${u} %`)}`,
-      $limit: "50",
-    },
-    opts
-  );
-  const row = rows.find((r) => {
-    const addr = (str(r, "address") ?? "").toUpperCase().replace(/\s+/g, " ").trim();
-    return addr.startsWith(`${u} `) && stripUnitFromRollAddress(addr) !== addr;
-  });
+  const rows = await soql(CALGARY_DATASETS.currentRoll, { $where: planWhere(plan), $limit: "5000" }, opts);
+  const row = findUnit(unitsForPlan(toRollUnits(rows), plan), u);
   if (!row) return null;
-  const address = (str(row, "address") ?? "").toUpperCase().replace(/\s+/g, " ").trim();
-  const roll = normalizeRollNumber(row.roll_number);
-  const value = parseMoney(row.assessed_value);
-  const year = parseMoney(row.roll_year);
+  const address = (row.address ?? "").toUpperCase().replace(/\s+/g, " ").trim();
+  const roll = row.roll_number;
+  const value = row.assessed_value;
+  const year = row.roll_year;
 
   const [history, appeals] = await Promise.allSettled([
     roll ? fetchHistory([roll], opts) : Promise.resolve([]),
@@ -97,7 +103,7 @@ export async function fetchUnitRecord(
     }
   }
   return {
-    unit: u,
+    unit: address.split(" ")[0] || u,
     address,
     assessed_value: value,
     roll_year: year,
