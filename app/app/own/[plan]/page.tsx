@@ -123,7 +123,7 @@ async function OwnerUnit({ params, searchParams }: { params: Params; searchParam
             <UnitPicker plan={plan} unit={unitParam || wanted} notFoundUnit={Boolean(unitParam)} />
           )}
 
-          <SavingsPanel unit={unit} saving={saving} />
+          <SavingsPanel unit={unit} saving={saving} medianValue={matched?.current_median ?? null} />
 
           <section id="estimate" className="report-paper rounded-2xl p-6 sm:p-8 scroll-mt-6" aria-labelledby="estimate-heading">
             <div className="flex flex-wrap items-center gap-2">
