@@ -184,7 +184,7 @@ Measured on the demo stack (`node --experimental-strip-types scripts/measure-pip
 |---|---|---|
 | PDF text extraction | 24 ms/page | ~2.4s |
 | Evidence verification | 0.2 ms/quote | <0.1s |
-| Claude analysis (~42k in-tokens, report JSON out, thinking off) | — | faster than the ~30–90s measured with thinking on (estimate) |
+| Claude analysis (~42k in-tokens, report JSON out, thinking off) | — | less than the ~30–90s estimated with thinking on (not yet measured) |
 | DB persist | — | <2s (assumed) |
 | **Total, sync** | — | **well under the 300s budget** |
 
