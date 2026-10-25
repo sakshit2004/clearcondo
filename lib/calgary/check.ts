@@ -25,6 +25,7 @@ import {
   matchBuilding,
   normalizePlanNumber,
   normalizeStreetAddress,
+  dwellingUnits,
   planWhere,
   stripUnitFromRollAddress,
   type MatchMethod,
@@ -96,7 +97,7 @@ export type CityRecords = { identity_key: string; fetched_at: string } & (
       building_addresses: string[];
       comm_name: string | null;
       year_of_construction: number | null;
-      /** Current-roll total and median unit value (null when the roll has none). */
+      /** Current-roll total (all entries) and median home value (dwellings only; null when none). */
       current_total: number | null;
       current_median: number | null;
       values: ValuesSection | Unavailable;
@@ -106,10 +107,15 @@ export type CityRecords = { identity_key: string; fetched_at: string } & (
     }
 );
 
+/** v2: current_median counts dwellings only (not parking stalls or lockers). */
+const RECORDS_VERSION = "v2";
+
 /** Cache identity: a corrected plan or address must not hit a stale entry. */
 export function identityKey(input: CityRecordsInput): string {
   const plans = [...new Set(input.planCandidates.map(normalizePlanNumber).filter(Boolean))];
-  return `plans:${plans.join(",")}|addr:${normalizeStreetAddress(input.address) ?? ""}`;
+  // Bump RECORDS_VERSION when the cached shape or a computed field changes,
+  // so stale cache entries are ignored instead of served for 24h.
+  return `${RECORDS_VERSION}|plans:${plans.join(",")}|addr:${normalizeStreetAddress(input.address) ?? ""}`;
 }
 
 export interface CityRecordsCache {
@@ -220,6 +226,8 @@ export async function fetchCityRecords(
 
   const [values, permits, appeals] = await Promise.allSettled([valuesP, permitsP, appealsP]);
   const currentValues = units.map((u) => u.assessed_value).filter((v): v is number => v != null && v > 0);
+  // The median "unit" is a median home: stalls, lockers and non-residential entries left out.
+  const dwellingValues = dwellingUnits(units).map((u) => u.assessed_value as number);
   const yoc = units.map((u) => u.year_of_construction).find((y): y is number => !!y) ?? null;
 
   return {
@@ -239,7 +247,7 @@ export async function fetchCityRecords(
     permits:
       permits.status === "fulfilled" ? permits.value : { status: "unavailable", message: errMessage(permits.reason) },
     current_total: currentValues.length ? currentValues.reduce((a, b) => a + b, 0) : null,
-    current_median: currentValues.length ? median(currentValues) : null,
+    current_median: dwellingValues.length ? median(dwellingValues) : null,
     appeals:
       appeals.status === "fulfilled" ? appeals.value : { status: "unavailable", message: errMessage(appeals.reason) },
   };

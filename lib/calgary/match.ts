@@ -246,6 +246,24 @@ export function toRollUnits(rows: SocrataRow[]): RollUnit[] {
   return [...byRoll.values()];
 }
 
+/** Below this, a roll entry is a parking stall, locker or similar, not a home. */
+export const MIN_DWELLING_VALUE = 50_000;
+
+/**
+ * Roll entries that are homes: residential class, not a titled parking
+ * stall ("12V …") or storage locker ("12S …"), and valued like a home.
+ * A condo plan's roll includes every titled stall and locker, so a median
+ * over all its entries can land far below any real unit's value.
+ */
+export function dwellingUnits(units: RollUnit[]): RollUnit[] {
+  return units.filter((u) => {
+    if (!(u.assessment_class ?? "").toUpperCase().startsWith("RE")) return false;
+    const unitToken = (u.address ?? "").trim().toUpperCase().split(/\s+/)[0] ?? "";
+    if (/^\d+[VS]$/.test(unitToken)) return false;
+    return u.assessed_value != null && u.assessed_value >= MIN_DWELLING_VALUE;
+  });
+}
+
 /** Units whose short_legal plan prefix equals the plan exactly. */
 export function unitsForPlan(units: RollUnit[], plan: string): RollUnit[] {
   return units.filter((u) => planPrefix(u.short_legal) === plan);
