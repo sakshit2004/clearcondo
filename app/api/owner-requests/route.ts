@@ -3,7 +3,7 @@ import { getUserId, isClerkConfigured } from "@/lib/auth";
 import { createOwnerRequest, isDbConfigured, withDb } from "@/lib/db";
 import { OwnerRequestSchema } from "@/lib/owner";
 import { estimateSaving, savingIfLowered } from "@/lib/owner-estimate";
-import { fetchUnitRecord } from "@/lib/calgary/unit";
+import { fetchUnitRecord, normalizeUnitInput } from "@/lib/calgary/unit";
 import { getCityRecords } from "@/lib/calgary/check";
 
 /** Reductions shown when the owner's numbers don't give a tailored estimate. */
@@ -21,10 +21,6 @@ export async function POST(req: Request) {
   }
   const userId = await getUserId();
   if (!userId) return NextResponse.json({ error: "Please sign in." }, { status: 401 });
-  if (!isDbConfigured()) {
-    return NextResponse.json({ error: "Requests open at launch: the database isn't configured." }, { status: 503 });
-  }
-
   let body: unknown;
   try {
     body = await req.json();
@@ -38,6 +34,8 @@ export async function POST(req: Request) {
   }
 
   const r = parsed.data;
+  // "#1203" / "Unit 1203" -> "1203", so the City lookup can find it.
+  r.unit = normalizeUnitInput(r.unit) ?? undefined;
   // The page sends the unit's City value; if it couldn't load it, look it up
   // here so the owner still gets a number back (best effort, short timeout).
   let assessed = r.assessed_value;
@@ -70,10 +68,15 @@ export async function POST(req: Request) {
   const base = assessed ?? median;
   const scenarios = base ? SCENARIOS.map((pct) => ({ pct, ...savingIfLowered(base, pct) })) : null;
 
+  const result = { estimate, scenarios, basis, basis_value: base ?? null };
+
+  // Save for the team. The owner gets their estimate either way: a failed
+  // save is reported as saved: false, never as a lost number.
+  if (!isDbConfigured()) return NextResponse.json({ ok: true, saved: false, ...result });
   try {
     const id = await withDb((db) => createOwnerRequest(db, userId, r, estimate ?? undefined));
-    return NextResponse.json({ ok: true, id, estimate, scenarios, basis, basis_value: base ?? null });
+    return NextResponse.json({ ok: true, saved: true, id, ...result });
   } catch {
-    return NextResponse.json({ error: "Couldn't save your request. Please try again." }, { status: 500 });
+    return NextResponse.json({ ok: true, saved: false, ...result });
   }
 }

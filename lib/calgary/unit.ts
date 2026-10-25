@@ -34,6 +34,13 @@ export function extractUnit(raw: string | null | undefined): string | null {
   return null;
 }
 
+/** A typed unit field ("#1203", "Unit 1203", "4b") as the roll writes it: "1203", "4B". Null if empty. */
+export function normalizeUnitInput(raw: string | null | undefined): string | null {
+  if (!raw?.trim()) return null;
+  const u = (extractUnit(`#${raw}`) ?? raw.replace(/[^0-9A-Z]/gi, "")).toUpperCase();
+  return u || null;
+}
+
 export interface UnitRecord {
   unit: string;
   /** The unit's roll address, e.g. "1203 1111 6 AV SW". */

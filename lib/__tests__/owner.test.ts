@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { extractUnit, fetchUnitRecord, findUnit } from "../calgary/unit.ts";
+import { extractUnit, fetchUnitRecord, findUnit, normalizeUnitInput } from "../calgary/unit.ts";
 import { toRollUnits } from "../calgary/match.ts";
 import { CityDataError } from "../calgary/socrata.ts";
 import { OWNER_PRICING, OwnerRequestSchema, annualSaving, ownerSavingsCut } from "../owner.ts";
@@ -133,5 +133,17 @@ describe("findUnit", () => {
   });
   it("returns null when the unit isn't there", () => {
     assert.equal(findUnit(units, "999"), null);
+  });
+});
+
+describe("normalizeUnitInput", () => {
+  it("reads a typed unit field the way the roll writes it", () => {
+    assert.equal(normalizeUnitInput("1203"), "1203");
+    assert.equal(normalizeUnitInput("#1203"), "1203");
+    assert.equal(normalizeUnitInput("Unit 1203"), "1203");
+    assert.equal(normalizeUnitInput("unit #1203"), "1203");
+    assert.equal(normalizeUnitInput("Suite 4b"), "4B");
+    assert.equal(normalizeUnitInput("  "), null);
+    assert.equal(normalizeUnitInput(undefined), null);
   });
 });
