@@ -110,6 +110,7 @@ export default function OwnerRequestForm({
   const [sentEstimate, setSentEstimate] = useState<OwnerEstimate | null>(null);
   const [scenarios, setScenarios] = useState<Scenario[] | null>(null);
   const [medianBasis, setMedianBasis] = useState<number | null>(null);
+  const [saved, setSaved] = useState(true);
 
   const comparables = comps
     .map((c) => ({ price: num(c.price), sqft: num(c.sqft), date: c.date || undefined }))
@@ -160,6 +161,7 @@ export default function OwnerRequestForm({
       setSentEstimate(body?.estimate ?? estimate);
       setScenarios(body?.scenarios ?? null);
       setMedianBasis(body?.basis === "median" ? body.basis_value : null);
+      setSaved(body?.saved !== false);
       setStatus("sent");
     } catch (err) {
       setError((err as Error).message);
@@ -184,12 +186,28 @@ export default function OwnerRequestForm({
             We couldn&apos;t load this building&apos;s City values just now, so we&apos;ll send your estimate by email.
           </p>
         )}
-        <div className="rounded-xl bg-accent-soft p-4" role="status">
-          <p className="text-sm text-stone-700 leading-relaxed">
-            <strong className="text-accent-dark">Request sent.</strong> We&apos;ll check your unit against recent
-            comparable sales and confirm by email. Nothing is filed with the City without your go-ahead.
-          </p>
-        </div>
+        {saved ? (
+          <div className="rounded-xl bg-accent-soft p-4" role="status">
+            <p className="text-sm text-stone-700 leading-relaxed">
+              <strong className="text-accent-dark">Request sent.</strong> We&apos;ll check your unit against recent
+              comparable sales and confirm by email. Nothing is filed with the City without your go-ahead.
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-xl bg-warn-soft p-4" role="status">
+            <p className="text-sm text-stone-700 leading-relaxed">
+              <strong className="text-warn-dark">Your request couldn&apos;t be saved just now.</strong> The estimate
+              above is yours to keep; please send it again in a moment so we can confirm it.
+            </p>
+            <button
+              type="button"
+              onClick={() => setStatus("idle")}
+              className="mt-3 rounded-lg border border-line2 bg-white hover:border-ink px-4 min-h-10 text-sm font-semibold text-ink"
+            >
+              Send again
+            </button>
+          </div>
+        )}
       </div>
     );
   }
