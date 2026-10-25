@@ -265,3 +265,33 @@ describe("real current-roll rows (4bsw-nn7w)", () => {
     assert.equal(stripUnitFromRollAddress(rows[1].address), "16 DEERMEADE BA SE");
   });
 });
+
+describe("dwellingUnits", () => {
+  const unit = (address: string, assessed_value: number | null, assessment_class = "RE") => ({
+    roll_number: address, address, short_legal: "0812345;1", assessed_value, assessment_class,
+    property_type: null, sub_property_use: null, comm_code: null, comm_name: null,
+    year_of_construction: null, roll_year: 2026,
+  });
+  it("keeps homes and drops stalls, lockers, non-residential and implausibly low values", async () => {
+    const { dwellingUnits } = await import("../calgary/match.ts");
+    const units = [
+      unit("1203 500 SAMPLE ST SW", 412000),
+      unit("4B 500 SAMPLE ST SW", 289000),
+      unit("12V 500 SAMPLE ST SW", 45500), // titled parking stall
+      unit("7S 500 SAMPLE ST SW", 9000), // storage locker
+      unit("CRU1 500 SAMPLE ST SW", 900000, "NR"), // commercial unit
+      unit("99 500 SAMPLE ST SW", 20000), // not a home's value
+      unit("101 500 SAMPLE ST SW", null),
+    ];
+    assert.deepEqual(dwellingUnits(units).map((u) => u.address), ["1203 500 SAMPLE ST SW", "4B 500 SAMPLE ST SW"]);
+  });
+  it("a building with many stalls no longer drags the median down", async () => {
+    const { dwellingUnits } = await import("../calgary/match.ts");
+    const { median } = await import("../calgary/values.ts");
+    const homes = [350000, 360000, 370000].map((v, i) => unit(`${101 + i} 500 SAMPLE ST SW`, v));
+    const stalls = Array.from({ length: 5 }, (_, i) => unit(`${i + 1}V 500 SAMPLE ST SW`, 45500));
+    const all = [...homes, ...stalls];
+    assert.equal(median(all.map((u) => u.assessed_value as number)), 45500); // the old bug
+    assert.equal(median(dwellingUnits(all).map((u) => u.assessed_value as number)), 360000);
+  });
+});
