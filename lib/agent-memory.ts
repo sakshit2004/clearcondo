@@ -69,6 +69,17 @@ export function sanitizeLabelSegment(s: string): string {
   return out || "unknown";
 }
 
+/**
+ * Labels for a building's SHARED memory (lib/shared-record.ts): every
+ * user's verified facts about the building, with no owner label, so a
+ * belief carries no link to who contributed it.
+ */
+export function sharedLabels(sharedKey: string, docDate?: string | null): string[] {
+  const labels = ["app=clearcondo", "scope=shared", `record=${sanitizeLabelSegment(sharedKey)}`];
+  if (docDate) labels.push(`doc_date=${sanitizeLabelSegment(docDate)}`);
+  return labels;
+}
+
 /** Labels tagging one building's facts: app, owner, building record id. */
 export function buildingLabels(
   ownerId: string,
@@ -203,6 +214,8 @@ export async function rememberBuildingFacts(
   opts: {
     ownerId: string;
     buildingRecordId: string;
+    /** The building's shared record: remember there, for every user, instead of per owner. */
+    sharedKey?: string | null;
     building: BuildingFacts;
     facts: VerifiedStructuredFacts;
   },
@@ -215,11 +228,9 @@ export async function rememberBuildingFacts(
   try {
     await client.remember(text, {
       infer: "full",
-      labels: buildingLabels(
-        opts.ownerId,
-        opts.buildingRecordId,
-        opts.facts.doc_date
-      ),
+      labels: opts.sharedKey
+        ? sharedLabels(opts.sharedKey, opts.facts.doc_date)
+        : buildingLabels(opts.ownerId, opts.buildingRecordId, opts.facts.doc_date),
     });
     return { ok: true };
   } catch (err) {
@@ -334,12 +345,21 @@ export async function recallBuildingMemory(
   buildingRecordId: string,
   fetchImpl?: typeof fetch
 ): Promise<RecallResult | null> {
+  return recallWithLabels(buildingLabels(ownerId, buildingRecordId), fetchImpl);
+}
+
+/** Recall a building's shared beliefs: what every user's packages established. */
+export async function recallSharedMemory(sharedKey: string, fetchImpl?: typeof fetch): Promise<RecallResult | null> {
+  return recallWithLabels(sharedLabels(sharedKey), fetchImpl);
+}
+
+async function recallWithLabels(labels: string[], fetchImpl?: typeof fetch): Promise<RecallResult | null> {
   const client = createClient(fetchImpl);
   if (!client) return null;
   try {
     const res = await client.recall(
       "Summarize the known facts about this condominium building: reserve fund balance, special assessments, litigation, insurance deductible, and rental rules. Include how each changed over time, most recent first.",
-      { k: 6, labels: buildingLabels(ownerId, buildingRecordId) }
+      { k: 6, labels }
     );
     const hits: RecallHit[] = (res.hits ?? [])
       .map((h) => ({

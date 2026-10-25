@@ -56,12 +56,15 @@ export default function ReportView({
   pdfHref,
   storageKey = "report",
   publicRecords,
+  buildingRecord,
 }: {
   report: ReportVM;
   pdfHref?: string;
   storageKey?: string;
   /** The public record check (City of Calgary), rendered server-side. */
   publicRecords?: ReactNode;
+  /** The package checked against the shared building record, rendered server-side. */
+  buildingRecord?: ReactNode;
 }) {
   const { analysis } = report;
   const flags = sortFlags(analysis);
@@ -176,6 +179,7 @@ export default function ReportView({
           <FlagList flags={flags} />
           {report.timeline && report.timeline.length >= 2 && <BuildingTimeline points={report.timeline} />}
           {report.deltas && report.deltas.length > 0 && <DeltasSection deltas={report.deltas} />}
+          {buildingRecord}
           {publicRecords}
           <VerificationAudit analysis={analysis} />
           <section className="report-paper px-5 py-4 text-sm text-muted leading-relaxed">

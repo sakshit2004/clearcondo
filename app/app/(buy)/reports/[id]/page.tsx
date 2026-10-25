@@ -7,6 +7,7 @@ import SetupNotice from "@/components/SetupNotice";
 import DeleteReportButton from "@/components/DeleteReportButton";
 import ReportView, { ReportToolbar } from "@/components/ReportView";
 import PublicRecords, { PublicRecordsPending } from "@/components/PublicRecords";
+import { ReportSharedRecord } from "@/components/SharedRecord";
 
 export default async function ReportDetailPage({
   params,
@@ -31,6 +32,11 @@ export default async function ReportDetailPage({
         report={vm}
         pdfHref={pdfHref}
         storageKey={id}
+        buildingRecord={
+          <Suspense fallback={null}>
+            <ReportSharedRecord userId={userId} reportId={id} />
+          </Suspense>
+        }
         publicRecords={
           <Suspense fallback={<PublicRecordsPending />}>
             <PublicRecords userId={userId} reportId={id} />

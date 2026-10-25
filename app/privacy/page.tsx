@@ -43,9 +43,9 @@ export default function PrivacyPage() {
             Open any report and use <strong>“Delete this report”</strong> at
             the bottom of the page. That permanently removes the report, its
             flags, its documents, and the extracted text. It cannot be
-            undone. One caveat: if building memory (Agent Memory) is enabled,
-            its learned beliefs about the building are removed on a
-            best-effort basis only — the service offers no guaranteed purge.
+            undone. Verified facts your report added to the building&apos;s
+            shared record (below) stay there, because they&apos;re about the
+            building and carry no link to you.
           </p>
           <h3 className="font-semibold text-stone-900 mt-5 mb-1.5">Your consent</h3>
           <p>
@@ -53,6 +53,35 @@ export default function PrivacyPage() {
             right to upload the documents and understand how they&apos;ll be
             processed and stored. Only upload documents you&apos;re entitled
             to share.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-stone-900 mb-2">
+            The shared building record
+          </h2>
+          <p>
+            Every condo building has one shared record, built from the
+            document packages all ClearCondo users check. When you check a
+            package, its <strong>verified facts</strong> are added: figures
+            and statuses such as the reserve fund balance, condo fees, the
+            insurance deductible, special assessments, lawsuits and rental
+            rules, each with its document date, document type and page.
+            Only facts we could match to a page are added.
+          </p>
+          <p className="mt-3">
+            <strong>Never added:</strong> your documents, their text,
+            filenames or quotes, your name, or anything that says who
+            uploaded them. Names of private individuals are removed from the
+            facts first.
+          </p>
+          <p className="mt-3">
+            Anyone checking the same building sees the record: what earlier
+            packages said, what changed, and anything an earlier package
+            reported that a newer one leaves out. Facts stay in the record
+            after you delete your report. Owners&apos; pages also add the
+            City&apos;s assessment for the building each year. Building
+            memory (Agent Memory, when enabled) learns from the same facts.
           </p>
         </section>
 
@@ -111,7 +140,8 @@ export default function PrivacyPage() {
             </li>
             <li>
               SurrealDB stores your account&apos;s reports, saved units and
-              requests, and building memory when it&apos;s enabled.
+              requests, the shared building records, and building memory
+              when it&apos;s enabled.
             </li>
             <li>Stripe handles payment for paid reports; your card details never reach us.</li>
             <li>Vercel hosts the site.</li>
@@ -141,8 +171,8 @@ export default function PrivacyPage() {
               counts and error types.
             </li>
             <li>
-              Building-memory features store factual summaries (balances,
-              assessments, dates), not document prose.
+              The shared building record and building memory store factual
+              summaries (balances, assessments, dates), not document prose.
             </li>
           </ul>
         </section>

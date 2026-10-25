@@ -508,7 +508,10 @@ export default function UploadForm({
                   I consent to these documents being processed to generate my
                   report, and confirm I have the right to upload them. PDFs are
                   read in memory and never stored as files; extracted text
-                  auto-deletes after 30 days.{" "}
+                  auto-deletes after 30 days. Verified facts (figures and
+                  dates, never the documents or who uploaded them) are added
+                  to this building&apos;s shared record, so the next buyer sees
+                  its history.{" "}
                   <Link href="/privacy" className="text-ink underline underline-offset-2">
                     Privacy note
                   </Link>

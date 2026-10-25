@@ -213,3 +213,43 @@ DEFINE FIELD IF NOT EXISTS comparables ON TABLE owner_request TYPE option<string
 DEFINE FIELD IF NOT EXISTS assessed_value ON TABLE owner_request TYPE option<number>;
 DEFINE FIELD IF NOT EXISTS indicated_value ON TABLE owner_request TYPE option<number>;
 DEFINE FIELD IF NOT EXISTS est_saving ON TABLE owner_request TYPE option<number>;
+
+-- The shared building record (lib/shared-record.ts): one row per condo
+-- building ACROSS ALL USERS, keyed by plan / corporation number (or name +
+-- address). Unlike the tables above it has no owner_id: it holds verified
+-- facts about the building only — never documents, page text, filenames,
+-- quotes, or who contributed them — so they stay when a report is deleted.
+DEFINE TABLE IF NOT EXISTS shared_building SCHEMAFULL;
+DEFINE FIELD IF NOT EXISTS key ON TABLE shared_building TYPE string;
+DEFINE FIELD IF NOT EXISTS name ON TABLE shared_building TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS corp_number ON TABLE shared_building TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS address ON TABLE shared_building TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS plan ON TABLE shared_building TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS units ON TABLE shared_building TYPE option<number>;
+DEFINE FIELD IF NOT EXISTS year_built ON TABLE shared_building TYPE option<number>;
+DEFINE FIELD IF NOT EXISTS created_at ON TABLE shared_building TYPE datetime DEFAULT time::now();
+DEFINE FIELD IF NOT EXISTS updated_at ON TABLE shared_building TYPE datetime DEFAULT time::now();
+DEFINE INDEX IF NOT EXISTS shared_building_key ON TABLE shared_building COLUMNS key UNIQUE;
+
+-- One row per (building, fact, document date, value). A second upload stating
+-- the same figure for the same date raises seen_count instead of adding a row;
+-- a newer date adds a row, so superseded figures keep their dates.
+DEFINE TABLE IF NOT EXISTS shared_fact SCHEMAFULL;
+DEFINE FIELD IF NOT EXISTS building ON TABLE shared_fact TYPE record<shared_building>;
+DEFINE FIELD IF NOT EXISTS fact_key ON TABLE shared_fact TYPE string;
+DEFINE FIELD IF NOT EXISTS kind ON TABLE shared_fact TYPE string;
+DEFINE FIELD IF NOT EXISTS label ON TABLE shared_fact TYPE string;
+DEFINE FIELD IF NOT EXISTS value_num ON TABLE shared_fact TYPE option<number>;
+DEFINE FIELD IF NOT EXISTS value_text ON TABLE shared_fact TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS as_of ON TABLE shared_fact TYPE string;
+DEFINE FIELD IF NOT EXISTS doc_type ON TABLE shared_fact TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS page ON TABLE shared_fact TYPE option<int>;
+DEFINE FIELD IF NOT EXISTS source ON TABLE shared_fact TYPE string;
+DEFINE FIELD IF NOT EXISTS seen_count ON TABLE shared_fact TYPE int DEFAULT 1;
+DEFINE FIELD IF NOT EXISTS first_seen ON TABLE shared_fact TYPE datetime DEFAULT time::now();
+DEFINE FIELD IF NOT EXISTS last_seen ON TABLE shared_fact TYPE datetime DEFAULT time::now();
+DEFINE INDEX IF NOT EXISTS shared_fact_building ON TABLE shared_fact COLUMNS building;
+
+-- The package's check against the shared record at the time it was analyzed
+-- (lib/shared-record.ts checkAgainstRecord), as JSON text.
+DEFINE FIELD IF NOT EXISTS shared_check ON TABLE report TYPE option<string>;

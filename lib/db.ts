@@ -16,6 +16,8 @@ import type { PublicRecordFact } from "./calgary/facts";
 import type { OwnerRequest } from "./owner";
 import type { UnitRecord } from "./calgary/unit";
 import { annualTax } from "./calgary/appeals.ts";
+import { createHash } from "crypto";
+import { valueKey, type CheckItem, type SharedFact, type SharedFactRow, type SharedIdentity } from "./shared-record.ts";
 
 /* ------------------------------------------------------------------ */
 /* Connection                                                          */
@@ -1118,4 +1120,154 @@ export async function spendCredit(db: Surreal, ownerId: string): Promise<boolean
     { owner: ownerId }
   );
   return rows.length > 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Shared building record (all users; see lib/shared-record.ts)        */
+/* ------------------------------------------------------------------ */
+
+const hashId = (s: string) => createHash("sha256").update(s).digest("hex").slice(0, 32);
+
+/** Find or create the shared record for a building; fills identity fields it was missing. */
+export async function upsertSharedBuilding(db: Surreal, identity: SharedIdentity): Promise<string> {
+  const id = hashId(identity.key);
+  await q(
+    db,
+    `UPSERT type::record("shared_building", $id) SET
+       key = $key,
+       name = name ?? $name, corp_number = corp_number ?? $corp, address = address ?? $addr,
+       plan = plan ?? $plan, units = units ?? $units, year_built = year_built ?? $yb,
+       updated_at = time::now()`,
+    {
+      id,
+      key: identity.key,
+      name: opt(identity.name),
+      corp: opt(identity.corp_number),
+      addr: opt(identity.address),
+      plan: opt(identity.plan),
+      units: opt(identity.units),
+      yb: opt(identity.year_built),
+    }
+  );
+  return `shared_building:${id}`;
+}
+
+/**
+ * Add facts to a shared record. The same figure for the same date from
+ * another upload raises seen_count; City facts (public_record) are
+ * refreshed on every page view, so they never count as extra uploads.
+ */
+export async function addSharedFacts(db: Surreal, buildingId: string, facts: SharedFact[]): Promise<void> {
+  for (const f of facts) {
+    await q(
+      db,
+      `UPSERT type::record("shared_fact", $id) SET
+         building = type::record($building), fact_key = $key, kind = $kind, label = $label,
+         value_num = $num, value_text = $text, as_of = $asOf,
+         doc_type = doc_type ?? $docType, page = page ?? $page, source = $source,
+         seen_count = IF $count THEN (seen_count ?? 0) + 1 ELSE 1 END,
+         first_seen = first_seen ?? time::now(), last_seen = time::now()`,
+      {
+        id: hashId(`${buildingId}|${f.fact_key}|${f.as_of}|${valueKey(f)}`),
+        building: buildingId,
+        key: f.fact_key,
+        kind: f.kind,
+        label: f.label,
+        num: opt(f.value_num),
+        text: opt(f.value_text),
+        asOf: f.as_of,
+        docType: opt(f.doc_type),
+        page: opt(f.page),
+        source: f.source,
+        count: f.source === "document",
+      }
+    );
+  }
+}
+
+export interface SharedRecord {
+  id: string;
+  key: string;
+  name: string | null;
+  address: string | null;
+  plan: string | null;
+  facts: SharedFactRow[];
+}
+
+/** A building's shared record by key, or null when nobody has added to it yet. */
+export async function getSharedRecord(db: Surreal, key: string): Promise<SharedRecord | null> {
+  const rows = await q<{ id: unknown; key: string; name?: string; address?: string; plan?: string }[]>(
+    db,
+    "SELECT id, key, name, address, plan FROM shared_building WHERE key = $key LIMIT 1",
+    { key }
+  );
+  if (rows.length === 0) return null;
+  const b = rows[0];
+  const facts = await q<(Omit<SharedFactRow, "first_seen"> & { first_seen: unknown })[]>(
+    db,
+    `SELECT fact_key, kind, label, value_num, value_text, as_of, doc_type, page, source, seen_count, first_seen
+     FROM shared_fact WHERE building = $b`,
+    { b: b.id }
+  );
+  return {
+    id: rid(b.id),
+    key: b.key,
+    name: b.name ?? null,
+    address: b.address ?? null,
+    plan: b.plan ?? null,
+    facts: facts.map((f) => ({
+      ...f,
+      value_num: f.value_num ?? null,
+      value_text: f.value_text ?? null,
+      doc_type: f.doc_type ?? null,
+      page: f.page ?? null,
+      first_seen: String(f.first_seen),
+    })),
+  };
+}
+
+/** The shared record key for a typed building hint (name, plan or address), before analysis. */
+export async function findSharedKeyByHint(db: Surreal, hint: string): Promise<string | null> {
+  const h = hint.trim().toLowerCase();
+  if (h.length < 4) return null;
+  const rows = await q<{ key: string }[]>(
+    db,
+    `SELECT key FROM shared_building
+     WHERE string::lowercase(name ?? "") CONTAINS $h
+        OR string::lowercase(plan ?? "") = $h
+        OR string::lowercase(address ?? "") CONTAINS $h
+     ORDER BY updated_at DESC LIMIT 1`,
+    { h }
+  );
+  return rows[0]?.key ?? null;
+}
+
+/** Store the package's check against the shared record on its report. */
+export async function saveSharedCheck(db: Surreal, ownerId: string, reportId: string, items: CheckItem[]): Promise<void> {
+  await q(db, "UPDATE type::record($id) SET shared_check = $c WHERE owner_id = $owner", {
+    id: reportId,
+    owner: ownerId,
+    c: JSON.stringify(items),
+  });
+}
+
+/** The stored check for one of the user's reports, with the report's building facts. */
+export async function getSharedCheck(
+  db: Surreal,
+  ownerId: string,
+  reportId: string
+): Promise<{ building: BuildingFacts; items: CheckItem[] | null } | null> {
+  const rows = await q<{ facts: BuildingFacts; shared_check?: string }[]>(
+    db,
+    "SELECT facts, shared_check FROM report WHERE id = type::record($id) AND owner_id = $owner LIMIT 1",
+    { id: reportId, owner: ownerId }
+  );
+  if (rows.length === 0) return null;
+  let items: CheckItem[] | null = null;
+  try {
+    items = rows[0].shared_check ? (JSON.parse(rows[0].shared_check) as CheckItem[]) : null;
+  } catch {
+    items = null;
+  }
+  return { building: rows[0].facts, items };
 }

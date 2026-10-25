@@ -63,7 +63,8 @@ export default function DeleteReportButton({ reportId }: { reportId: string }) {
       </p>
       <p className="text-sm text-red-800 mb-3">
         This removes the report, its flags, its documents, and the extracted
-        page text. This cannot be undone.
+        page text. This cannot be undone. Verified facts it added to the
+        building&apos;s shared record stay there, with no link to you.
       </p>
       <div className="flex gap-2">
         <button
