@@ -40,12 +40,6 @@ export default async function DashboardPage() {
 
   const reports = data ?? [];
   const maxExposure = Math.max(0, ...reports.map((r) => r.money_exposure_total_cad ?? 0));
-  const stats: [string, string][] = [
-    [String(reports.length), reports.length === 1 ? "report" : "reports"],
-    [String(new Set(reports.map((r) => String(r.building))).size), "buildings"],
-    [String(reports.reduce((n, r) => n + r.mix.critical, 0)), "critical flags"],
-    [cad(reports.reduce((n, r) => n + (r.money_exposure_total_cad ?? 0), 0)), "money flagged"],
-  ];
 
   return (
     <div>
@@ -82,22 +76,13 @@ export default async function DashboardPage() {
         </div>
       ) : (
         <>
-          <dl className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-            {stats.map(([v, l], i) => (
-              <div key={l} className="stagger rounded-[14px] border border-line bg-white px-5 py-4" style={{ animationDelay: `${i * 70}ms` }}>
-                <dt className="sr-only">{l}</dt>
-                <dd className="text-2xl font-bold tracking-tight text-ink tabular-nums">{v}</dd>
-                <dd className="text-[13px] text-subtle mt-0.5">{l}</dd>
-              </div>
-            ))}
-          </dl>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {reports.map((r, i) => (
               <Link
                 key={String(r.id)}
                 href={`/app/reports/${encodeURIComponent(String(r.id).split(":")[1] ?? String(r.id))}`}
                 className="hover-card stagger report-paper p-5 flex flex-col no-underline"
-                style={{ animationDelay: `${120 + i * 60}ms` }}
+                style={{ animationDelay: `${i * 60}ms` }}
               >
                 <div className="font-bold text-ink mb-1">{r.building_name || "Unnamed building"}</div>
                 <div className="micro-label !text-[10px] text-stone-500 mb-3">

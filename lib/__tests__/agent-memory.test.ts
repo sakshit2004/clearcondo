@@ -5,6 +5,7 @@ import {
   factsToMemoryText,
   isAgentMemoryConfigured,
   recallBuildingMemory,
+  recallSharedMemory,
   rememberBuildingFacts,
   rememberPublicRecordFacts,
   sanitizeLabelSegment,
@@ -270,6 +271,52 @@ describe("recallBuildingMemory", () => {
     assert.equal(res.hits.length, 1); // empty text filtered out
     assert.ok(res.hits[0].text.includes("745,000"));
     assert.ok(capturedUrl.includes("/api/v1/ctx-123/query"));
+  });
+});
+
+describe("recall budget and cache", () => {
+  const body = JSON.stringify({ hits: [{ text: "Reserve fund balance was $412,000.", score: 0.9 }], tier: "hybrid" });
+  const json = () => new Response(body, { status: 200, headers: { "content-type": "application/json" } });
+
+  it("gives up after the budget, then serves the finished recall from cache", async () => {
+    setAgentMemoryEnv();
+    let calls = 0;
+    const slowFetch = (async () => {
+      calls++;
+      await new Promise((r) => setTimeout(r, 150));
+      return json();
+    }) as unknown as typeof fetch;
+    const t0 = Date.now();
+    assert.equal(await recallSharedMemory("plan:0614321", slowFetch, 30), null);
+    assert.ok(Date.now() - t0 < 120, "the page doesn't wait for the slow call");
+    await new Promise((r) => setTimeout(r, 200)); // the call finishes in the background
+    const cached = await recallSharedMemory("plan:0614321", slowFetch, 30);
+    assert.equal(cached?.hits[0].text, "Reserve fund balance was $412,000.");
+    assert.equal(calls, 1, "served from cache, no second call");
+  });
+
+  it("remembering new facts clears that building's cached recall", async () => {
+    setAgentMemoryEnv();
+    let queries = 0;
+    const fetchImpl = (async (url: unknown) => {
+      if (String(url).includes("/query")) queries++;
+      return json();
+    }) as unknown as typeof fetch;
+    await recallSharedMemory("plan:7777777", fetchImpl);
+    await recallSharedMemory("plan:7777777", fetchImpl);
+    assert.equal(queries, 1);
+    await rememberBuildingFacts(
+      {
+        ownerId: "u",
+        buildingRecordId: "building:x",
+        sharedKey: "plan:7777777",
+        building: { name: "B", corp_number: "7777777", address: null, units: null, year_built: null, monthly_contribution_avg_cad: null },
+        facts: { doc_date: "2025-03", reserve_balance_cad: 1000, reserve_recommended_cad: null, contribution_monthly_cad: null, insurance_deductible_cad: null, special_assessments: [], litigation: [], rental_rules: null, rental_rules_evidence: null, fee_change_pct: null },
+      },
+      fetchImpl
+    );
+    await recallSharedMemory("plan:7777777", fetchImpl);
+    assert.equal(queries, 2);
   });
 });
 
