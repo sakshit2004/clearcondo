@@ -9,8 +9,8 @@ import { CALGARY_RES_TAX_RATE_2026 } from "./calgary/appeals.ts";
 export const OWNER_PRICING = {
   /** Share of the tax actually saved; nothing if the assessment doesn't come down. */
   feeShare: 0.3,
-  /** Software subscription, CAD per month. */
-  softwareMonthly: 10,
+  /** Per complaint we file, CAD: charged when we file, with the owner's go-ahead, win or lose. */
+  filingFee: 20,
   /** Free while in beta. */
   freeDuringBeta: true,
 } as const;

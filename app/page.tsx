@@ -69,7 +69,7 @@ const TRACKS: {
     href: "/owners",
     cta: "ClearCondo for owners",
     secondary: { href: "/demo/own", label: "See a sample report" },
-    pricing: "You only pay if you save: 30% of the saving, plus $10/month for the software. Free during beta.",
+    pricing: "30% of the saving, only if you save, plus $20 per filing. Free during beta.",
   },
 ];
 

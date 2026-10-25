@@ -95,7 +95,7 @@ test("landing is generic and splits into buyers and owners", async ({ page }) =>
   await expect(page.getByText("Owning a condo", { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: /ClearCondo for buyers/ }).first()).toHaveAttribute("href", "/buyers");
   await expect(page.getByRole("link", { name: /ClearCondo for owners/ }).first()).toHaveAttribute("href", "/owners");
-  await expect(page.getByText(/30% of the saving, plus \$10\/month/)).toBeVisible();
+  await expect(page.getByText(/30% of the saving, only if you save, plus \$20 per filing/)).toBeVisible();
   await expect(page.getByRole("link", { name: /I'm buying a condo/ }).first()).toHaveAttribute("href", "/buyers");
   await expect(page.getByRole("link", { name: /I own a condo/ }).first()).toHaveAttribute("href", "/owners");
   // Header buttons go straight to each dashboard.
@@ -124,7 +124,7 @@ test("owners page: owner-only content and dashboard link", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toContainText("paying too much property tax");
   await expect(page.getByRole("link", { name: /Open the owner dashboard/ })).toHaveAttribute("href", "/app/own");
   await expect(page.getByRole("link", { name: "See a sample report" })).toHaveAttribute("href", "/demo/own");
-  await expect(page.getByRole("heading", { name: "You only pay if you save." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The 30% only if you save." })).toBeVisible();
 });
 
 test("owner pages sit behind sign-in; old public links redirect", async ({ request }) => {

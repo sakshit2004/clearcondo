@@ -4,11 +4,11 @@ import { cad } from "@/lib/format";
 const pct = (n: number) => `${Math.round(n * 100)}%`;
 
 /**
- * "You only pay if you save": the owner-side pricing, with the beta
+ * The owner-side pricing (30% only if you save, $20 per filing), with the beta
  * waiver shown first. Given an estimated saving, works the fee through.
  */
 export default function OwnerPricing({ saving }: { saving?: number | null }) {
-  const { feeShare, softwareMonthly, freeDuringBeta } = OWNER_PRICING;
+  const { feeShare, filingFee, freeDuringBeta } = OWNER_PRICING;
   return (
     <section className="report-paper rounded-2xl p-6" aria-labelledby="owner-pricing">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -19,18 +19,18 @@ export default function OwnerPricing({ saving }: { saving?: number | null }) {
           </span>
         )}
       </div>
-      <p className="text-sm text-subtle mt-1 mb-4">You only pay if you save.</p>
+      <p className="text-sm text-subtle mt-1 mb-4">The {pct(feeShare)} only if you save.</p>
       <ul className="space-y-3">
         <li className="flex gap-3">
           <span className="font-bold text-ink tabular-nums w-14 flex-none">{pct(feeShare)}</span>
           <span className="text-sm text-stone-600 leading-relaxed">
-            of the tax you save, once your assessment comes down. If it doesn&apos;t, you pay nothing.
+            of the tax you save, once your assessment comes down. If it doesn&apos;t, there&apos;s no {pct(feeShare)} fee.
           </span>
         </li>
         <li className="flex gap-3">
-          <span className="font-bold text-ink tabular-nums w-14 flex-none">${softwareMonthly}/mo</span>
+          <span className="font-bold text-ink tabular-nums w-14 flex-none">${filingFee}</span>
           <span className="text-sm text-stone-600 leading-relaxed">
-            for the software: your assessment checked every year, and a reminder before the complaint deadline.
+            per filing: our fee to file your complaint, charged when we file. Nothing is filed without your go-ahead.
           </span>
         </li>
       </ul>
@@ -43,7 +43,7 @@ export default function OwnerPricing({ saving }: { saving?: number | null }) {
       )}
       {freeDuringBeta && (
         <p className="text-[13px] text-subtle mt-3">
-          No fee and no subscription while ClearCondo is in beta.
+          No fees while ClearCondo is in beta.
         </p>
       )}
     </section>

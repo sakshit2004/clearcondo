@@ -356,7 +356,7 @@ export default function OwnerRequestForm({
         >
           {status === "sending" ? "Sending…" : "Get my savings estimate"}
         </button>
-        <span className="text-[13px] text-subtle">Beta: free for now. You only pay if you save.</span>
+        <span className="text-[13px] text-subtle">Beta: free for now. After that, 30% only if you save, plus $20 per filing.</span>
       </div>
     </form>
   );

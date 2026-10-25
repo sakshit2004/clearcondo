@@ -30,7 +30,7 @@ describe("owner links", () => {
 
 describe("owner pricing and savings", () => {
   it("is 30% of savings plus $10/month, free during beta", () => {
-    assert.deepEqual(OWNER_PRICING, { feeShare: 0.3, softwareMonthly: 10, freeDuringBeta: true });
+    assert.deepEqual(OWNER_PRICING, { feeShare: 0.3, filingFee: 20, freeDuringBeta: true });
   });
   it("hides the estimate unless a sane cut is configured", () => {
     const prev = process.env.OWNER_SAVINGS_CUT;
