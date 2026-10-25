@@ -25,9 +25,13 @@ import {
 } from "@/lib/extract";
 import { verifyAnalysis, type VerifiableDoc } from "@/lib/verify";
 import { redactAnalysis, toPublicAnalysis } from "@/lib/redact";
-import { rememberBuildingFacts } from "@/lib/agent-memory";
+import { recallBuildingMemory, rememberBuildingFacts } from "@/lib/agent-memory";
+import { buildMemoryContext } from "@/lib/memory-context";
 import { hasUploadConsent } from "@/lib/retention";
 import type { DocType } from "@/lib/report-schema";
+
+/** Max wait for the Agent Memory recall before analysis starts without it. */
+const RECALL_BUDGET_MS = 5_000;
 
 /**
  * Vercel Hobby (Fluid compute) allows up to 300s per function invocation.
@@ -161,13 +165,19 @@ export async function POST(req: Request) {
       const prior = await getPriorFlags(db, userId, bid, 12);
       return { bid, prior };
     });
-    if (mem && mem.prior.length > 0) {
+    if (mem) {
       matchedBuildingId = mem.bid;
-      memoryContext = mem.prior
-        .map((f) => `- [${f.severity}] ${f.title}: ${f.explanation}`)
-        .join("\n");
-    } else if (mem) {
-      matchedBuildingId = mem.bid;
+      // Agent Memory recall: the building's reconciled beliefs join the
+      // prior verified flags as context. Capped so a slow memory service
+      // never eats the analysis budget; null when unconfigured.
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const recall = await Promise.race([
+        recallBuildingMemory(userId, mem.bid),
+        new Promise<null>((resolve) => {
+          timer = setTimeout(() => resolve(null), RECALL_BUDGET_MS);
+        }),
+      ]).finally(() => clearTimeout(timer));
+      memoryContext = buildMemoryContext(mem.prior, recall?.hits.map((h) => h.text) ?? []);
     }
   }
 
